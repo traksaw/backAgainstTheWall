@@ -2,11 +2,13 @@ import { supabase } from "./supabase"
 import type { QuizResult } from "./supabase"
 
 export interface QuizAnswer {
-  questionId: number
-  archetype: "Avoider" | "Gambler" | "Realist" | "Architect"
-  points: number
-  text: string
-  question?: string
+  id: number;
+  questionId?: number | string;
+  archetype: "Avoider" | "Gambler" | "Realist" | "Architect";
+  points: number;
+  text: string;
+  question?: string;
+  answer?: string;
 }
 
 export interface QuizSubmission {
@@ -100,13 +102,18 @@ export class QuizService {
 
         // Fallback to localStorage if database is not available
         const mockResult: QuizResult = {
-          id: Math.random().toString(36).substr(2, 9),
+          id: Math.random().toString(36).substring(2, 9),
           user_id: user.id,
           archetype: topArchetype,
           score: scores[topArchetype],
-          answers: detailedAnswers,
+          answers: {
+            responses: submission.answers,
+            scores,
+            totalQuestions: Object.keys(submission.answers).length,
+            completedAt: new Date().toISOString(),
+          },
           completed_at: new Date().toISOString(),
-          session_id: submission.sessionId || Math.random().toString(36).substr(2, 9),
+          session_id: submission.sessionId || Math.random().toString(36).substring(2, 9),
           has_viewed_results: false,
           has_watched_film: false,
           created_at: new Date().toISOString(),
@@ -117,6 +124,7 @@ export class QuizService {
         const existingResults = JSON.parse(localStorage.getItem(`quiz_results_${user.id}`) || "[]")
         existingResults.unshift(mockResult)
         localStorage.setItem(`quiz_results_${user.id}`, JSON.stringify(existingResults))
+
 
         console.log("Quiz submitted successfully with localStorage fallback:", mockResult)
         return mockResult

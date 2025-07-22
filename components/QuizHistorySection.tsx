@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useAuth } from "@/hooks/useAuth"
 import { useQuiz } from "@/hooks/useQuiz"
-import { QuizService } from "@/lib/quiz"
 import {
   Calendar,
   Award,
@@ -58,7 +57,6 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
   const { quizResults, loading } = useQuiz()
   const [selectedResult, setSelectedResult] = useState<QuizResult | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
-  
 
   const getArchetypeIcon = (archetype: string) => {
     switch (archetype) {
@@ -170,7 +168,7 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                               <div className="flex items-center space-x-4 text-sm text-gray-600">
                                 <div className="flex items-center">
                                   <Calendar className="w-4 h-4 mr-1" />
-                                  {formatDate(result.completed_at)}
+                                  {formatDate(result.completed_at?.toString() || "")}
                                 </div>
                                 <div className="flex items-center">
                                   <BarChart3 className="w-4 h-4 mr-1" />
@@ -246,7 +244,7 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold text-[#B95D38] mb-2">The {selectedResult.archetype}</h3>
-                  <p className="text-gray-600">Completed on {formatDate(selectedResult.completed_at)}</p>
+                  <p className="text-gray-600">Completed on {formatDate(selectedResult.completed_at?.toString() || "")}</p>
                 </div>
               </div>
 

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "Back Against the Wall - Financial Psychology Film",
   description:
     "When financial pressure mounts, who do you become? Discover your financial archetype and watch this powerful short film.",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -18,8 +18,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={inter.className}>
-      <body>{children}</body>
+    <html lang="en">
+      <body className={inter.className} suppressHydrationWarning={true}>
+        {children}
+      </body>
     </html>
   )
 }

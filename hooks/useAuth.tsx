@@ -12,11 +12,14 @@ interface AuthContextType {
   profile: UserProfile | null
   session: Session | null
   loading: boolean
+  isHydrated: boolean
+  databaseStatus: "checking" | "ready" | "error" | "setup-required"
   signUp: (data: any) => Promise<void>
   signIn: (data: any) => Promise<void>
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>
   refreshProfile: () => Promise<void>
+  checkDatabaseSetup: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -26,31 +29,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
+  const [databaseStatus, setDatabaseStatus] = useState<"checking" | "ready" | "error" | "setup-required">("checking")
 
-  // Ensure we're mounted before doing anything client-side
   useEffect(() => {
-    setMounted(true)
+    setIsHydrated(true)
   }, [])
 
   useEffect(() => {
-    if (!mounted) return
+    if (!isHydrated) return
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        loadUserProfile(session.user)
-      } else {
-        setLoading(false)
+    const checkSetup = async () => {
+      try {
+        const setupStatus = await AuthService.checkDatabaseSetup()
+        setDatabaseStatus(setupStatus.isSetup ? "ready" : "setup-required")
+      } catch (error) {
+        console.error("Database setup check failed:", error)
+        setDatabaseStatus("error")
       }
-    })
+    }
 
-    // Listen for auth changes
+    checkSetup()
+  }, [isHydrated])
+
+  useEffect(() => {
+    if (!isHydrated) return
+
+    let isMounted = true
+
+    const initializeAuth = async () => {
+      try {
+        const {
+          data: { session: initialSession },
+        } = await supabase.auth.getSession()
+
+        if (!isMounted) return
+
+        setSession(initialSession)
+        setUser(initialSession?.user ?? null)
+
+        if (initialSession?.user) {
+          await loadUserProfile(initialSession.user)
+        } else {
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error)
+        if (isMounted) setLoading(false)
+      }
+    }
+
+    initializeAuth()
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return
+
+      console.log("Auth state change:", event, !!session?.user)
       setSession(session)
       setUser(session?.user ?? null)
 
@@ -62,50 +98,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })
 
-    return () => subscription.unsubscribe()
-  }, [mounted])
-
-  const createFallbackProfile = (user: User | null, signupData?: any): UserProfile => {
-    // Handle case where user might be null
-    const userId = user?.id || "temp-" + Math.random().toString(36).substr(2, 9)
-    const userEmail = user?.email || signupData?.email || "user@example.com"
-
-    return {
-      id: userId,
-      first_name: signupData?.firstName || user?.user_metadata?.first_name || userEmail.split("@")[0] || "User",
-      last_name: signupData?.lastName || user?.user_metadata?.last_name || "",
-      zip_code: signupData?.zipcode || user?.user_metadata?.zipcode || "00000",
-      professional_status:
-        signupData?.occupationStatus || (user?.user_metadata?.occupation_status as any) || "working-professional",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
     }
-  }
+  }, [isHydrated, databaseStatus])
 
-  const loadUserProfile = async (userObj: User, signupData?: any) => {
+  const loadUserProfile = async (userObj: User) => {
     try {
-      console.log("Loading user profile for user:", userObj.id)
+      if (databaseStatus !== "ready") return
 
-      // Try to get profile from database
       const userProfile = await AuthService.getUserProfile(userObj.id)
 
       if (userProfile) {
-        console.log("Successfully loaded user profile from database")
-        setProfile(userProfile)
-      } else {
-        // Database not ready or profile doesn't exist - create fallback
-        console.log("Database not ready - creating fallback profile")
-        const fallbackProfile = createFallbackProfile(userObj, signupData)
-        setProfile(fallbackProfile)
-        console.log("Created fallback profile:", fallbackProfile)
-      }
-    } catch (error) {
-      console.error("Unexpected error loading user profile:", error)
+        const completeProfile: UserProfile = {
+          id: userProfile.id,
+          email: userProfile.email ?? "",
+          first_name: userProfile.first_name ?? "",
+          last_name: userProfile.last_name ?? "",
+          zip_code: userProfile.zipcode ?? "00000",
+          occupation_status: userProfile.occupation_status ?? "working-professional",
+          created_at: userProfile.created_at ?? new Date().toISOString(),
+          updated_at: userProfile.updated_at ?? new Date().toISOString(),
+        }
 
-      // Even if there's an error, create a fallback profile
-      const fallbackProfile = createFallbackProfile(userObj, signupData)
-      setProfile(fallbackProfile)
-      console.log("Created fallback profile due to error:", fallbackProfile)
+        setProfile(completeProfile)
+      }
+
+    } catch (error) {
+      console.error("Error loading profile from Supabase:", error)
     } finally {
       setLoading(false)
     }
@@ -114,30 +135,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (data: any) => {
     setLoading(true)
     try {
-      const result = await AuthService.signUp(data)
+      console.log("Starting signup process with data:", data)
 
-      // If signup successful but user not immediately available, create fallback profile
-      if (result.user) {
-        await loadUserProfile(result.user, data)
-      } else {
-        // Create temporary profile with signup data
-        const tempProfile = createFallbackProfile(null, data)
-        setProfile(tempProfile)
-        setLoading(false)
-      }
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+      })
+
+      if (error) throw error
+      if (!authData.user) throw new Error("User not created")
+
+      await supabase.from("user_profiles").insert([
+        {
+          id: authData.user.id,
+          email: data.email,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          zipcode: data.zipcode,
+          occupation_status: data.occupationStatus,
+        },
+      ])
+
+      await loadUserProfile(authData.user)
     } catch (error) {
+      console.error("Signup failed:", error)
+    } finally {
       setLoading(false)
-      throw error
     }
   }
 
   const signIn = async (data: any) => {
     setLoading(true)
     try {
-      await AuthService.signIn(data)
+      await AuthService.signIn(data.email, data.password)
     } catch (error) {
+      console.error("Sign-in failed:", error)
+    } finally {
       setLoading(false)
-      throw error
     }
   }
 
@@ -145,9 +179,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true)
     try {
       await AuthService.signOut()
+      setUser(null)
+      setSession(null)
+      setProfile(null)
     } catch (error) {
+      console.error("Sign-out failed:", error)
+    } finally {
       setLoading(false)
-      throw error
     }
   }
 
@@ -155,9 +193,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) throw new Error("No user logged in")
 
     try {
-      const updatedProfile = await AuthService.updateUserProfile(user.id, updates)
-      setProfile(updatedProfile)
+      if (databaseStatus === "ready") {
+        const updatedProfile = await AuthService.updateUserProfile(user.id, updates)
+        setProfile(updatedProfile)
+      }
     } catch (error) {
+      console.error("Failed to update profile:", error)
       throw error
     }
   }
@@ -167,32 +208,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadUserProfile(user)
   }
 
+  const checkDatabaseSetup = async () => {
+    setDatabaseStatus("checking")
+    try {
+      const setupStatus = await AuthService.checkDatabaseSetup()
+      setDatabaseStatus(setupStatus.isSetup ? "ready" : "setup-required")
+    } catch (error) {
+      console.error("Database setup check failed:", error)
+      setDatabaseStatus("error")
+    }
+  }
+
   const value: AuthContextType = {
     user,
     profile,
     session,
     loading,
+    isHydrated,
+    databaseStatus,
     signUp,
     signIn,
     signOut,
     updateProfile,
     refreshProfile,
-  }
-
-  // Always render the provider so descendants can call useAuth safely
-  if (!mounted) {
-    const fallbackValue: AuthContextType = {
-      user: null,
-      profile: null,
-      session: null,
-      loading: true,
-      signUp: async () => {},
-      signIn: async () => {},
-      signOut: async () => {},
-      updateProfile: async () => {},
-      refreshProfile: async () => {},
-    }
-    return <AuthContext.Provider value={fallbackValue}>{children}</AuthContext.Provider>
+    checkDatabaseSetup,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

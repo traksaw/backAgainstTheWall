@@ -1,4 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
+import type { QuizAnswer } from "./quiz"
+
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -6,43 +8,53 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Types for our database
+
+
+
+export interface QuizResponse {
+  id: number
+  question: string
+  text: string
+  archetype: string
+  points: number
+  question_id: string        // 👈 REQUIRED
+  answer: string             // 👈 REQUIRED
+}
+
+
+
 export interface UserProfile {
   id: string
   first_name: string
   last_name: string
-  zip_code: string
-  professional_status: "working-professional" | "dedicated-student" | "entrepreneur" | "retired"
+  email: string
+  zip_code?: string
+  // professional_status?: "working-professional" | "dedicated-student" | "entrepreneur" | "retired"
+  profile?: string
   created_at: string
   updated_at: string
+  zipcode?: string
+  occupation_status?: string
 }
 
 export interface QuizResult {
   id: string
   user_id: string
-  archetype: string
+  archetype: "Avoider" | "Gambler" | "Realist" | "Architect"
   score: number
   answers: {
-    responses: {
-      [index: number]: {
-        questionId: number
-        question?: string
-        text: string
-        archetype: string
-        points: number
-      }
-    }
+    responses: Record<number, QuizAnswer>
     scores: Record<string, number>
     totalQuestions: number
     completedAt: string
   }
-  completed_at: string
-  session_id: string
+  completed_at?: string
+  session_id?: string
   has_viewed_results: boolean
   has_watched_film: boolean
-  created_at: string
-  updated_at: string
+  created_at?: string
+  updated_at?: string
 }
-
 
 export interface UserActivity {
   id: string
@@ -67,7 +79,7 @@ export interface UserEngagementStats {
   film_completion_rate: number
 }
 
-// Database connection test function
+//  test function
 export async function testSupabaseConnection() {
   try {
     const { data, error } = await supabase.from("user_profiles").select("count").limit(1)

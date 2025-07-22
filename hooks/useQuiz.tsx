@@ -9,45 +9,30 @@ export function useQuiz() {
   const { user } = useAuth()
   const [quizResults, setQuizResults] = useState<QuizResult[]>([])
   const [latestResult, setLatestResult] = useState<QuizResult | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (user) {
-      loadQuizResults()
+      fetchQuizResults()
     }
   }, [user])
 
-  const loadQuizResults: () => Promise<void> = async () => {
+  const fetchQuizResults = async () => {
     if (!user) return
 
     setLoading(true)
     try {
-      const [rawResults, latestRaw] = await Promise.all([
-        QuizService.getUserQuizResults(user.id),
-        QuizService.getLatestQuizResult(user.id),
-      ])
-
-      const parseAnswers = (result: QuizResult): QuizResult => ({
-        ...result,
-        answers:
-          typeof result.answers === "string"
-            ? JSON.parse(result.answers)
-            : result.answers,
-      })
-
-      const results = rawResults.map(parseAnswers)
-      const latest = latestRaw ? parseAnswers(latestRaw) : null
-
-
+      const results = await QuizService.getUserQuizResults(user.id)
       setQuizResults(results)
-      setLatestResult(latest)
+      setLatestResult(results[0] || null) // assuming latest result is first
     } catch (error) {
       console.error("Error loading quiz results:", error)
+      setQuizResults([])
+      setLatestResult(null)
     } finally {
       setLoading(false)
     }
   }
-
 
   const submitQuiz = async (answers: Record<number, any>, sessionId?: string) => {
     if (!user) throw new Error("User not authenticated")
@@ -71,8 +56,9 @@ export function useQuiz() {
     try {
       const updatedResult = await QuizService.updateQuizResult(resultId, updates)
 
-      // Update local state
-      setQuizResults((prev) => prev.map((result) => (result.id === resultId ? updatedResult : result)))
+      setQuizResults((prev) =>
+        prev.map((result) => (result.id === resultId ? updatedResult : result))
+      )
 
       if (latestResult?.id === resultId) {
         setLatestResult(updatedResult)
@@ -93,6 +79,6 @@ export function useQuiz() {
     loading,
     submitQuiz,
     updateQuizResult,
-    refreshResults: loadQuizResults,
+    refreshResults: fetchQuizResults,
   }
 }

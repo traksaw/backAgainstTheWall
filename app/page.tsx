@@ -1,4 +1,5 @@
 "use client"
+
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -7,16 +8,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useAuth, AuthProvider } from "@/hooks/useAuth"
 import { useQuiz } from "@/hooks/useQuiz"
 import { SignUpModal } from "@/components/auth/SignUpModal"
 import { SignInModal } from "@/components/auth/SignInModal"
 import { VideoPlayer } from "@/components/VideoPlayer"
 import { QuizHistorySection } from "@/components/QuizHistorySection"
+import { ClientOnly } from "@/components/ClientOnly"
 import {
   Play,
   ArrowRight,
@@ -39,168 +38,198 @@ import {
   LogOut,
   User,
   BarChart3,
+  MessageSquare,
+  List,
+  EyeOff,
 } from "lucide-react"
+import { QuizAnswersDisplay } from "@/components/QuizAnswersDisplay"
+import type { QuizAnswer } from "@/lib/quiz"
 
-// Quiz Types and Data
+
+
 interface QuizQuestion {
   id: number
   question: string
-  options: {
-    text: string
-    archetype: "Avoider" | "Gambler" | "Realist" | "Architect"
-    points: number
-  }[]
+  options: QuizAnswer[]
 }
 
+interface QuizResponse {
+  question: string
+  text: string
+  archetype: string
+  points: number
+}
+
+export interface QuizResult {
+  id: string
+  user_id: string
+  archetype: "Avoider" | "Gambler" | "Realist" | "Architect"
+  score: number
+  answers: {
+    responses: Record<number, QuizAnswer>
+    scores: Record<string, number>
+    totalQuestions: number
+    completedAt: string
+  }
+  completed_at?: string
+  session_id?: string
+  has_viewed_results: boolean
+  has_watched_film: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+
+// Quiz Types and Data
 const quizQuestions: QuizQuestion[] = [
   {
     id: 1,
     question: "When you receive unexpected money, what's your first instinct?",
     options: [
-      { text: "Save it immediately for emergencies", archetype: "Avoider", points: 3 },
-      { text: "Invest it in something with high potential returns", archetype: "Gambler", points: 3 },
-      { text: "Research the best balanced investment options", archetype: "Realist", points: 3 },
-      { text: "Create a detailed plan for how to allocate it", archetype: "Architect", points: 3 },
+      { id: 1, text: "Save it immediately for emergencies", archetype: "Avoider", points: 3 },
+      { id: 2, text: "Invest it in something with high potential returns", archetype: "Gambler", points: 3 },
+      { id: 3, text: "Research the best balanced investment options", archetype: "Realist", points: 3 },
+      { id: 4, text: "Create a detailed plan for how to allocate it", archetype: "Architect", points: 3 },
     ],
   },
   {
     id: 2,
     question: "How do you feel about taking financial risks?",
     options: [
-      { text: "I prefer to avoid them entirely", archetype: "Avoider", points: 3 },
-      { text: "The bigger the risk, the bigger the reward", archetype: "Gambler", points: 3 },
-      { text: "Calculated risks are necessary for growth", archetype: "Realist", points: 3 },
-      { text: "I analyze every risk thoroughly before deciding", archetype: "Architect", points: 3 },
+      { id: 1, text: "I prefer to avoid them entirely", archetype: "Avoider", points: 3 },
+      { id: 2, text: "The bigger the risk, the bigger the reward", archetype: "Gambler", points: 3 },
+      { id: 3, text: "Calculated risks are necessary for growth", archetype: "Realist", points: 3 },
+      { id: 4, text: "I analyze every risk thoroughly before deciding", archetype: "Architect", points: 3 },
     ],
   },
   {
     id: 3,
     question: "What's your approach to budgeting?",
     options: [
-      { text: "I keep things simple and spend conservatively", archetype: "Avoider", points: 3 },
-      { text: "Budgets are too restrictive for my lifestyle", archetype: "Gambler", points: 3 },
-      { text: "I track expenses but allow for flexibility", archetype: "Realist", points: 3 },
-      { text: "I have detailed spreadsheets for everything", archetype: "Architect", points: 3 },
+      { id: 1, text: "I keep things simple and spend conservatively", archetype: "Avoider", points: 3 },
+      { id: 2, text: "Budgets are too restrictive for my lifestyle", archetype: "Gambler", points: 3 },
+      { id: 3, text: "I track expenses but allow for flexibility", archetype: "Realist", points: 3 },
+      { id: 4, text: "I have detailed spreadsheets for everything", archetype: "Architect", points: 3 },
     ],
   },
   {
     id: 4,
     question: "When making a major purchase, you:",
     options: [
-      { text: "Research extensively and often decide not to buy", archetype: "Avoider", points: 3 },
-      { text: "Go with your gut feeling in the moment", archetype: "Gambler", points: 3 },
-      { text: "Compare options and make a practical choice", archetype: "Realist", points: 3 },
-      { text: "Create a detailed cost-benefit analysis", archetype: "Architect", points: 3 },
+      { id: 1, text: "Research extensively and often decide not to buy", archetype: "Avoider", points: 3 },
+      { id: 2, text: "Go with your gut feeling in the moment", archetype: "Gambler", points: 3 },
+      { id: 3, text: "Compare options and make a practical choice", archetype: "Realist", points: 3 },
+      { id: 4, text: "Create a detailed cost-benefit analysis", archetype: "Architect", points: 3 },
     ],
   },
   {
     id: 5,
     question: "Your ideal investment portfolio would be:",
     options: [
-      { text: "Mostly savings accounts and bonds", archetype: "Avoider", points: 3 },
-      { text: "High-growth stocks and cryptocurrency", archetype: "Gambler", points: 3 },
-      { text: "A balanced mix of stocks and bonds", archetype: "Realist", points: 3 },
-      { text: "Carefully diversified across multiple asset classes", archetype: "Architect", points: 3 },
+      { id: 1, text: "Mostly savings accounts and bonds", archetype: "Avoider", points: 3 },
+      { id: 2, text: "High-growth stocks and cryptocurrency", archetype: "Gambler", points: 3 },
+      { id: 3, text: "A balanced mix of stocks and bonds", archetype: "Realist", points: 3 },
+      { id: 4, text: "Carefully diversified across multiple asset classes", archetype: "Architect", points: 3 },
     ],
   },
   {
     id: 6,
     question: "How do you handle financial setbacks?",
     options: [
-      { text: "I become more cautious and conservative", archetype: "Avoider", points: 3 },
-      { text: "I look for the next big opportunity to recover", archetype: "Gambler", points: 3 },
-      { text: "I adjust my strategy based on what I learned", archetype: "Realist", points: 3 },
-      { text: "I analyze what went wrong and create a recovery plan", archetype: "Architect", points: 3 },
+      { id: 1, text: "I become more cautious and conservative", archetype: "Avoider", points: 3 },
+      { id: 2, text: "I look for the next big opportunity to recover", archetype: "Gambler", points: 3 },
+      { id: 3, text: "I adjust my strategy based on what I learned", archetype: "Realist", points: 3 },
+      { id: 4, text: "I analyze what went wrong and create a recovery plan", archetype: "Architect", points: 3 },
     ],
   },
   {
     id: 7,
     question: "Your relationship with money is best described as:",
     options: [
-      { text: "A source of security and stability", archetype: "Avoider", points: 3 },
-      { text: "A tool for exciting opportunities", archetype: "Gambler", points: 3 },
-      { text: "A means to achieve life goals", archetype: "Realist", points: 3 },
-      { text: "A system that requires careful management", archetype: "Architect", points: 3 },
+      { id: 1, text: "A source of security and stability", archetype: "Avoider", points: 3 },
+      { id: 2, text: "A tool for exciting opportunities", archetype: "Gambler", points: 3 },
+      { id: 3, text: "A means to achieve life goals", archetype: "Realist", points: 3 },
+      { id: 4, text: "A system that requires careful management", archetype: "Architect", points: 3 },
     ],
   },
   {
     id: 8,
     question: "When friends ask for financial advice, you:",
     options: [
-      { text: "Suggest they be very careful and conservative", archetype: "Avoider", points: 3 },
-      { text: "Share exciting investment opportunities you've heard about", archetype: "Gambler", points: 3 },
-      { text: "Give practical, balanced suggestions", archetype: "Realist", points: 3 },
-      { text: "Recommend they create a comprehensive financial plan", archetype: "Architect", points: 3 },
+      { id: 1, text: "Suggest they be very careful and conservative", archetype: "Avoider", points: 3 },
+      { id: 2, text: "Share exciting investment opportunities you've heard about", archetype: "Gambler", points: 3 },
+      { id: 3, text: "Give practical, balanced suggestions", archetype: "Realist", points: 3 },
+      { id: 4, text: "Recommend they create a comprehensive financial plan", archetype: "Architect", points: 3 },
     ],
   },
   {
     id: 9,
     question: "Your emergency fund should be:",
     options: [
-      { text: "As large as possible for maximum security", archetype: "Avoider", points: 3 },
-      { text: "Minimal - money should be working for you", archetype: "Gambler", points: 3 },
-      { text: "3-6 months of expenses", archetype: "Realist", points: 3 },
-      { text: "Precisely calculated based on your risk profile", archetype: "Architect", points: 3 },
+      { id: 1, text: "As large as possible for maximum security", archetype: "Avoider", points: 3 },
+      { id: 2, text: "Minimal - money should be working for you", archetype: "Gambler", points: 3 },
+      { id: 3, text: "3-6 months of expenses", archetype: "Realist", points: 3 },
+      { id: 4, text: "Precisely calculated based on your risk profile", archetype: "Architect", points: 3 },
     ],
   },
   {
     id: 10,
     question: "How do you research investments?",
     options: [
-      { text: "I stick to what I know is safe", archetype: "Avoider", points: 3 },
-      { text: "I follow trends and hot tips", archetype: "Gambler", points: 3 },
-      { text: "I read reputable financial sources", archetype: "Realist", points: 3 },
-      { text: "I conduct thorough fundamental analysis", archetype: "Architect", points: 3 },
+      { id: 1, text: "I stick to what I know is safe", archetype: "Avoider", points: 3 },
+      { id: 2, text: "I follow trends and hot tips", archetype: "Gambler", points: 3 },
+      { id: 3, text: "I read reputable financial sources", archetype: "Realist", points: 3 },
+      { id: 4, text: "I conduct thorough fundamental analysis", archetype: "Architect", points: 3 },
     ],
   },
   {
     id: 11,
     question: "Your biggest financial fear is:",
     options: [
-      { text: "Losing what I've already saved", archetype: "Avoider", points: 3 },
-      { text: "Missing out on the next big opportunity", archetype: "Gambler", points: 3 },
-      { text: "Not having enough for retirement", archetype: "Realist", points: 3 },
-      { text: "Making a poorly calculated decision", archetype: "Architect", points: 3 },
+      { id: 1, text: "Losing what I've already saved", archetype: "Avoider", points: 3 },
+      { id: 2, text: "Missing out on the next big opportunity", archetype: "Gambler", points: 3 },
+      { id: 3, text: "Not having enough for retirement", archetype: "Realist", points: 3 },
+      { id: 4, text: "Making a poorly calculated decision", archetype: "Architect", points: 3 },
     ],
   },
   {
     id: 12,
     question: "When markets are volatile, you:",
     options: [
-      { text: "Move everything to safer investments", archetype: "Avoider", points: 3 },
-      { text: "See it as a chance to make big gains", archetype: "Gambler", points: 3 },
-      { text: "Stay the course with your long-term plan", archetype: "Realist", points: 3 },
-      { text: "Rebalance based on your predetermined strategy", archetype: "Architect", points: 3 },
+      { id: 1, text: "Move everything to safer investments", archetype: "Avoider", points: 3 },
+      { id: 2, text: "See it as a chance to make big gains", archetype: "Gambler", points: 3 },
+      { id: 3, text: "Stay the course with your long-term plan", archetype: "Realist", points: 3 },
+      { id: 4, text: "Rebalance based on your predetermined strategy", archetype: "Architect", points: 3 },
     ],
   },
   {
     id: 13,
     question: "Your approach to retirement planning is:",
     options: [
-      { text: "Save as much as possible in safe accounts", archetype: "Avoider", points: 3 },
-      { text: "I'll figure it out when I get closer", archetype: "Gambler", points: 3 },
-      { text: "Consistent contributions to a 401k and IRA", archetype: "Realist", points: 3 },
-      { text: "A detailed plan with multiple scenarios", archetype: "Architect", points: 3 },
+      { id: 1, text: "Save as much as possible in safe accounts", archetype: "Avoider", points: 3 },
+      { id: 2, text: "I'll figure it out when I get closer", archetype: "Gambler", points: 3 },
+      { id: 3, text: "Consistent contributions to a 401k and IRA", archetype: "Realist", points: 3 },
+      { id: 4, text: "A detailed plan with multiple scenarios", archetype: "Architect", points: 3 },
     ],
   },
   {
     id: 14,
     question: "How do you feel about debt?",
     options: [
-      { text: "I avoid it at all costs", archetype: "Avoider", points: 3 },
-      { text: "Good debt can accelerate wealth building", archetype: "Gambler", points: 3 },
-      { text: "Some debt is necessary, but should be managed", archetype: "Realist", points: 3 },
-      { text: "I optimize debt as part of my overall strategy", archetype: "Architect", points: 3 },
+      { id: 1, text: "I avoid it at all costs", archetype: "Avoider", points: 3 },
+      { id: 2, text: "Good debt can accelerate wealth building", archetype: "Gambler", points: 3 },
+      { id: 3, text: "Some debt is necessary, but should be managed", archetype: "Realist", points: 3 },
+      { id: 4, text: "I optimize debt as part of my overall strategy", archetype: "Architect", points: 3 },
     ],
   },
   {
     id: 15,
     question: "Your financial role model would be someone who:",
     options: [
-      { text: "Built wealth slowly and safely over time", archetype: "Avoider", points: 3 },
-      { text: "Made bold moves and struck it rich", archetype: "Gambler", points: 3 },
-      { text: "Achieved financial independence through discipline", archetype: "Realist", points: 3 },
-      { text: "Mastered complex financial strategies", archetype: "Architect", points: 3 },
+      { id: 1, text: "Built wealth slowly and safely over time", archetype: "Avoider", points: 3 },
+      { id: 2, text: "Made bold moves and struck it rich", archetype: "Gambler", points: 3 },
+      { id: 3, text: "Achieved financial independence through discipline", archetype: "Realist", points: 3 },
+      { id: 4, text: "Mastered complex financial strategies", archetype: "Architect", points: 3 },
     ],
   },
 ]
@@ -334,18 +363,45 @@ const archetypeResults = {
   },
 }
 
+type Archetype = keyof typeof archetypeResults
+
+const getArchetypeResult = (archetype: Archetype) => {
+  return archetypeResults[archetype] || archetypeResults["Avoider"]
+}
+
+// Helper function to get archetype color for badges
+const getArchetypeColor = (archetype: string): string => {
+  switch (archetype) {
+    case "Avoider":
+      return "bg-blue-100 text-blue-800 border-blue-200"
+    case "Gambler":
+      return "bg-red-100 text-red-800 border-red-200"
+    case "Realist":
+      return "bg-green-100 text-green-800 border-green-200"
+    case "Architect":
+      return "bg-purple-100 text-purple-800 border-purple-200"
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200"
+  }
+}
+
+// Component to display user's quiz answers
+interface QuizAnswersDisplayProps {
+  latestResult: QuizResult
+}
+
+
 // This component now uses the auth context properly
 function FilmWebsiteContent() {
-  const { user, profile, signOut, loading: authLoading } = useAuth()
+  const { user, profile, signOut, loading: authLoading, databaseStatus } = useAuth()
   const { latestResult, submitQuiz, updateQuizResult, loading: quizLoading } = useQuiz()
-
   const [showSignup, setShowSignup] = useState(false)
   const [showSignin, setShowSignin] = useState(false)
   const [showQuiz, setShowQuiz] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const [showFilm, setShowFilm] = useState(false)
   const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [quizAnswers, setQuizAnswers] = useState<Record<number, any>>({})
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, QuizAnswer>>({})
   const [expandedCreator, setExpandedCreator] = useState<number | null>(null)
   const [shuffledQuestions, setShuffledQuestions] = useState<QuizQuestion[]>([])
   const [showWelcome, setShowWelcome] = useState(true)
@@ -363,13 +419,12 @@ function FilmWebsiteContent() {
     setQuizAnswers({})
   }
 
-  const handleQuizAnswer = (answer: any) => {
+  const handleQuizAnswer = (answer: QuizAnswer) => {
     // Add question text to the answer for better history display
     const enhancedAnswer = {
       ...answer,
       question: shuffledQuestions[currentQuestion]?.question,
     }
-
     const newAnswers = { ...quizAnswers, [currentQuestion]: enhancedAnswer }
     setQuizAnswers(newAnswers)
 
@@ -380,7 +435,7 @@ function FilmWebsiteContent() {
     }
   }
 
-  const handleQuizComplete = async (answers: Record<number, any>) => {
+  const handleQuizComplete = async (answers: Record<number, QuizAnswer>) => {
     try {
       const sessionId = Math.random().toString(36).substr(2, 9)
       await submitQuiz(answers, sessionId)
@@ -490,6 +545,9 @@ function FilmWebsiteContent() {
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
+      {/* Database Setup Alert */}
+      {/* <DatabaseSetupAlert /> */}
+
       {/* User Menu */}
       {user && (
         <div className="fixed top-4 right-4 z-50">
@@ -500,7 +558,6 @@ function FilmWebsiteContent() {
                 {profile?.first_name} {profile?.last_name}
               </span>
             </div>
-
             {/* Add Quiz History Button */}
             <Button
               variant="ghost"
@@ -511,7 +568,6 @@ function FilmWebsiteContent() {
             >
               <BarChart3 className="w-4 h-4" />
             </Button>
-
             <Button variant="ghost" size="sm" onClick={signOut} className="text-gray-600 hover:text-red-600">
               <LogOut className="w-4 h-4" />
             </Button>
@@ -649,7 +705,9 @@ function FilmWebsiteContent() {
                       </div>
                       <div className="w-8 h-px bg-gray-300"></div>
                       <div
-                        className={`flex items-center space-x-2 ${latestResult.has_viewed_results ? "text-green-600" : "text-gray-400"}`}
+                        className={`flex items-center space-x-2 ${
+                          latestResult.has_viewed_results ? "text-green-600" : "text-gray-400"
+                        }`}
                       >
                         {latestResult.has_viewed_results ? (
                           <CheckCircle className="w-4 h-4" />
@@ -660,7 +718,9 @@ function FilmWebsiteContent() {
                       </div>
                       <div className="w-8 h-px bg-gray-300"></div>
                       <div
-                        className={`flex items-center space-x-2 ${latestResult.has_watched_film ? "text-green-600" : "text-gray-400"}`}
+                        className={`flex items-center space-x-2 ${
+                          latestResult.has_watched_film ? "text-green-600" : "text-gray-400"
+                        }`}
                       >
                         {latestResult.has_watched_film ? (
                           <CheckCircle className="w-4 h-4" />
@@ -699,7 +759,6 @@ function FilmWebsiteContent() {
                     <span className="text-[#B95D38]">THE WALL</span>
                   </h1>
                 </div>
-
                 <p className="text-2xl md:text-3xl text-gray-600 leading-relaxed max-w-lg mx-auto lg:mx-0">
                   When financial pressure mounts,
                   <br />
@@ -797,7 +856,9 @@ function FilmWebsiteContent() {
                       </div>
                       <div className="w-8 h-px bg-gray-300"></div>
                       <div
-                        className={`flex items-center space-x-2 ${latestResult.has_viewed_results ? "text-green-600" : "text-gray-400"}`}
+                        className={`flex items-center space-x-2 ${
+                          latestResult.has_viewed_results ? "text-green-600" : "text-gray-400"
+                        }`}
                       >
                         {latestResult.has_viewed_results ? (
                           <CheckCircle className="w-4 h-4" />
@@ -808,7 +869,9 @@ function FilmWebsiteContent() {
                       </div>
                       <div className="w-8 h-px bg-gray-300"></div>
                       <div
-                        className={`flex items-center space-x-2 ${latestResult.has_watched_film ? "text-green-600" : "text-gray-400"}`}
+                        className={`flex items-center space-x-2 ${
+                          latestResult.has_watched_film ? "text-green-600" : "text-gray-400"
+                        }`}
                       >
                         {latestResult.has_watched_film ? (
                           <CheckCircle className="w-4 h-4" />
@@ -881,7 +944,6 @@ function FilmWebsiteContent() {
               The passionate team behind this exploration of financial psychology and human nature.
             </p>
           </div>
-
           <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
             {creators.map((creator, index) => (
               <div key={index} className="text-center space-y-6 group">
@@ -893,17 +955,14 @@ function FilmWebsiteContent() {
                     className="object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                 </div>
-
                 <div className="space-y-3">
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900">{creator.name}</h3>
                     <p className="text-[#B95D38] font-medium text-lg">{creator.role}</p>
                   </div>
-
                   <p className="text-gray-600 leading-relaxed">
                     {expandedCreator === index ? creator.expandedBio : creator.bio}
                   </p>
-
                   <Button
                     variant="ghost"
                     size="sm"
@@ -941,7 +1000,6 @@ function FilmWebsiteContent() {
                     grantors, and investors.
                   </p>
                 </div>
-
                 <form className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <Input
@@ -1122,7 +1180,7 @@ function FilmWebsiteContent() {
                 {shuffledQuestions[currentQuestion]?.question}
               </h3>
               <div className="space-y-3">
-                {shuffledQuestions[currentQuestion]?.options.map((option, index) => (
+                {shuffledQuestions[currentQuestion]?.options.map((option: QuizAnswer, index: number) => (
                   <Button
                     key={index}
                     variant="outline"
@@ -1146,145 +1204,139 @@ function FilmWebsiteContent() {
             <DialogTitle className="text-3xl font-bold text-center text-gray-900">Your Financial Archetype</DialogTitle>
           </DialogHeader>
 
-          {latestResult && (
-            <div className="space-y-8 py-6">
-              <div className="text-center space-y-6">
-                <div className="w-24 h-24 bg-[#B95D38]/10 rounded-full flex items-center justify-center mx-auto">
-                  {(() => {
-                    const IconComponent = getArchetypeIcon(latestResult.archetype)
-                    return <IconComponent className="w-12 h-12 text-[#B95D38]" />
-                  })()}
-                </div>
-                <div>
-                  <h3 className="text-4xl font-bold text-[#B95D38] mb-3">The {latestResult.archetype}</h3>
-                  <p className="text-xl text-gray-700 leading-relaxed max-w-2xl mx-auto">
-                    {archetypeResults[latestResult.archetype]?.summary}
-                  </p>
-                </div>
-              </div>
+          {latestResult &&
+            (() => {
+              const currentArchetype = archetypeResults[latestResult.archetype as Archetype]
+              return (
+                <div className="space-y-8 py-6">
+                  <div className="text-center space-y-6">
+                    <div className="w-24 h-24 bg-[#B95D38]/10 rounded-full flex items-center justify-center mx-auto">
+                      {(() => {
+                        const IconComponent = getArchetypeIcon(currentArchetype.archetype)
+                        return <IconComponent className="w-12 h-12 text-[#B95D38]" />
+                      })()}
+                    </div>
+                    <div>
+                      <h3 className="text-4xl font-bold text-[#B95D38] mb-3">The {currentArchetype.archetype}</h3>
+                      <p className="text-xl text-gray-700 leading-relaxed max-w-2xl mx-auto">
+                        {currentArchetype.summary}
+                      </p>
+                    </div>
+                  </div>
 
-              {/* Strengths and Blind Spots */}
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card className="border-green-200 bg-green-50">
-                  <CardHeader>
-                    <CardTitle className="text-green-700 text-lg">Your Strengths</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3">
-                      {archetypeResults[latestResult.archetype]?.strengths.map((strength, index) => (
-                        <li key={index} className="text-gray-700 flex items-start">
-                          <span className="text-green-500 mr-2">•</span>
-                          {strength}
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
+                  {/* Quiz Answers Display - NEW SECTION */}
+                  <QuizAnswersDisplay latestResult={latestResult} />
 
-                <Card className="border-yellow-200 bg-yellow-50">
-                  <CardHeader>
-                    <CardTitle className="text-yellow-700 text-lg">Potential Blind Spots</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3">
-                      {archetypeResults[latestResult.archetype]?.blindSpots.map((blindSpot, index) => (
-                        <li key={index} className="text-gray-700 flex items-start">
-                          <span className="text-yellow-500 mr-2">•</span>
-                          {blindSpot}
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card className="border-blue-200 bg-blue-50">
-                <CardHeader>
-                  <CardTitle className="text-blue-700 text-lg">Reflection Question</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-700 text-lg leading-relaxed">
-                    {archetypeResults[latestResult.archetype]?.reflectionQuestion}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="border-[#B95D38]/20 bg-[#B95D38]/10">
-                <CardHeader>
-                  <CardTitle className="text-[#B95D38] text-lg">Your Film Connection</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-700 text-lg leading-relaxed">
-                    {archetypeResults[latestResult.archetype]?.filmCharacterTieIn}
-                  </p>
-                </CardContent>
-              </Card>
-
-              {/* Exploration Section */}
-              <Card className="border-[#669CCB]/20 bg-[#669CCB]/10">
-                <CardHeader>
-                  <CardTitle className="text-[#669CCB] text-xl flex items-center">
-                    <BookOpen className="w-5 h-5 mr-2" />
-                    Explore Your {latestResult.archetype} Mindset
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <p className="text-gray-700 leading-relaxed">
-                    {archetypeResults[latestResult.archetype]?.exploration.description}
-                  </p>
-
+                  {/* Strengths and Blind Spots */}
                   <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="font-semibold text-[#669CCB] mb-3">Actionable Tips</h4>
-                      <ul className="space-y-2">
-                        {archetypeResults[latestResult.archetype]?.exploration.tips.map((tip, index) => (
-                          <li key={index} className="text-sm text-gray-700 flex items-start">
-                            <span className="text-[#669CCB] mr-2">•</span>
-                            {tip}
-                          </li>
+                    <Card className="border-green-200 bg-green-50">
+                      <CardHeader>
+                        <CardTitle className="text-green-700 text-lg">Your Strengths</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {currentArchetype.strengths.map((strength, index) => (
+                          <div key={index} className="text-gray-700 flex items-start">
+                            <span className="text-green-500 mr-2">•</span>
+                            {strength}
+                          </div>
                         ))}
-                      </ul>
-                    </div>
+                      </CardContent>
+                    </Card>
 
-                    <div>
-                      <h4 className="font-semibold text-[#669CCB] mb-3">Recommended Resources</h4>
-                      <ul className="space-y-2">
-                        {archetypeResults[latestResult.archetype]?.exploration.resources.map((resource, index) => (
-                          <li key={index} className="text-sm text-gray-700 flex items-start">
-                            <span className="text-[#669CCB] mr-2">•</span>
-                            {resource}
-                          </li>
+                    <Card className="border-yellow-200 bg-yellow-50">
+                      <CardHeader>
+                        <CardTitle className="text-yellow-700 text-lg">Potential Blind Spots</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {currentArchetype.blindSpots.map((blindSpot, index) => (
+                          <div key={index} className="text-gray-700 flex items-start">
+                            <span className="text-yellow-500 mr-2">•</span>
+                            {blindSpot}
+                          </div>
                         ))}
-                      </ul>
-                    </div>
+                      </CardContent>
+                    </Card>
                   </div>
 
-                  <div>
-                    <h4 className="font-semibold text-[#669CCB] mb-3">Next Steps</h4>
-                    <ul className="space-y-2">
-                      {archetypeResults[latestResult.archetype]?.exploration.nextSteps.map((step, index) => (
-                        <li key={index} className="text-sm text-gray-700 flex items-start">
-                          <span className="text-[#669CCB] mr-2">•</span>
-                          {step}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
+                  <Card className="border-blue-200 bg-blue-50">
+                    <CardHeader>
+                      <CardTitle className="text-blue-700 text-lg">Reflection Question</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-700 text-lg leading-relaxed">{currentArchetype.reflectionQuestion}</p>
+                    </CardContent>
+                  </Card>
 
-              <div className="flex justify-center">
-                <Button
-                  onClick={handleResultsViewed}
-                  disabled={quizLoading}
-                  className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold py-4 px-12 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
-                >
-                  <Play className="w-5 h-5 mr-2" />
-                  Now Watch the Film
-                </Button>
-              </div>
-            </div>
-          )}
+                  <Card className="border-[#B95D38]/20 bg-[#B95D38]/10">
+                    <CardHeader>
+                      <CardTitle className="text-[#B95D38] text-lg">Your Film Connection</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-700 text-lg leading-relaxed">{currentArchetype.filmCharacterTieIn}</p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Exploration Section */}
+                  <Card className="border-[#669CCB]/20 bg-[#669CCB]/10">
+                    <CardHeader>
+                      <CardTitle className="text-[#669CCB] text-xl flex items-center">
+                        <BookOpen className="w-5 h-5 mr-2" />
+                        Explore Your {currentArchetype.archetype} Mindset
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <p className="text-gray-700 leading-relaxed">{currentArchetype.exploration.description}</p>
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="font-semibold text-[#669CCB] mb-3">Actionable Tips</h4>
+                          <ul className="space-y-2">
+                            {currentArchetype.exploration.tips.map((tip, index) => (
+                              <li key={index} className="text-sm text-gray-700 flex items-start">
+                                <span className="text-[#669CCB] mr-2">•</span>
+                                {tip}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-[#669CCB] mb-3">Recommended Resources</h4>
+                          <ul className="space-y-2">
+                            {currentArchetype.exploration.resources.map((resource, index) => (
+                              <li key={index} className="text-sm text-gray-700 flex items-start">
+                                <span className="text-[#669CCB] mr-2">•</span>
+                                {resource}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-[#669CCB] mb-3">Next Steps</h4>
+                        <ul className="space-y-2">
+                          {currentArchetype.exploration.nextSteps.map((step, index) => (
+                            <li key={index} className="text-sm text-gray-700 flex items-start">
+                              <span className="text-[#669CCB] mr-2">•</span>
+                              {step}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={handleResultsViewed}
+                      disabled={quizLoading}
+                      className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold py-4 px-12 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                    >
+                      <Play className="w-5 h-5 mr-2" />
+                      Now Watch the Film
+                    </Button>
+                  </div>
+                </div>
+              )
+            })()}
         </DialogContent>
       </Dialog>
 
@@ -1293,20 +1345,17 @@ function FilmWebsiteContent() {
         <DialogContent className="max-w-5xl bg-black border-0">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-center text-white">Back Against the Wall</DialogTitle>
-            {latestResult && (
-              <DialogDescription className="text-center text-gray-300">
-                Watching as <span className="text-[#B95D38]">The {latestResult.archetype}</span> - Notice how the
-                characters' financial decisions reflect your own mindset
-              </DialogDescription>
-            )}
+            <DialogDescription className="text-center text-gray-300">
+              Watching as <span className="text-[#B95D38]">The {latestResult?.archetype}</span> — Notice how the
+              characters' financial decisions reflect your own mindset
+            </DialogDescription>
           </DialogHeader>
-
           <VideoPlayer
             src="/videos/ambitious-film-compressed.mp4"
             title="Back Against the Wall"
             onEnded={handleFilmComplete}
             onError={handleVideoError}
-            archetype={latestResult?.archetype}
+            archetype={latestResult?.archetype || "Avoider"}
             className="aspect-video"
           />
         </DialogContent>
@@ -1320,7 +1369,9 @@ function FilmWebsiteContent() {
 export default function Page() {
   return (
     <AuthProvider>
-      <FilmWebsiteContent />
+      <ClientOnly>
+        <FilmWebsiteContent />
+      </ClientOnly>
     </AuthProvider>
   )
 }
