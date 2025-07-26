@@ -2,131 +2,67 @@
 
 import type React from "react"
 import { useState, useEffect, createContext, useContext } from "react"
-import type { User, Session } from "@supabase/supabase-js"
-import { supabase } from "@/lib/supabase"
-import { AuthService } from "@/lib/auth"
-import type { UserProfile } from "@/lib/supabase"
+import type { IUser } from "@/models/User"
+import { set } from "mongoose"
 
 interface AuthContextType {
-  user: User | null
-  profile: UserProfile | null
-  session: Session | null
+  user: IUser | null
+  profile: IUser | null
+  session: null
   loading: boolean
   isHydrated: boolean
-  databaseStatus: "checking" | "ready" | "error" | "setup-required"
+  // databaseStatus: "checking" | "ready" | "error" | "setup-required"
   signUp: (data: any) => Promise<void>
   signIn: (data: any) => Promise<void>
   signOut: () => Promise<void>
-  updateProfile: (updates: Partial<UserProfile>) => Promise<void>
+  updateProfile: (updates: Partial<IUser>) => Promise<void>
   refreshProfile: () => Promise<void>
-  checkDatabaseSetup: () => Promise<void>
+  // checkDatabaseSetup: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
+  const [user, setUser] = useState<IUser | null>(null)
+  const [profile, setProfile] = useState<IUser | null>(null)
+  const [session, setSession] = useState<null>(null)
   const [loading, setLoading] = useState(true)
   const [isHydrated, setIsHydrated] = useState(false)
-  const [databaseStatus, setDatabaseStatus] = useState<"checking" | "ready" | "error" | "setup-required">("checking")
+  // const [databaseStatus, setDatabaseStatus] = useState<"checking" | "ready" | "error" | "setup-required">("checking")
 
-  useEffect(() => {
-    setIsHydrated(true)
-  }, [])
-
-  useEffect(() => {
-    if (!isHydrated) return
-
-    const checkSetup = async () => {
-      try {
-        const setupStatus = await AuthService.checkDatabaseSetup()
-        setDatabaseStatus(setupStatus.isSetup ? "ready" : "setup-required")
-      } catch (error) {
-        console.error("Database setup check failed:", error)
-        setDatabaseStatus("error")
-      }
-    }
-
-    checkSetup()
-  }, [isHydrated])
-
-  useEffect(() => {
-    if (!isHydrated) return
-
-    let isMounted = true
-
-    const initializeAuth = async () => {
-      try {
-        const {
-          data: { session: initialSession },
-        } = await supabase.auth.getSession()
-
-        if (!isMounted) return
-
-        setSession(initialSession)
-        setUser(initialSession?.user ?? null)
-
-        if (initialSession?.user) {
-          await loadUserProfile(initialSession.user)
-        } else {
-          setLoading(false)
-        }
-      } catch (error) {
-        console.error("Error initializing auth:", error)
-        if (isMounted) setLoading(false)
-      }
-    }
-
-    initializeAuth()
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!isMounted) return
-
-      console.log("Auth state change:", event, !!session?.user)
-      setSession(session)
-      setUser(session?.user ?? null)
-
-      if (session?.user) {
-        await loadUserProfile(session.user)
-      } else {
-        setProfile(null)
-        setLoading(false)
-      }
-    })
-
-    return () => {
-      isMounted = false
-      subscription.unsubscribe()
-    }
-  }, [isHydrated, databaseStatus])
-
-  const loadUserProfile = async (userObj: User) => {
+ useEffect(() => {
+  const fetchCurrentUser = async () => {
     try {
-      if (databaseStatus !== "ready") return
-
-      const userProfile = await AuthService.getUserProfile(userObj.id)
-
-      if (userProfile) {
-        const completeProfile: UserProfile = {
-          id: userProfile.id,
-          email: userProfile.email ?? "",
-          first_name: userProfile.first_name ?? "",
-          last_name: userProfile.last_name ?? "",
-          zip_code: userProfile.zipcode ?? "00000",
-          occupation_status: userProfile.occupation_status ?? "working-professional",
-          created_at: userProfile.created_at ?? new Date().toISOString(),
-          updated_at: userProfile.updated_at ?? new Date().toISOString(),
-        }
-
-        setProfile(completeProfile)
+      const res = await fetch("/api/auth/me") // or your session endpoint
+      if (res.ok) {
+        const user = await res.json()
+        setUser(user)
+        setProfile(user)
       }
+    } catch (err) {
+      console.error("Failed to fetch current user:", err)
+    } finally {
+      setIsHydrated(true)
+      setLoading(false)
+    }
+  }
 
-    } catch (error) {
-      console.error("Error loading profile from Supabase:", error)
+  fetchCurrentUser()
+}, [])
+
+
+  
+
+  const loadUserProfile = async (user: IUser) => {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/users/${user.userId}`)
+      if (!res.ok) throw new Error("Failed to load user profile")
+
+      const profileData = await res.json()
+      setProfile(profileData)
+    } catch (err) {
+      console.error("Error loading user profile:", err)
     } finally {
       setLoading(false)
     }
@@ -135,53 +71,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (data: any) => {
     setLoading(true)
     try {
-      console.log("Starting signup process with data:", data)
-
-      const { data: authData, error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       })
 
-      if (error) throw error
-      if (!authData.user) throw new Error("User not created")
+      const user = await res.json()
+      if (!res.ok) throw new Error(user.error || "Signup failed")
 
-      await supabase.from("user_profiles").insert([
-        {
-          id: authData.user.id,
-          email: data.email,
-          first_name: data.firstName,
-          last_name: data.lastName,
-          zipcode: data.zipcode,
-          occupation_status: data.occupationStatus,
-        },
-      ])
-
-      await loadUserProfile(authData.user)
-    } catch (error) {
-      console.error("Signup failed:", error)
+      setUser(user)
+      setProfile(user)
+    } catch (err) {
+      console.error("Signup error:", err)
     } finally {
       setLoading(false)
     }
   }
+
 
   const signIn = async (data: any) => {
     setLoading(true)
     try {
-      await AuthService.signIn(data.email, data.password)
-    } catch (error) {
-      console.error("Sign-in failed:", error)
+      const res = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+
+      const user = await res.json()
+      if (!res.ok) throw new Error(user.error || "Signup failed")
+
+      setUser(user)
+      setProfile(user)
+    } catch (err) {
+      console.error("Signup error:", err)
     } finally {
       setLoading(false)
     }
   }
 
+
   const signOut = async () => {
     setLoading(true)
     try {
-      await AuthService.signOut()
+      const res = await fetch("/api/auth/signout", {
+        method: "POST",
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.message || "Sign out failed")
+      }
+
       setUser(null)
-      setSession(null)
       setProfile(null)
+      setSession(null)
     } catch (error) {
       console.error("Sign-out failed:", error)
     } finally {
@@ -189,35 +134,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!user) throw new Error("No user logged in")
-
-    try {
-      if (databaseStatus === "ready") {
-        const updatedProfile = await AuthService.updateUserProfile(user.id, updates)
-        setProfile(updatedProfile)
-      }
-    } catch (error) {
-      console.error("Failed to update profile:", error)
-      throw error
-    }
-  }
 
   const refreshProfile = async () => {
     if (!user) return
     await loadUserProfile(user)
   }
 
-  const checkDatabaseSetup = async () => {
-    setDatabaseStatus("checking")
+
+  const updateProfile = async (updates: Partial<IUser>) => {
+    if (!user) return
+    setLoading(true)
     try {
-      const setupStatus = await AuthService.checkDatabaseSetup()
-      setDatabaseStatus(setupStatus.isSetup ? "ready" : "setup-required")
+      const res = await fetch(`/api/users/${user.userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.message || "Update failed")
+      }
+
+      const updatedUser = await res.json()
+      setUser(updatedUser)
+      setProfile(updatedUser)
     } catch (error) {
-      console.error("Database setup check failed:", error)
-      setDatabaseStatus("error")
+      console.error("Update profile failed:", error)
+    } finally {
+      setLoading(false)
     }
   }
+
 
   const value: AuthContextType = {
     user,
@@ -225,21 +173,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     loading,
     isHydrated,
-    databaseStatus,
     signUp,
     signIn,
     signOut,
     updateProfile,
     refreshProfile,
-    checkDatabaseSetup,
+    // checkDatabaseSetup,
+  }
+
+  if (!isHydrated || loading) {
+    return <div className="w-full h-screen flex items-center justify-center text-xl">Loading...</div>
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
-
 export function useAuth() {
   const context = useContext(AuthContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider")
   }
   return context

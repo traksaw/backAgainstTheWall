@@ -20,7 +20,8 @@ import {
   CheckCircle,
   X,
 } from "lucide-react"
-import type { QuizResult } from "@/lib/supabase"
+import type { IQuizResult } from "@/models/QuizResult"
+
 
 // Import quiz questions for reference
 const quizQuestions = [
@@ -55,7 +56,11 @@ interface QuizHistorySectionProps {
 export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionProps) {
   const { user } = useAuth()
   const { quizResults, loading } = useQuiz()
-  const [selectedResult, setSelectedResult] = useState<QuizResult | null>(null)
+  const [selectedResult, setSelectedResult] = useState<IQuizResult | null>(null)
+  const viewResultDetails = (result: IQuizResult) => {
+    setSelectedResult(result)
+    setShowDetailModal(true)
+  }
   const [showDetailModal, setShowDetailModal] = useState(false)
 
   const getArchetypeIcon = (archetype: string) => {
@@ -98,11 +103,6 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
     })
   }
 
-  const viewResultDetails = (result: QuizResult) => {
-    setSelectedResult(result)
-    setShowDetailModal(true)
-  }
-
   if (loading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -143,7 +143,7 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                   const IconComponent = getArchetypeIcon(result.archetype)
                   return (
                     <Card
-                      key={result.id}
+                      key={result._id}
                       className="border-gray-200 hover:border-[#B95D38]/30 transition-all duration-300 hover:shadow-md"
                     >
                       <CardContent className="p-6">
@@ -168,7 +168,7 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                               <div className="flex items-center space-x-4 text-sm text-gray-600">
                                 <div className="flex items-center">
                                   <Calendar className="w-4 h-4 mr-1" />
-                                  {formatDate(result.completed_at?.toString() || "")}
+                                  {formatDate(result.completedAt?.toString() || "")}
                                 </div>
                                 <div className="flex items-center">
                                   <BarChart3 className="w-4 h-4 mr-1" />
@@ -180,13 +180,13 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
 
                           <div className="flex items-center space-x-3">
                             <div className="flex items-center space-x-2 text-sm text-gray-500">
-                              {result.has_viewed_results && (
+                              {result.hasViewedResults && (
                                 <div className="flex items-center">
                                   <CheckCircle className="w-4 h-4 text-green-500 mr-1" />
                                   <span>Results Viewed</span>
                                 </div>
                               )}
-                              {result.has_watched_film && (
+                              {result.hasWatchedFilm && (
                                 <div className="flex items-center">
                                   <CheckCircle className="w-4 h-4 text-green-500 mr-1" />
                                   <span>Film Watched</span>
@@ -221,14 +221,7 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="text-2xl font-bold text-gray-900">Quiz Results Details</DialogTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowDetailModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-5 h-5" />
-              </Button>
+              
             </div>
           </DialogHeader>
 
@@ -244,7 +237,7 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold text-[#B95D38] mb-2">The {selectedResult.archetype}</h3>
-                  <p className="text-gray-600">Completed on {formatDate(selectedResult.completed_at?.toString() || "")}</p>
+                  <p className="text-gray-600">Completed on {formatDate(selectedResult.completedAt?.toString() || "")}</p>
                 </div>
               </div>
 
@@ -331,7 +324,7 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                   <CardContent className="p-4 text-center">
                     <Eye className="w-8 h-8 text-purple-500 mx-auto mb-2" />
                     <div className="text-lg font-semibold text-purple-700">
-                      {selectedResult.has_watched_film ? "Yes" : "No"}
+                      {selectedResult.hasWatchedFilm ? "Yes" : "No"}
                     </div>
                     <div className="text-sm text-purple-600">Film Watched</div>
                   </CardContent>

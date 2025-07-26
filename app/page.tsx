@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
+// import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useAuth, AuthProvider } from "@/hooks/useAuth"
 import { useQuiz } from "@/hooks/useQuiz"
@@ -45,20 +45,18 @@ import {
 import { QuizAnswersDisplay } from "@/components/QuizAnswersDisplay"
 import type { QuizAnswer } from "@/lib/quiz"
 
-
-
 interface QuizQuestion {
   id: number
   question: string
   options: QuizAnswer[]
 }
 
-interface QuizResponse {
-  question: string
-  text: string
-  archetype: string
-  points: number
-}
+// interface QuizResponse {
+//   question: string
+//   text: string
+//   archetype: string
+//   points: number
+// }
 
 export interface QuizResult {
   id: string
@@ -78,7 +76,6 @@ export interface QuizResult {
   created_at?: string
   updated_at?: string
 }
-
 
 // Quiz Types and Data
 const quizQuestions: QuizQuestion[] = [
@@ -393,7 +390,7 @@ interface QuizAnswersDisplayProps {
 
 // This component now uses the auth context properly
 function FilmWebsiteContent() {
-  const { user, profile, signOut, loading: authLoading, databaseStatus } = useAuth()
+  const { user, profile, signOut, loading: authLoading, isHydrated, loading } = useAuth()
   const { latestResult, submitQuiz, updateQuizResult, loading: quizLoading } = useQuiz()
   const [showSignup, setShowSignup] = useState(false)
   const [showSignin, setShowSignin] = useState(false)
@@ -406,6 +403,13 @@ function FilmWebsiteContent() {
   const [shuffledQuestions, setShuffledQuestions] = useState<QuizQuestion[]>([])
   const [showWelcome, setShowWelcome] = useState(true)
   const [showQuizHistory, setShowQuizHistory] = useState(false)
+
+  console.log("Auth State:", {
+    user,
+    profile,
+    loading,
+    isHydrated,
+  })
 
   // Shuffle questions on component mount
   useEffect(() => {
@@ -448,9 +452,9 @@ function FilmWebsiteContent() {
   }
 
   const handleResultsViewed = async () => {
-    if (latestResult && !latestResult.has_viewed_results) {
+    if (latestResult && !latestResult.hasViewedResults) {
       try {
-        await updateQuizResult(latestResult.id, { has_viewed_results: true })
+        await updateQuizResult(latestResult._id, { hasViewedResults: true })
       } catch (error) {
         console.error("Error updating results viewed:", error)
       }
@@ -460,9 +464,9 @@ function FilmWebsiteContent() {
   }
 
   const handleFilmComplete = async () => {
-    if (latestResult && !latestResult.has_watched_film) {
+    if (latestResult && !latestResult.hasWatchedFilm) {
       try {
-        await updateQuizResult(latestResult.id, { has_watched_film: true })
+        await updateQuizResult(latestResult._id, { hasWatchedFilm: true })
       } catch (error) {
         console.error("Error updating film watched:", error)
       }
@@ -493,8 +497,8 @@ function FilmWebsiteContent() {
   const getNextStep = () => {
     if (!user) return "Sign up to begin your journey"
     if (!latestResult) return "Take the quiz to discover your financial archetype"
-    if (!latestResult.has_viewed_results) return "Explore your results"
-    if (!latestResult.has_watched_film) return "Watch the film through your archetype lens"
+    if (!latestResult.hasViewedResults) return "Explore your results"
+    if (!latestResult.hasWatchedFilm) return "Watch the film through your archetype lens"
     return "Journey complete! Explore your results anytime"
   }
 
@@ -653,7 +657,7 @@ function FilmWebsiteContent() {
                           <Brain className="w-5 h-5 mr-2" />
                           Take Financial Quiz
                         </Button>
-                      ) : !latestResult.has_viewed_results ? (
+                      ) : !latestResult.hasViewedResults ? (
                         <Button
                           size="lg"
                           onClick={() => setShowResults(true)}
@@ -662,7 +666,7 @@ function FilmWebsiteContent() {
                           <Award className="w-5 h-5 mr-2" />
                           View Your Results
                         </Button>
-                      ) : !latestResult.has_watched_film ? (
+                      ) : !latestResult.hasWatchedFilm ? (
                         <Button
                           size="lg"
                           onClick={() => setShowFilm(true)}
@@ -705,11 +709,10 @@ function FilmWebsiteContent() {
                       </div>
                       <div className="w-8 h-px bg-gray-300"></div>
                       <div
-                        className={`flex items-center space-x-2 ${
-                          latestResult.has_viewed_results ? "text-green-600" : "text-gray-400"
-                        }`}
+                        className={`flex items-center space-x-2 ${latestResult.hasViewedResults ? "text-green-600" : "text-gray-400"
+                          }`}
                       >
-                        {latestResult.has_viewed_results ? (
+                        {latestResult.hasViewedResults ? (
                           <CheckCircle className="w-4 h-4" />
                         ) : (
                           <Award className="w-4 h-4" />
@@ -718,11 +721,10 @@ function FilmWebsiteContent() {
                       </div>
                       <div className="w-8 h-px bg-gray-300"></div>
                       <div
-                        className={`flex items-center space-x-2 ${
-                          latestResult.has_watched_film ? "text-green-600" : "text-gray-400"
-                        }`}
+                        className={`flex items-center space-x-2 ${latestResult.hasWatchedFilm ? "text-green-600" : "text-gray-400"
+                          }`}
                       >
-                        {latestResult.has_watched_film ? (
+                        {latestResult.hasWatchedFilm ? (
                           <CheckCircle className="w-4 h-4" />
                         ) : (
                           <Play className="w-4 h-4" />
@@ -804,7 +806,7 @@ function FilmWebsiteContent() {
                           <Brain className="w-5 h-5 mr-2" />
                           Take Financial Quiz
                         </Button>
-                      ) : !latestResult.has_viewed_results ? (
+                      ) : !latestResult.hasViewedResults ? (
                         <Button
                           size="lg"
                           onClick={() => setShowResults(true)}
@@ -813,7 +815,7 @@ function FilmWebsiteContent() {
                           <Award className="w-5 h-5 mr-2" />
                           View Your Results
                         </Button>
-                      ) : !latestResult.has_watched_film ? (
+                      ) : !latestResult.hasWatchedFilm ? (
                         <Button
                           size="lg"
                           onClick={() => setShowFilm(true)}
@@ -856,11 +858,10 @@ function FilmWebsiteContent() {
                       </div>
                       <div className="w-8 h-px bg-gray-300"></div>
                       <div
-                        className={`flex items-center space-x-2 ${
-                          latestResult.has_viewed_results ? "text-green-600" : "text-gray-400"
-                        }`}
+                        className={`flex items-center space-x-2 ${latestResult.hasViewedResults ? "text-green-600" : "text-gray-400"
+                          }`}
                       >
-                        {latestResult.has_viewed_results ? (
+                        {latestResult.hasViewedResults ? (
                           <CheckCircle className="w-4 h-4" />
                         ) : (
                           <Award className="w-4 h-4" />
@@ -869,11 +870,10 @@ function FilmWebsiteContent() {
                       </div>
                       <div className="w-8 h-px bg-gray-300"></div>
                       <div
-                        className={`flex items-center space-x-2 ${
-                          latestResult.has_watched_film ? "text-green-600" : "text-gray-400"
-                        }`}
+                        className={`flex items-center space-x-2 ${latestResult.hasWatchedFilm ? "text-green-600" : "text-gray-400"
+                          }`}
                       >
-                        {latestResult.has_watched_film ? (
+                        {latestResult.hasWatchedFilm ? (
                           <CheckCircle className="w-4 h-4" />
                         ) : (
                           <Play className="w-4 h-4" />
@@ -1139,24 +1139,38 @@ function FilmWebsiteContent() {
         <DialogContent className="max-w-2xl bg-white text-gray-900 border-0 shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-3xl font-bold text-center text-gray-900">Financial Mindset Quiz</DialogTitle>
-            <div className="space-y-4 pt-4">
-              <Progress
-                value={showWelcome ? 0 : ((currentQuestion + 1) / shuffledQuestions.length) * 100}
-                className="w-full h-2"
-              />
-              <p className="text-sm text-gray-600 text-center">
-                {showWelcome ? "Ready to begin?" : `Question ${currentQuestion + 1} of ${shuffledQuestions.length}`}
-              </p>
-            </div>
+            {showWelcome && profile && (
+              <div className="space-y-6 py-6">
+                <div className="text-center space-y-4">
+                  <p className="text-xl text-gray-700 leading-relaxed">
+                    Welcome, {profile?.first_name || "Guest"}! Let's discover your financial personality.
+                  </p>
+                  <p className="text-gray-600">
+                    Your responses will reveal your financial archetype and help you connect more deeply with the film's
+                    characters.
+                  </p>
+                </div>
+                <div className="flex justify-center">
+                  <Button
+                    onClick={startQuiz}
+                    className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-8 py-3 rounded-lg"
+                  >
+                    Start Quiz
+                  </Button>
+                </div>
+              </div>
+            )}
+
           </DialogHeader>
 
           {/* Welcome Screen */}
-          {showWelcome && (
+          {/* {showWelcome && profile && (
             <div className="space-y-6 py-6">
               <div className="text-center space-y-4">
                 <p className="text-xl text-gray-700 leading-relaxed">
-                  Welcome, {profile?.first_name}! Let's discover your financial personality.
+                  Welcome, {profile?.first_name || "Guest"}! Let's discover your financial personality.
                 </p>
+
                 <p className="text-gray-600">
                   Your responses will reveal your financial archetype and help you connect more deeply with the film's
                   characters.
@@ -1171,7 +1185,8 @@ function FilmWebsiteContent() {
                 </Button>
               </div>
             </div>
-          )}
+          )} */}
+
 
           {/* Quiz Questions */}
           {!showWelcome && shuffledQuestions.length > 0 && currentQuestion < shuffledQuestions.length && (

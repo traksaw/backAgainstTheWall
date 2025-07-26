@@ -24,7 +24,7 @@ interface FormErrors {
   email?: string
   password?: string
   passwordConfirmation?: string
-  zipcode?: string
+  zip_code?: string
   occupationStatus?: string
   terms?: string
 }
@@ -40,7 +40,7 @@ export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }:
     passwordConfirmation: "",
     firstName: "",
     lastName: "",
-    zipcode: "",
+    zip_code: "",
     occupationStatus: "",
     acceptTerms: false,
   })
@@ -98,10 +98,10 @@ export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }:
       newErrors.passwordConfirmation = "Passwords do not match"
     }
 
-    if (!formData.zipcode.trim()) {
-      newErrors.zipcode = "Zip code is required"
-    } else if (!/^\d{5}(-\d{4})?$/.test(formData.zipcode.trim())) {
-      newErrors.zipcode = "Please enter a valid zip code (e.g., 12345 or 12345-6789)"
+    if (!formData.zip_code.trim()) {
+      newErrors.zip_code = "Zip code is required"
+    } else if (!/^\d{5}(-\d{4})?$/.test(formData.zip_code.trim())) {
+      newErrors.zip_code = "Please enter a valid zip code (e.g., 12345 or 12345-6789)"
     }
 
     if (!formData.occupationStatus) {
@@ -151,7 +151,7 @@ export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }:
         email: formData.email,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        zipcode: formData.zipcode,
+        zip_code: formData.zip_code,
         occupationStatus: formData.occupationStatus,
       })
 
@@ -170,7 +170,7 @@ export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }:
         passwordConfirmation: "",
         firstName: "",
         lastName: "",
-        zipcode: "",
+        zip_code: "",
         occupationStatus: "",
         acceptTerms: false,
       })
@@ -242,7 +242,7 @@ export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }:
         passwordConfirmation: "",
         firstName: "",
         lastName: "",
-        zipcode: "",
+        zip_code: "",
         occupationStatus: "",
         acceptTerms: false,
       })
@@ -446,25 +446,25 @@ export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }:
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="zipcode" className="text-sm font-medium text-gray-700 flex items-center">
+                <Label htmlFor="zip_code" className="text-sm font-medium text-gray-700 flex items-center">
                   <MapPin className="w-4 h-4 mr-1" />
                   Zip Code
                 </Label>
                 <Input
-                  id="zipcode"
+                  id="zip_code"
                   type="text"
                   placeholder="12345"
-                  value={formData.zipcode}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, zipcode: e.target.value }))}
+                  value={formData.zip_code}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, zip_code: e.target.value }))}
                   maxLength={10}
                   className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] ${
-                    errors.zipcode ? "border-red-500" : ""
+                    errors.zip_code ? "border-red-500" : ""
                   }`}
                 />
-                {errors.zipcode && (
+                {errors.zip_code && (
                   <p className="text-red-500 text-xs flex items-center">
                     <AlertCircle className="w-3 h-3 mr-1" />
-                    {errors.zipcode}
+                    {errors.zip_code}
                   </p>
                 )}
               </div>

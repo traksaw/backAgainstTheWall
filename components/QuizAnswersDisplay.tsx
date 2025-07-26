@@ -22,11 +22,11 @@ interface QuizResponse {
 }
 
 interface QuizResult {
-  id: string
+  _id: string
   archetype: string
   score: number
-  has_viewed_results: boolean
-  has_watched_film: boolean
+  hasViewedResults: boolean
+  hasWatchedFilm: boolean
   answers: {
     responses: Record<number, QuizAnswer>
     scores: Record<string, number>
