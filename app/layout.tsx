@@ -7,10 +7,9 @@ import { AuthProvider } from "@/hooks/useAuth" // ✅ import the provider
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Back Against the Wall - Financial Psychology Film",
+  title: "Back Against the Wall",
   description:
     "When financial pressure mounts, who do you become? Discover your financial archetype and watch this powerful short film.",
-  generator: "v0.dev",
 }
 
 export default function RootLayout({
