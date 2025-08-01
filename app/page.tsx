@@ -44,19 +44,13 @@ import {
 } from "lucide-react"
 import { QuizAnswersDisplay } from "@/components/QuizAnswersDisplay"
 import type { QuizAnswer } from "@/lib/quiz"
+import ContactForm from "@/components/ContactForm"
 
 interface QuizQuestion {
   id: number
   question: string
   options: QuizAnswer[]
 }
-
-// interface QuizResponse {
-//   question: string
-//   text: string
-//   archetype: string
-//   points: number
-// }
 
 export interface QuizResult {
   id: string
@@ -362,31 +356,6 @@ const archetypeResults = {
 
 type Archetype = keyof typeof archetypeResults
 
-const getArchetypeResult = (archetype: Archetype) => {
-  return archetypeResults[archetype] || archetypeResults["Avoider"]
-}
-
-// Helper function to get archetype color for badges
-const getArchetypeColor = (archetype: string): string => {
-  switch (archetype) {
-    case "Avoider":
-      return "bg-blue-100 text-blue-800 border-blue-200"
-    case "Gambler":
-      return "bg-red-100 text-red-800 border-red-200"
-    case "Realist":
-      return "bg-green-100 text-green-800 border-green-200"
-    case "Architect":
-      return "bg-purple-100 text-purple-800 border-purple-200"
-    default:
-      return "bg-gray-100 text-gray-800 border-gray-200"
-  }
-}
-
-// Component to display user's quiz answers
-interface QuizAnswersDisplayProps {
-  latestResult: QuizResult
-}
-
 
 // This component now uses the auth context properly
 function FilmWebsiteContent() {
@@ -589,7 +558,7 @@ function FilmWebsiteContent() {
               <div className="relative group w-full max-w-sm">
                 <div className="absolute -inset-4 bg-gradient-to-r from-[#B95D38]/20 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <Image
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/A1147D70-FC71-4DEE-9749-E32CD0A8535D_4_5005_c-9qAxFCjLKUt4bBj5yUosrtWW0UpqVM.jpeg"
+                  src="public/mobile-poster.png"
                   alt="Back Against the Wall Movie Poster"
                   width={400}
                   height={600}
@@ -992,40 +961,7 @@ function FilmWebsiteContent() {
           <div className="max-w-6xl mx-auto">
             <div className="grid lg:grid-cols-2 gap-16">
               {/* Contact Form */}
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-4xl font-bold text-gray-900 mb-4">Get in Touch</h2>
-                  <p className="text-xl text-gray-600 leading-relaxed">
-                    Interested in screenings, partnerships, or panel discussions? We'd love to connect with sponsors,
-                    grantors, and investors.
-                  </p>
-                </div>
-                <form className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <Input
-                      placeholder="Name"
-                      className="border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3"
-                    />
-                    <Input
-                      type="email"
-                      placeholder="Email"
-                      className="border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3"
-                    />
-                  </div>
-                  <Input
-                    placeholder="Organization (optional)"
-                    className="border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3"
-                  />
-                  <Textarea
-                    placeholder="Message"
-                    rows={5}
-                    className="border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg resize-none"
-                  />
-                  <Button className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold w-full py-3 rounded-lg">
-                    Send Message
-                  </Button>
-                </form>
-              </div>
+              <ContactForm />
 
               {/* Social & Events */}
               <div className="space-y-12">
