@@ -45,6 +45,7 @@ import {
 import { QuizAnswersDisplay } from "@/components/QuizAnswersDisplay"
 import type { QuizAnswer } from "@/lib/quiz"
 import ContactForm from "@/components/ContactForm"
+import Hero from "@/components/Hero"
 
 interface QuizQuestion {
   id: number
@@ -518,8 +519,7 @@ function FilmWebsiteContent() {
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      {/* Database Setup Alert */}
-      {/* <DatabaseSetupAlert /> */}
+
 
       {/* User Menu */}
       {user && (
@@ -548,336 +548,22 @@ function FilmWebsiteContent() {
         </div>
       )}
 
-      {/* Hero Section - Mobile-First Layout */}
-      <section className="min-h-screen flex items-center justify-center py-20">
-        <div className="container mx-auto px-6 max-w-6xl">
-          {/* Mobile Layout: Poster First */}
-          <div className="flex flex-col lg:hidden space-y-12">
-            {/* Film Poster - Mobile Priority */}
-            <div className="flex justify-center">
-              <div className="relative group w-full max-w-sm">
-                <div className="absolute -inset-4 bg-gradient-to-r from-[#B95D38]/20 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <Image
-                  src="public/mobile-poster.png"
-                  alt="Back Against the Wall Movie Poster"
-                  width={400}
-                  height={600}
-                  className="w-full h-auto rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500"
-                  priority
-                />
-              </div>
-            </div>
+      <Hero
+        user={user}
+        profile={profile}
+        latestResult={latestResult}
+        onSignUp={() => setShowSignup(true)}
+        onSignIn={() => setShowSignin(true)}
+        onStartQuiz={() => {
+          setShowQuiz(true)
+          setShowWelcome(true)
+          setCurrentQuestion(0)
+          setQuizAnswers({})
+        }}
+        onShowResults={() => setShowResults(true)}
+        onWatchFilm={() => setShowFilm(true)}
+      />
 
-            {/* Typography Content - Mobile */}
-            <div className="space-y-8 text-center">
-              <div className="space-y-6">
-                <Badge variant="outline" className="border-[#B95D38] text-[#B95D38] px-4 py-2 text-sm font-medium">
-                  An Ambitious Short Film
-                </Badge>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight tracking-tight">
-                  BACK
-                  <br />
-                  AGAINST
-                  <br />
-                  <span className="text-[#B95D38]">THE WALL</span>
-                </h1>
-                <p className="text-lg sm:text-xl text-gray-600 leading-relaxed">
-                  When financial pressure mounts,
-                  <br />
-                  <em className="text-gray-900">who do you become?</em>
-                </p>
-              </div>
-
-              {/* Core CTA - Mobile */}
-              <div className="space-y-6">
-                <div className="flex flex-col gap-4">
-                  {!user ? (
-                    <div className="flex flex-col gap-3">
-                      <Button
-                        size="lg"
-                        onClick={() => setShowSignup(true)}
-                        className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-8 py-4 text-lg rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg w-full"
-                      >
-                        Sign Up to Begin
-                        <ArrowRight className="w-5 h-5 ml-2" />
-                      </Button>
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        onClick={() => setShowSignin(true)}
-                        className="border-2 border-[#B95D38] text-[#B95D38] hover:bg-[#B95D38]/10 px-8 py-4 text-lg rounded-full transition-all duration-300 w-full"
-                      >
-                        Sign In
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-4">
-                      {!latestResult ? (
-                        <Button
-                          size="lg"
-                          onClick={() => {
-                            setShowQuiz(true)
-                            setShowWelcome(true)
-                            setCurrentQuestion(0)
-                            setQuizAnswers({})
-                          }}
-                          className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-8 py-4 text-lg rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg w-full"
-                        >
-                          <Brain className="w-5 h-5 mr-2" />
-                          Take Financial Quiz
-                        </Button>
-                      ) : !latestResult.hasViewedResults ? (
-                        <Button
-                          size="lg"
-                          onClick={() => setShowResults(true)}
-                          className="bg-[#669CCB] hover:bg-[#669CCB]/90 text-white font-semibold px-8 py-4 text-lg rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg w-full"
-                        >
-                          <Award className="w-5 h-5 mr-2" />
-                          View Your Results
-                        </Button>
-                      ) : !latestResult.hasWatchedFilm ? (
-                        <Button
-                          size="lg"
-                          onClick={() => setShowFilm(true)}
-                          className="bg-gray-900 hover:bg-gray-800 text-white font-semibold px-8 py-4 text-lg rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg w-full"
-                        >
-                          <Play className="w-5 h-5 mr-2" />
-                          Watch Film
-                        </Button>
-                      ) : (
-                        <div className="flex flex-col gap-3">
-                          <Button
-                            size="lg"
-                            className="bg-green-500 hover:bg-green-600 text-white font-semibold px-8 py-4 text-lg rounded-full transition-all duration-300 shadow-lg w-full"
-                            disabled
-                          >
-                            <CheckCircle className="w-5 h-5 mr-2" />
-                            Journey Complete
-                          </Button>
-                          <Button
-                            size="lg"
-                            onClick={() => setShowResults(true)}
-                            variant="outline"
-                            className="border-2 border-[#B95D38] text-[#B95D38] hover:bg-[#B95D38]/10 px-8 py-4 text-lg rounded-full transition-all duration-300 w-full"
-                          >
-                            Review Results
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Progress Indicator - Mobile */}
-                {user && latestResult && (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-center space-x-4 text-sm">
-                      <div className="flex items-center space-x-2 text-green-600">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Quiz</span>
-                      </div>
-                      <div className="w-8 h-px bg-gray-300"></div>
-                      <div
-                        className={`flex items-center space-x-2 ${latestResult.hasViewedResults ? "text-green-600" : "text-gray-400"
-                          }`}
-                      >
-                        {latestResult.hasViewedResults ? (
-                          <CheckCircle className="w-4 h-4" />
-                        ) : (
-                          <Award className="w-4 h-4" />
-                        )}
-                        <span>Results</span>
-                      </div>
-                      <div className="w-8 h-px bg-gray-300"></div>
-                      <div
-                        className={`flex items-center space-x-2 ${latestResult.hasWatchedFilm ? "text-green-600" : "text-gray-400"
-                          }`}
-                      >
-                        {latestResult.hasWatchedFilm ? (
-                          <CheckCircle className="w-4 h-4" />
-                        ) : (
-                          <Play className="w-4 h-4" />
-                        )}
-                        <span>Film</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <p className="text-sm text-gray-500">
-                  {!user
-                    ? "Discover your financial mindset, then watch how it shapes destiny in this powerful short film."
-                    : `Welcome back, ${profile?.first_name}! ${getNextStep()}`}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Desktop Layout: Side by Side */}
-          <div className="hidden lg:grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left: Typography */}
-            <div className="space-y-12 text-center lg:text-left">
-              <div className="space-y-8">
-                <div className="space-y-4">
-                  <Badge variant="outline" className="border-[#B95D38] text-[#B95D38] px-4 py-2 text-sm font-medium">
-                    An Ambitious Short Film
-                  </Badge>
-                  <h1 className="text-6xl md:text-8xl font-bold leading-tight tracking-tight">
-                    BACK
-                    <br />
-                    AGAINST
-                    <br />
-                    <span className="text-[#B95D38]">THE WALL</span>
-                  </h1>
-                </div>
-                <p className="text-2xl md:text-3xl text-gray-600 leading-relaxed max-w-lg mx-auto lg:mx-0">
-                  When financial pressure mounts,
-                  <br />
-                  <em className="text-gray-900">who do you become?</em>
-                </p>
-              </div>
-
-              {/* Core CTA - Desktop */}
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  {!user ? (
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <Button
-                        size="lg"
-                        onClick={() => setShowSignup(true)}
-                        className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-8 py-4 text-lg rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
-                      >
-                        Sign Up to Begin
-                        <ArrowRight className="w-5 h-5 ml-2" />
-                      </Button>
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        onClick={() => setShowSignin(true)}
-                        className="border-2 border-[#B95D38] text-[#B95D38] hover:bg-[#B95D38]/10 px-8 py-4 text-lg rounded-full transition-all duration-300"
-                      >
-                        Sign In
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      {!latestResult ? (
-                        <Button
-                          size="lg"
-                          onClick={() => {
-                            setShowQuiz(true)
-                            setShowWelcome(true)
-                            setCurrentQuestion(0)
-                            setQuizAnswers({})
-                          }}
-                          className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-8 py-4 text-lg rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
-                        >
-                          <Brain className="w-5 h-5 mr-2" />
-                          Take Financial Quiz
-                        </Button>
-                      ) : !latestResult.hasViewedResults ? (
-                        <Button
-                          size="lg"
-                          onClick={() => setShowResults(true)}
-                          className="bg-[#669CCB] hover:bg-[#669CCB]/90 text-white font-semibold px-8 py-4 text-lg rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
-                        >
-                          <Award className="w-5 h-5 mr-2" />
-                          View Your Results
-                        </Button>
-                      ) : !latestResult.hasWatchedFilm ? (
-                        <Button
-                          size="lg"
-                          onClick={() => setShowFilm(true)}
-                          className="bg-gray-900 hover:bg-gray-800 text-white font-semibold px-8 py-4 text-lg rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
-                        >
-                          <Play className="w-5 h-5 mr-2" />
-                          Watch Film
-                        </Button>
-                      ) : (
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <Button
-                            size="lg"
-                            className="bg-green-500 hover:bg-green-600 text-white font-semibold px-8 py-4 text-lg rounded-full transition-all duration-300 shadow-lg"
-                            disabled
-                          >
-                            <CheckCircle className="w-5 h-5 mr-2" />
-                            Journey Complete
-                          </Button>
-                          <Button
-                            size="lg"
-                            onClick={() => setShowResults(true)}
-                            variant="outline"
-                            className="border-2 border-[#B95D38] text-[#B95D38] hover:bg-[#B95D38]/10 px-8 py-4 text-lg rounded-full transition-all duration-300"
-                          >
-                            Review Results
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Progress Indicator - Desktop */}
-                {user && latestResult && (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-center lg:justify-start space-x-4 text-sm">
-                      <div className="flex items-center space-x-2 text-green-600">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Quiz</span>
-                      </div>
-                      <div className="w-8 h-px bg-gray-300"></div>
-                      <div
-                        className={`flex items-center space-x-2 ${latestResult.hasViewedResults ? "text-green-600" : "text-gray-400"
-                          }`}
-                      >
-                        {latestResult.hasViewedResults ? (
-                          <CheckCircle className="w-4 h-4" />
-                        ) : (
-                          <Award className="w-4 h-4" />
-                        )}
-                        <span>Results</span>
-                      </div>
-                      <div className="w-8 h-px bg-gray-300"></div>
-                      <div
-                        className={`flex items-center space-x-2 ${latestResult.hasWatchedFilm ? "text-green-600" : "text-gray-400"
-                          }`}
-                      >
-                        {latestResult.hasWatchedFilm ? (
-                          <CheckCircle className="w-4 h-4" />
-                        ) : (
-                          <Play className="w-4 h-4" />
-                        )}
-                        <span>Film</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <p className="text-sm text-gray-500 max-w-md mx-auto lg:mx-0">
-                  {!user
-                    ? "Discover your financial mindset, then watch how it shapes destiny in this powerful short film."
-                    : `Welcome back, ${profile?.first_name}! ${getNextStep()}`}
-                </p>
-              </div>
-            </div>
-
-            {/* Right: Film Poster - Desktop */}
-            <div className="flex justify-center lg:justify-end">
-              <div className="relative group">
-                <div className="absolute -inset-4 bg-gradient-to-r from-[#B95D38]/20 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <Image
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/A1147D70-FC71-4DEE-9749-E32CD0A8535D_4_5005_c-9qAxFCjLKUt4bBj5yUosrtWW0UpqVM.jpeg"
-                  alt="Back Against the Wall Movie Poster"
-                  width={400}
-                  height={600}
-                  className="rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500"
-                  priority
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Sponsors Section */}
       <section className="py-20 bg-gray-50">
