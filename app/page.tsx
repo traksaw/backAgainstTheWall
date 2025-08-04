@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-// import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useAuth, AuthProvider } from "@/hooks/useAuth"
 import { useQuiz } from "@/hooks/useQuiz"
@@ -357,7 +356,6 @@ const archetypeResults = {
 
 type Archetype = keyof typeof archetypeResults
 
-
 // This component now uses the auth context properly
 function FilmWebsiteContent() {
   const { user, profile, signOut, loading: authLoading, isHydrated, loading } = useAuth()
@@ -373,13 +371,6 @@ function FilmWebsiteContent() {
   const [shuffledQuestions, setShuffledQuestions] = useState<QuizQuestion[]>([])
   const [showWelcome, setShowWelcome] = useState(true)
   const [showQuizHistory, setShowQuizHistory] = useState(false)
-
-  console.log("Auth State:", {
-    user,
-    profile,
-    loading,
-    isHydrated,
-  })
 
   // Shuffle questions on component mount
   useEffect(() => {
@@ -519,8 +510,6 @@ function FilmWebsiteContent() {
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
-
-
       {/* User Menu */}
       {user && (
         <div className="fixed top-4 right-4 z-50">
@@ -732,6 +721,8 @@ function FilmWebsiteContent() {
       </footer>
 
       {/* Auth Modals */}
+     // In your main component, replace the SignUpModal onSuccess with this:
+
       <SignUpModal
         open={showSignup}
         onOpenChange={setShowSignup}
@@ -740,10 +731,12 @@ function FilmWebsiteContent() {
           setShowSignin(true)
         }}
         onSuccess={() => {
+          console.log('=== OPENING QUIZ IMMEDIATELY ===')
           setShowQuiz(true)
           setShowWelcome(true)
           setCurrentQuestion(0)
           setQuizAnswers({})
+          console.log('Quiz modal should now be open')
         }}
       />
 
@@ -765,7 +758,7 @@ function FilmWebsiteContent() {
               <div className="space-y-6 py-6">
                 <div className="text-center space-y-4">
                   <p className="text-xl text-gray-700 leading-relaxed">
-                    Welcome, {profile?.first_name || "Guest"}! Let's discover your financial personality.
+                    Welcome! Let's discover your financial personality.
                   </p>
                   <p className="text-gray-600">
                     Your responses will reveal your financial archetype and help you connect more deeply with the film's
@@ -981,10 +974,21 @@ function FilmWebsiteContent() {
       <Dialog open={showFilm} onOpenChange={setShowFilm}>
         <DialogContent className="max-w-5xl bg-black border-0">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-center text-white">Back Against the Wall</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-center text-white">
+              Back Against the Wall
+            </DialogTitle>
             <DialogDescription className="text-center text-gray-300">
-              Watching as <span className="text-[#B95D38]">The {latestResult?.archetype}</span> — Notice how the
-              characters' financial decisions reflect your own mindset
+              {user && latestResult?.archetype ? (
+                <>
+                  Watching as <span className="text-[#B95D38]">The {latestResult.archetype}</span> — Notice how the
+                  characters' financial decisions reflect your own mindset
+                </>
+              ) : (
+                <>
+                  Watching as <span className="text-[#B95D38]">A Guest</span> — Observe how different financial
+                  personalities handle pressure
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
           <VideoPlayer
@@ -992,7 +996,7 @@ function FilmWebsiteContent() {
             title="Back Against the Wall"
             onEnded={handleFilmComplete}
             onError={handleVideoError}
-            archetype={latestResult?.archetype || "Avoider"}
+            archetype={latestResult?.archetype} // Only pass if exists, VideoPlayer handles the conditional display
             className="aspect-video"
           />
         </DialogContent>

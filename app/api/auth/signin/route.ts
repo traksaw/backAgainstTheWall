@@ -7,11 +7,18 @@ export async function POST(req: Request) {
 
   try {
     const user = await AuthService.signIn(email, password)
-    const token = signToken({ userId: user.id }) // ✅ no nesting
+    
+    const token = signToken({ userId: user._id.toString() })
 
-    const res = NextResponse.json(user)
+    const res = NextResponse.json({
+      id: user._id,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      // Don't send back the passwordHash
+    })
 
-    // ✅ Set the cookie on the response
+    // Set the cookie on the response
     res.cookies.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

@@ -3,7 +3,6 @@
 import type React from "react"
 import { useState, useEffect, createContext, useContext } from "react"
 import type { IUser } from "@/models/User"
-import { set } from "mongoose"
 
 interface AuthContextType {
   user: IUser | null
@@ -11,13 +10,11 @@ interface AuthContextType {
   session: null
   loading: boolean
   isHydrated: boolean
-  // databaseStatus: "checking" | "ready" | "error" | "setup-required"
   signUp: (data: any) => Promise<void>
   signIn: (data: any) => Promise<void>
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<IUser>) => Promise<void>
   refreshProfile: () => Promise<void>
-  // checkDatabaseSetup: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -28,35 +25,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<null>(null)
   const [loading, setLoading] = useState(true)
   const [isHydrated, setIsHydrated] = useState(false)
-  // const [databaseStatus, setDatabaseStatus] = useState<"checking" | "ready" | "error" | "setup-required">("checking")
 
- useEffect(() => {
+  // ✅ Extract fetchCurrentUser so we can reuse it
   const fetchCurrentUser = async () => {
     try {
-      const res = await fetch("/api/auth/me") // or your session endpoint
+      const res = await fetch("/api/auth/me")
       if (res.ok) {
-        const user = await res.json()
-        setUser(user)
-        setProfile(user)
+        const userData = await res.json()
+        setUser(userData)
+        setProfile(userData)
+        return userData
+      } else {
+        // Clear user data if not authenticated
+        setUser(null)
+        setProfile(null)
+        return null
       }
     } catch (err) {
       console.error("Failed to fetch current user:", err)
-    } finally {
-      setIsHydrated(true)
-      setLoading(false)
+      setUser(null)
+      setProfile(null)
+      return null
     }
   }
 
-  fetchCurrentUser()
-}, [])
+  useEffect(() => {
+    const initializeAuth = async () => {
+      setLoading(true)
+      await fetchCurrentUser()
+      setIsHydrated(true)
+      setLoading(false)
+    }
 
-
-  
+    initializeAuth()
+  }, [])
 
   const loadUserProfile = async (user: IUser) => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/users/${user.userId}`)
+      const res = await fetch(`/api/users/${user._id}`)
       if (!res.ok) throw new Error("Failed to load user profile")
 
       const profileData = await res.json()
@@ -77,18 +84,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify(data),
       })
 
-      const user = await res.json()
-      if (!res.ok) throw new Error(user.error || "Signup failed")
+      const responseData = await res.json()
+      
+      if (!res.ok) {
+        throw new Error(responseData.error || "Signup failed")
+      }
 
-      setUser(user)
-      setProfile(user)
+      // ✅ After successful signup, fetch the current user to get the latest state
+      const userData = await fetchCurrentUser()
+      if (!userData) {
+        throw new Error("Failed to authenticate after signup")
+      }
+
+      console.log("Signup successful, user data:", userData)
     } catch (err) {
       console.error("Signup error:", err)
+      throw err // Re-throw so the component can handle it
     } finally {
       setLoading(false)
     }
   }
-
 
   const signIn = async (data: any) => {
     setLoading(true)
@@ -99,18 +114,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify(data),
       })
 
-      const user = await res.json()
-      if (!res.ok) throw new Error(user.error || "Signup failed")
+      const responseData = await res.json()
+      
+      if (!res.ok) {
+        throw new Error(responseData.error || "Signin failed")
+      }
 
-      setUser(user)
-      setProfile(user)
+      // ✅ After successful signin, fetch the current user
+      const userData = await fetchCurrentUser()
+      if (!userData) {
+        throw new Error("Failed to authenticate after signin")
+      }
+
+      console.log("Signin successful, user data:", userData)
     } catch (err) {
-      console.error("Signup error:", err)
+      console.error("Signin error:", err)
+      throw err
     } finally {
       setLoading(false)
     }
   }
-
 
   const signOut = async () => {
     setLoading(true)
@@ -129,23 +152,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(null)
     } catch (error) {
       console.error("Sign-out failed:", error)
+      throw error
     } finally {
       setLoading(false)
     }
   }
-
 
   const refreshProfile = async () => {
     if (!user) return
     await loadUserProfile(user)
   }
 
-
   const updateProfile = async (updates: Partial<IUser>) => {
     if (!user) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/users/${user.userId}`, {
+      const res = await fetch(`/api/users/${user._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates),
@@ -161,11 +183,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(updatedUser)
     } catch (error) {
       console.error("Update profile failed:", error)
+      throw error
     } finally {
       setLoading(false)
     }
   }
-
 
   const value: AuthContextType = {
     user,
@@ -178,15 +200,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     updateProfile,
     refreshProfile,
-    // checkDatabaseSetup,
   }
 
-  if (!isHydrated || loading) {
+  if (!isHydrated) {
     return <div className="w-full h-screen flex items-center justify-center text-xl">Loading...</div>
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
+
 export function useAuth() {
   const context = useContext(AuthContext)
   if (!context) {

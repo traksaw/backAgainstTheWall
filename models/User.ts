@@ -2,7 +2,7 @@ import { Schema, Document, Model } from "mongoose"
 import mongoose from "@/lib/mongoose" // ✅ Import your shared instance
 
 export interface IUser extends Document {
-  userId: string
+  _id: string // ✅ This is what Mongoose actually provides
   email: string
   passwordHash: string
   first_name?: string

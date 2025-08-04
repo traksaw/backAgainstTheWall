@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
+import { useAuth } from "@/hooks/useAuth"
 import { Play, Pause, Maximize, Minimize, RotateCcw, AlertCircle, Loader2 } from "lucide-react"
 
 interface VideoPlayerProps {
@@ -30,6 +31,7 @@ export function VideoPlayer({
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
+  const { user } = useAuth();
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -191,20 +193,6 @@ export function VideoPlayer({
     }
   }
 
-  const handleRestart = () => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0
-      setCurrentTime(0)
-    }
-  }
-
-  const changePlaybackRate = (rate: number) => {
-    if (videoRef.current) {
-      videoRef.current.playbackRate = rate
-      setPlaybackRate(rate)
-    }
-  }
-
   // Fullscreen change listener
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -318,7 +306,7 @@ export function VideoPlayer({
       )}
 
       {/* Archetype Badge */}
-      {archetype && (
+      {archetype && user && (
         <div className="absolute top-4 right-4 z-30">
           <div className="bg-[#B95D38]/90 text-white px-3 py-1 rounded-full text-sm font-medium">The {archetype}</div>
         </div>
@@ -397,19 +385,6 @@ export function VideoPlayer({
           </Button>
         </div>
       </div>
-
-      {/* Keyboard Shortcuts Help */}
-      {/* <div className="absolute top-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <div className="bg-black/70 text-white text-xs p-2 rounded">
-          <div className="space-y-1">
-            <div>Space: Play/Pause</div>
-            <div>←/→: Seek ±10s</div>
-            <div>↑/↓: Volume</div>
-            <div>M: Mute</div>
-            <div>F: Fullscreen</div>
-          </div>
-        </div>
-      </div> */}
     </div>
   )
 }

@@ -41,7 +41,7 @@ export class QuizService {
       throw new Error(errorData?.error || "Failed to submit quiz")
     }
 
-    return await res.json() // ✅ this line was missing
+    return await res.json() 
   }
 
 

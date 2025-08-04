@@ -14,12 +14,12 @@ interface QuizAnswer {
   question?: string
 }
 
-interface QuizResponse {
-  question: string
-  text: string
-  archetype: string
-  points: number
-}
+// interface QuizResponse {
+//   question: string
+//   text: string
+//   archetype: string
+//   points: number
+// }
 
 interface QuizResult {
   _id: string

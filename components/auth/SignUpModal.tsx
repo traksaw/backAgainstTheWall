@@ -138,73 +138,83 @@ export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }:
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
 
-    if (!validateStep3()) return
+  if (!validateStep3()) return
 
+  setError("")
+  setLoading(true)
+
+  try {
+    console.log("=== STARTING SIGNUP ===")
+    console.log("Starting signup process with data:", {
+      email: formData.email,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      zip_code: formData.zip_code,
+      occupationStatus: formData.occupationStatus,
+    })
+
+    console.log("Calling signUp function...")
+    await signUp(formData)
+    console.log("signUp function completed successfully!")
+
+    console.log("Signup completed successfully, closing modal and starting quiz...")
+
+    // Reset form first
+    setFormData({
+      email: "",
+      password: "",
+      passwordConfirmation: "",
+      firstName: "",
+      lastName: "",
+      zip_code: "",
+      occupationStatus: "",
+      acceptTerms: false,
+    })
+    setCurrentStep(1)
+    setErrors({})
     setError("")
-    setLoading(true)
 
-    try {
-      console.log("Starting signup process with data:", {
-        email: formData.email,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        zip_code: formData.zip_code,
-        occupationStatus: formData.occupationStatus,
-      })
+    // Close modal
+    onOpenChange(false)
 
-      await signUp(formData)
+    console.log("About to call onSuccess()...")
+    // Call success callback
+    onSuccess()
+    console.log("onSuccess() called successfully!")
 
-      console.log("Signup completed successfully, closing modal and starting quiz...")
+  } catch (error) {
+    console.error("=== SIGNUP FAILED ===")
+    console.error("Signup failed in component:", error)
 
-      // Close modal and trigger success callback
-      onOpenChange(false)
-      onSuccess()
+    let errorMessage = "An unexpected error occurred during signup"
 
-      // Reset form
-      setFormData({
-        email: "",
-        password: "",
-        passwordConfirmation: "",
-        firstName: "",
-        lastName: "",
-        zip_code: "",
-        occupationStatus: "",
-        acceptTerms: false,
-      })
-      setCurrentStep(1)
-      setErrors({})
-      setError("")
-    } catch (error) {
-      console.error("Signup failed in component:", error)
-
-      let errorMessage = "An unexpected error occurred during signup"
-
-      if (error instanceof Error) {
-        errorMessage = error.message
-      } else if (typeof error === "string") {
-        errorMessage = error
-      } else if (error && typeof error === "object" && "message" in error) {
-        errorMessage = (error as any).message
-      }
-
-      // Handle specific Supabase errors
-      const errorMsg = errorMessage.toLowerCase()
-      if (errorMsg.includes("already registered") || errorMsg.includes("already exists")) {
-        errorMessage = "An account with this email already exists"
-      } else if (errorMsg.includes("invalid email")) {
-        errorMessage = "Please enter a valid email address"
-      } else if (errorMsg.includes("password")) {
-        errorMessage = "Password requirements not met"
-      }
-
-      setError(errorMessage)
-    } finally {
-      setLoading(false)
+    if (error instanceof Error) {
+      errorMessage = error.message
+    } else if (typeof error === "string") {
+      errorMessage = error
+    } else if (error && typeof error === "object" && "message" in error) {
+      errorMessage = (error as any).message
     }
+
+    // Handle specific errors
+    const errorMsg = errorMessage.toLowerCase()
+    if (errorMsg.includes("already registered") || errorMsg.includes("already exists")) {
+      errorMessage = "An account with this email already exists"
+    } else if (errorMsg.includes("invalid email")) {
+      errorMessage = "Please enter a valid email address"
+    } else if (errorMsg.includes("password")) {
+      errorMessage = "Password requirements not met"
+    }
+
+    setError(errorMessage)
+  } finally {
+    console.log("Setting loading to false")
+    setLoading(false)
   }
+}
 
   const getPasswordStrength = (password: string) => {
     let strength = 0
