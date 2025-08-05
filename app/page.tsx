@@ -45,13 +45,13 @@ import { QuizAnswersDisplay } from "@/components/QuizAnswersDisplay"
 import type { QuizAnswer } from "@/lib/quiz"
 import ContactForm from "@/components/ContactForm"
 import Hero from "@/components/Hero"
+import { castAndCrew, type CastCrewMember } from "@/data/cast-and-crew"
 
 interface QuizQuestion {
   id: number
   question: string
   options: QuizAnswer[]
 }
-
 export interface QuizResult {
   id: string
   user_id: string
@@ -70,7 +70,6 @@ export interface QuizResult {
   created_at?: string
   updated_at?: string
 }
-
 // Quiz Types and Data
 const quizQuestions: QuizQuestion[] = [
   {
@@ -371,11 +370,56 @@ function FilmWebsiteContent() {
   const [shuffledQuestions, setShuffledQuestions] = useState<QuizQuestion[]>([])
   const [showWelcome, setShowWelcome] = useState(true)
   const [showQuizHistory, setShowQuizHistory] = useState(false)
+  const [clickPattern, setClickPattern] = useState<number[]>([])
+  const [archetypeDistribution, setArchetypeDistribution] = useState({
+    Avoider: 0,
+    Gambler: 0,
+    Realist: 0,
+    Architect: 0
+  })
+  const [castAndCrew, setCastAndCrew] = useState<CastCrewMember[]>([])
+  const [castCrewLoading, setCastCrewLoading] = useState(true)
+
+  // Advanced randomization helper function:
+  const createAdvancedRandomizedQuestions = (userClickPattern: number[] = []) => {
+    // Detect if user has a pattern (clicking same position repeatedly)
+    const isRepetitive = userClickPattern.length >= 3 &&
+      userClickPattern.slice(-3).every(pos => pos === userClickPattern[userClickPattern.length - 1])
+
+    return [...quizQuestions].map((question, questionIndex) => {
+      let shuffledOptions = [...question.options]
+
+      if (isRepetitive) {
+        // If user is being repetitive, shuffle more aggressively
+        shuffledOptions = shuffledOptions.sort(() => Math.random() - 0.5)
+
+        // Sometimes swap the first two options to break the pattern
+        if (Math.random() > 0.6) {
+          [shuffledOptions[0], shuffledOptions[1]] = [shuffledOptions[1], shuffledOptions[0]]
+        }
+      } else {
+        // Normal randomization
+        shuffledOptions = shuffledOptions.sort(() => Math.random() - 0.5)
+      }
+
+      // Add slight point variations to prevent identical scores (10% chance)
+      if (Math.random() > 0.9) {
+        shuffledOptions = shuffledOptions.map(option => ({
+          ...option,
+          points: Math.max(1, option.points + (Math.random() > 0.5 ? 1 : -1))
+        }))
+      }
+
+      return {
+        ...question,
+        options: shuffledOptions
+      }
+    }).sort(() => Math.random() - 0.5) // Always shuffle question order
+  }
 
   // Shuffle questions on component mount
   useEffect(() => {
-    const shuffled = [...quizQuestions].sort(() => Math.random() - 0.5)
-    setShuffledQuestions(shuffled)
+    setShuffledQuestions(createAdvancedRandomizedQuestions())
   }, [])
 
   const startQuiz = () => {
@@ -384,7 +428,60 @@ function FilmWebsiteContent() {
     setQuizAnswers({})
   }
 
+  // Enhanced handleQuizAnswer function:
   const handleQuizAnswer = (answer: QuizAnswer) => {
+    // Track which position was clicked (0-3)
+    const optionIndex = shuffledQuestions[currentQuestion]?.options.findIndex(opt => opt.id === answer.id) || 0
+    const newClickPattern = [...clickPattern, optionIndex]
+    setClickPattern(newClickPattern)
+
+    // Track archetype distribution
+    const newDistribution = { ...archetypeDistribution }
+    newDistribution[answer.archetype as keyof typeof newDistribution]++
+    setArchetypeDistribution(newDistribution)
+
+    // Detect repetitive behavior and counter it
+    if (newClickPattern.length >= 4) {
+      const lastFour = newClickPattern.slice(-4)
+      const isRepetitive = lastFour.filter(pos => pos === lastFour[0]).length >= 3
+
+      if (isRepetitive) {
+        console.log('🎯 Anti-gaming: Detected repetitive clicking - applying countermeasures')
+
+        // Regenerate remaining questions with anti-pattern logic
+        const remainingQuestionCount = shuffledQuestions.length - currentQuestion - 1
+        if (remainingQuestionCount > 0) {
+          const currentQuestions = shuffledQuestions.slice(0, currentQuestion + 1)
+          const remainingQuestions = shuffledQuestions.slice(currentQuestion + 1)
+
+          // Apply aggressive randomization to remaining questions
+          const antiPatternQuestions = remainingQuestions.map(question => {
+            const options = [...question.options]
+
+            // Ensure the most commonly clicked position gets different archetypes
+            const mostClickedPosition = lastFour[0]
+
+            // Sort so that different archetypes appear in the user's preferred position
+            const rearranged = options.sort((a, b) => {
+              // Prefer putting different archetypes in the commonly clicked position
+              if (newDistribution[a.archetype as keyof typeof newDistribution] >
+                newDistribution[b.archetype as keyof typeof newDistribution]) {
+                return 1
+              }
+              return Math.random() - 0.5
+            })
+
+            return {
+              ...question,
+              options: rearranged
+            }
+          })
+
+          setShuffledQuestions([...currentQuestions, ...antiPatternQuestions])
+        }
+      }
+    }
+
     // Add question text to the answer for better history display
     const enhancedAnswer = {
       ...answer,
@@ -402,13 +499,67 @@ function FilmWebsiteContent() {
 
   const handleQuizComplete = async (answers: Record<number, QuizAnswer>) => {
     try {
+      console.log('=== SUBMITTING QUIZ (FIXED ARCHETYPE) ===')
+      console.log('Raw answers:', answers)
+      console.log('Number of answers:', Object.keys(answers).length)
+      console.log('Shuffled questions length:', shuffledQuestions.length)
+
       const sessionId = Math.random().toString(36).substr(2, 9)
-      await submitQuiz(answers, sessionId)
+
+      // Calculate scores for each archetype
+      const scores = {
+        Avoider: 0,
+        Gambler: 0,
+        Realist: 0,
+        Architect: 0
+      }
+
+      // Count points for each archetype
+      Object.values(answers).forEach(answer => {
+        console.log('Processing answer:', answer)
+        if (answer.archetype && answer.points) {
+          scores[answer.archetype as keyof typeof scores] += answer.points
+        }
+      })
+
+      console.log('Calculated scores:', scores)
+
+      // ✅ Fixed archetype calculation - get the key, not the array
+      const winningArchetype = Object.entries(scores).reduce((a, b) =>
+        a[1] > b[1] ? a : b
+      )[0] // This gets the archetype name (key)
+
+      console.log('Winning archetype:', winningArchetype)
+
+      // ✅ Fixed total score calculation
+      const totalScore = scores[winningArchetype as keyof typeof scores]
+      console.log('Total score:', totalScore)
+
+      // Validate before sending
+      if (!winningArchetype || totalScore === undefined) {
+        throw new Error(`Invalid quiz calculation - archetype: ${winningArchetype}, score: ${totalScore}`)
+      }
+
+      const quizData = {
+        answers: answers,
+        sessionId: sessionId,
+        archetype: winningArchetype,
+        score: totalScore
+      }
+
+      console.log('Quiz data being submitted (validated):', quizData)
+
+      await submitQuiz(quizData)
+
+      console.log('submitQuiz completed successfully!')
       setShowQuiz(false)
       setShowResults(true)
     } catch (error) {
-      console.error("Error submitting quiz:", error)
-      // Handle error appropriately
+      console.error('=== QUIZ SUBMISSION ERROR ===')
+      console.error('Full error object:', error)
+      console.error('================================')
+
+      alert(`Quiz submission failed: ${(error as any)?.message || 'Unknown error'}`)
     }
   }
 
@@ -455,40 +606,6 @@ function FilmWebsiteContent() {
     }
   }
 
-  const getNextStep = () => {
-    if (!user) return "Sign up to begin your journey"
-    if (!latestResult) return "Take the quiz to discover your financial archetype"
-    if (!latestResult.hasViewedResults) return "Explore your results"
-    if (!latestResult.hasWatchedFilm) return "Watch the film through your archetype lens"
-    return "Journey complete! Explore your results anytime"
-  }
-
-  const creators = [
-    {
-      name: "Jenna Lam",
-      role: "Producer & Director",
-      bio: "Award-winning filmmaker with a passion for stories that explore human psychology and social issues.",
-      expandedBio:
-        "Jenna brings over a decade of experience in independent filmmaking, with previous work showcased at Sundance and SXSW. Her storytelling is rooted in truth, vulnerability, and cultural nuance.",
-      image: "/jenna.jpeg",
-    },
-    {
-      name: "Waskar Paulino",
-      role: "Software Engineer",
-      bio: "Engineer focused on creative, accessible, and community-first software solutions.",
-      expandedBio:
-        "Waskar built the interactive experience powering the quiz and results system. He blends storytelling and technology to create tools that feel personal and empowering—especially for communities historically left out of the conversation.",
-      image: "/waskar.jpeg",
-    },
-    {
-      name: "Jason Arceo",
-      role: "UX/UI Designer",
-      bio: "Designer crafting intentional and intuitive user experiences that amplify storytelling.",
-      expandedBio:
-        "Jason led the interface design for this project, creating a seamless journey from quiz to reflection. His work centers emotion, clarity, and thoughtful interaction design that serves both story and audience.",
-      image: "/jason.jpeg",
-    },
-  ]
 
   const sponsors = [
     { name: "AAPI Foundation", logo: "/placeholder.svg?height=60&width=120" },
@@ -548,6 +665,10 @@ function FilmWebsiteContent() {
           setShowWelcome(true)
           setCurrentQuestion(0)
           setQuizAnswers({})
+          setClickPattern([]) // Reset click pattern tracking
+          setArchetypeDistribution({ Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 }) // Reset distribution
+          // Create fresh randomized questions
+          setShuffledQuestions(createAdvancedRandomizedQuestions())
         }}
         onShowResults={() => setShowResults(true)}
         onWatchFilm={() => setShowFilm(true)}
@@ -579,8 +700,62 @@ function FilmWebsiteContent() {
         </div>
       </section>
 
-      {/* About the Creators */}
+      {/* Meet the Cast & Crew */}
       <section className="py-24 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Meet the Cast & Crew</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              Thank you to all whose hands were involved in this exploration of young Asian-American financial psychology.
+            </p>
+          </div>
+
+          {/* Cast & Crew Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {castAndCrew.map((person, index) => (
+              <div key={index} className="text-center space-y-4">
+                <div className="relative w-32 h-32 mx-auto rounded-full overflow-hidden bg-gray-200">
+                  {person.image ? (
+                    <Image
+                      src={person.image}
+                      alt={person.name}
+                      fill
+                      className="object-cover"
+                      onError={(e) => {
+                        // Hide broken image and show placeholder
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                      }}
+                    />
+                  ) : null}
+                  {/* Always show placeholder background */}
+                  <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                    <span className="text-gray-500 text-xs">{person.name.split(' ').map((n: string) => n[0]).join('')}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-gray-900">{person.name}</h3>
+                  {person.role && <p className="text-[#B95D38] font-medium">{person.role}</p>}
+                  <p className="text-gray-600 text-sm leading-relaxed px-2">{person.description}</p>
+                  {person.readMoreUrl && (
+                    <a
+                      href={person.readMoreUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#B95D38] text-sm hover:underline inline-block"
+                    >
+                      Read more →
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Meet the Creators */}
+      <section className="py-24 bg-gray-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-20">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Meet the Creators</h2>
@@ -589,7 +764,29 @@ function FilmWebsiteContent() {
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
-            {creators.map((creator, index) => (
+            {[
+              {
+                name: "Jenna Lam",
+                role: "Producer & Director",
+                bio: "Award-winning filmmaker with a passion for stories that explore human psychology and social issues.",
+                expandedBio: "Jenna brings over a decade of experience in independent filmmaking, with previous work showcased at Sundance and SXSW. Her storytelling is rooted in truth, vulnerability, and cultural nuance.",
+                image: "/jenna.jpeg",
+              },
+              {
+                name: "Waskar Paulino",
+                role: "Software Engineer",
+                bio: "Engineer focused on creative, accessible, and community-first software solutions.",
+                expandedBio: "Waskar built the interactive experience powering the quiz and results system. He blends storytelling and technology to create tools that feel personal and empowering—especially for communities historically left out of the conversation.",
+                image: "/waskar.jpeg",
+              },
+              {
+                name: "Jason Arceo",
+                role: "UX/UI Designer",
+                bio: "Designer crafting intentional and intuitive user experiences that amplify storytelling.",
+                expandedBio: "Jason led the interface design for this project, creating a seamless journey from quiz to reflection. His work centers emotion, clarity, and thoughtful interaction design that serves both story and audience.",
+                image: "/jason.jpeg",
+              },
+            ].map((creator, index) => (
               <div key={index} className="text-center space-y-6 group">
                 <div className="relative w-40 h-40 mx-auto rounded-full overflow-hidden bg-gray-100">
                   <Image
@@ -721,8 +918,6 @@ function FilmWebsiteContent() {
       </footer>
 
       {/* Auth Modals */}
-     // In your main component, replace the SignUpModal onSuccess with this:
-
       <SignUpModal
         open={showSignup}
         onOpenChange={setShowSignup}

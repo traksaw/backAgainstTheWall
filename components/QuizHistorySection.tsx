@@ -22,32 +22,6 @@ import {
 } from "lucide-react"
 import type { IQuizResult } from "@/models/QuizResult"
 
-
-// Import quiz questions for reference
-const quizQuestions = [
-  {
-    id: 1,
-    question: "When you receive unexpected money, what's your first instinct?",
-    options: [
-      { text: "Save it immediately for emergencies", archetype: "Avoider", points: 3 },
-      { text: "Invest it in something with high potential returns", archetype: "Gambler", points: 3 },
-      { text: "Research the best balanced investment options", archetype: "Realist", points: 3 },
-      { text: "Create a detailed plan for how to allocate it", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 2,
-    question: "How do you feel about taking financial risks?",
-    options: [
-      { text: "I prefer to avoid them entirely", archetype: "Avoider", points: 3 },
-      { text: "The bigger the risk, the bigger the reward", archetype: "Gambler", points: 3 },
-      { text: "Calculated risks are necessary for growth", archetype: "Realist", points: 3 },
-      { text: "I analyze every risk thoroughly before deciding", archetype: "Architect", points: 3 },
-    ],
-  },
-  // Add more questions as needed for display purposes
-]
-
 interface QuizHistorySectionProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -57,11 +31,12 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
   const { user } = useAuth()
   const { quizResults, loading } = useQuiz()
   const [selectedResult, setSelectedResult] = useState<IQuizResult | null>(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+
   const viewResultDetails = (result: IQuizResult) => {
     setSelectedResult(result)
     setShowDetailModal(true)
   }
-  const [showDetailModal, setShowDetailModal] = useState(false)
 
   const getArchetypeIcon = (archetype: string) => {
     switch (archetype) {
@@ -93,14 +68,63 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
     }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
+  const formatDate = (dateString: string | Date | undefined) => {
+    if (!dateString) return "Unknown Date"
+    
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return "Invalid Date"
+      
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    } catch {
+      return "Invalid Date"
+    }
+  }
+
+  const debugQuizData = (result: IQuizResult) => {
+  console.log('=== QUIZ RESULT DEBUG ===')
+  console.log('Full result object:', result)
+  console.log('result.answers:', result.answers)
+  console.log('result.answers?.totalQuestions:', result.answers?.totalQuestions)
+  console.log('result.answers?.responses:', result.answers?.responses)
+  if (result.answers?.responses) {
+    console.log('Number of responses:', Object.keys(result.answers.responses).length)
+    console.log('Response keys:', Object.keys(result.answers.responses))
+  }
+  console.log('=========================')
+}
+
+  // Helper function to get the number of questions answered
+  const getQuestionsAnswered = (result: IQuizResult) => {
+    debugQuizData(result) // Add this line for debugging
+  
+  if (result.answers?.totalQuestions) {
+    console.log('Using totalQuestions:', result.answers.totalQuestions)
+    return result.answers.totalQuestions
+  }
+  if (result.answers?.responses) {
+    const count = Object.keys(result.answers.responses).length
+    console.log('Using responses count:', count)
+    return count
+  }
+  console.log('Falling back to 0')
+  return 0
+  }
+
+  // Helper function to get completion date
+  const getCompletionDate = (result: IQuizResult) => {
+    // Try different possible date fields
+    return result.completedAt || 
+           result.answers?.completedAt || 
+           result.createdAt || 
+           result.updatedAt ||
+           undefined
   }
 
   if (loading) {
@@ -141,6 +165,8 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
               <div className="space-y-4">
                 {quizResults.map((result, index) => {
                   const IconComponent = getArchetypeIcon(result.archetype)
+                  const completionDate = getCompletionDate(result)
+                  
                   return (
                     <Card
                       key={result._id}
@@ -168,11 +194,11 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                               <div className="flex items-center space-x-4 text-sm text-gray-600">
                                 <div className="flex items-center">
                                   <Calendar className="w-4 h-4 mr-1" />
-                                  {formatDate(result.completedAt?.toString() || "")}
+                                  {formatDate(completionDate)}
                                 </div>
                                 <div className="flex items-center">
                                   <BarChart3 className="w-4 h-4 mr-1" />
-                                  Score: {result.score}
+                                  Score: {result.score || 0}
                                 </div>
                               </div>
                             </div>
@@ -221,7 +247,6 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="text-2xl font-bold text-gray-900">Quiz Results Details</DialogTitle>
-              
             </div>
           </DialogHeader>
 
@@ -237,7 +262,9 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold text-[#B95D38] mb-2">The {selectedResult.archetype}</h3>
-                  <p className="text-gray-600">Completed on {formatDate(selectedResult.completedAt?.toString() || "")}</p>
+                  <p className="text-gray-600">
+                    Completed on {formatDate(getCompletionDate(selectedResult))}
+                  </p>
                 </div>
               </div>
 
@@ -300,13 +327,13 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                 </Card>
               )}
 
-              {/* Quiz Statistics */}
+              {/* Quiz Statistics - FIXED */}
               <div className="grid md:grid-cols-3 gap-4">
                 <Card className="border-gray-200 bg-blue-50">
                   <CardContent className="p-4 text-center">
                     <Clock className="w-8 h-8 text-blue-500 mx-auto mb-2" />
                     <div className="text-lg font-semibold text-blue-700">
-                      {selectedResult.answers?.totalQuestions || "N/A"}
+                      {getQuestionsAnswered(selectedResult)}
                     </div>
                     <div className="text-sm text-blue-600">Questions Answered</div>
                   </CardContent>
@@ -315,7 +342,7 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                 <Card className="border-gray-200 bg-green-50">
                   <CardContent className="p-4 text-center">
                     <Award className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                    <div className="text-lg font-semibold text-green-700">{selectedResult.score}</div>
+                    <div className="text-lg font-semibold text-green-700">{selectedResult.score || 0}</div>
                     <div className="text-sm text-green-600">Final Score</div>
                   </CardContent>
                 </Card>

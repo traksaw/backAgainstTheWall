@@ -28,20 +28,47 @@ export class QuizService {
     archetype: string
     score: number
   }): Promise<any> {
-    const res = await fetch("/api/quiz/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-      credentials: "include",
-    })
+    console.log('=== QUIZ SERVICE DEBUG ===')
+    console.log('Data being sent to API:', JSON.stringify(data, null, 2))
 
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}))
-      console.error("Quiz submission error:", errorData)
-      throw new Error(errorData?.error || "Failed to submit quiz")
+    try {
+      const res = await fetch("/api/quiz/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      })
+
+      console.log('Response status:', res.status)
+      console.log('Response ok:', res.ok)
+      console.log('Response headers:', Object.fromEntries(res.headers.entries()))
+
+      if (!res.ok) {
+        let errorData
+        try {
+          errorData = await res.json()
+        } catch (jsonError) {
+          console.error('Failed to parse error response as JSON:', jsonError)
+          errorData = { error: `HTTP ${res.status}: ${res.statusText}` }
+        }
+
+        console.error("Quiz submission HTTP error:", {
+          status: res.status,
+          statusText: res.statusText,
+          errorData
+        })
+
+        throw new Error(errorData?.error || `HTTP ${res.status}: ${res.statusText}`)
+      }
+
+      const responseData = await res.json()
+      console.log('Quiz submission successful:', responseData)
+      return responseData
+
+    } catch (error) {
+      console.error('Quiz submission fetch error:', error)
+      throw error
     }
-
-    return await res.json() 
   }
 
 
