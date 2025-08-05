@@ -1,4 +1,3 @@
-
 export interface CastCrewMember {
   name: string
   role: string
@@ -13,7 +12,7 @@ export const castAndCrew: CastCrewMember[] = [
     name: "Jenna Lam",
     role: "Samara, Executive Producer & Director",
     description: "Award-winning filmmaker with a passion for stories that explore human psychology and social issues. Jenna brings over a decade of experience in independent filmmaking, with previous work showcased at Sundance and SXSW.",
-    image: "/cast/jenna-lam.jpg",
+    image: "/cast/jenna.jpeg",
     order: 1,
     readMoreUrl: "https://www.linkedin.com/in/jennalamx/"
   },

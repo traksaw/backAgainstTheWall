@@ -31,12 +31,12 @@ export default function Hero({
       <section className="relative w-full">
         {/* Mobile Layout - Full poster with letterboxing */}
         <div className="block md:hidden">
-          <div className="relative w-full h-[50vh] min-h-[400px] max-h-[600px] flex items-center justify-center">
+          <div className="relative w-full h-[50vh] min-h-[400px] max-h-[600px]">
             <Image
-              src="/desktop-poster.png"
+              src="/assets/mobile-poster.png"
               alt="Back Against the Wall Poster"
               fill
-              className="object-contain"
+              className="object-cover"
               priority
               sizes="100vw"
             />
@@ -47,7 +47,7 @@ export default function Hero({
         <div className="hidden md:block">
           <div className="relative w-full h-screen">
             <Image
-              src="/desktop-poster.png"
+              src="/assets/desktop-poster.png"
               alt="Back Against the Wall Poster"
               fill
               className="object-cover"
@@ -72,14 +72,14 @@ export default function Hero({
                 who do you become?
               </h2>
             </div>
-            
+
             {/* Description Text - Matches Figma */}
             <p className="text-sm text-gray-700 leading-relaxed max-w-sm mx-auto">
-              Before watching Samara's story, take this short quiz to uncover your financial personality. 
-              Are you the kind of person who freezes, risks it all, plays it smart, or plays the long game? 
+              Before watching Samara's story, take this short quiz to uncover your financial personality.
+              Are you the kind of person who freezes, risks it all, plays it smart, or plays the long game?
               Based on your results, you may or may not find yourself in the film.
             </p>
-            
+
             {/* CTA Button - Matches Figma Style */}
             <div className="pt-4">
               {user ? (
@@ -191,13 +191,13 @@ export default function Hero({
               When financial pressure mounts,{" "}
               <span className="text-[#B95D38]">who do you become?</span>
             </h2>
-            
+
             <p className="text-base lg:text-lg text-gray-700 leading-relaxed">
               Before watching Samara's story, take this short quiz to uncover your financial personality.
               Are you the kind of person who freezes, risks it all, plays it smart, or plays the long game?
               Based on your results, you may or may not find yourself in the film.
             </p>
-            
+
             {user ? (
               latestResult?.hasWatchedFilm ? (
                 <div className="flex flex-col items-center gap-6">
@@ -305,26 +305,39 @@ export default function Hero({
         </div>
       </section>
 
-      {/* Support Section - Simplified for Mobile */}
-      <section className="py-6 md:py-16 bg-gray-50 border-t">
+      {/* Support Section - Prominent AAPI Logo */}
+      <section className="py-8 md:py-20 bg-gray-50 border-t">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center space-y-4 md:space-y-8">
-            {/* Mobile: Simplified text */}
-            <p className="text-xs md:text-xl font-medium text-gray-600 tracking-wide uppercase leading-relaxed px-2">
-              <span className="block md:inline">Proudly supported by our partners</span>
-              <span className="block md:inline md:before:content-[' '] md:before:mx-1">and a grant from the AAPI Foundation</span>
-            </p>
+          <div className="text-center space-y-6 md:space-y-12">
+            {/* Heading Text */}
+            <div className="space-y-2 md:space-y-4">
+              <p className="text-sm md:text-2xl font-semibold text-gray-700 tracking-wide uppercase leading-relaxed">
+                Proudly supported by our partners
+              </p>
+              <p className="text-base md:text-3xl font-bold text-gray-800 tracking-wide uppercase leading-relaxed">
+                and a grant from the AAPI Foundation
+              </p>
+            </div>
             
-            {/* Simplified logo placeholders */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
-              {[1, 2, 3, 4].map((_, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-center"
-                >
-                  <div className="w-12 h-12 md:w-20 md:h-20 bg-gray-300 rounded-full opacity-60"></div>
-                </div>
-              ))}
+            {/* Large Centered AAPI Logo */}
+            <div className="flex justify-center items-center py-4 md:py-8">
+              <div className="relative w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64">
+                <Image
+                  src="/assets/aapi-logo.png"
+                  alt="AAPI Foundation"
+                  fill
+                  className="object-contain hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 768px) 128px, (max-width: 1024px) 192px, 256px"
+                  priority
+                />
+              </div>
+            </div>
+
+            {/* Additional partner acknowledgment */}
+            <div className="pt-4 md:pt-8 max-w-2xl mx-auto">
+              <p className="text-sm md:text-base text-gray-600 leading-relaxed">
+                Special thanks to all community partners and individual supporters who made this project possible.
+              </p>
             </div>
           </div>
         </div>

@@ -46,6 +46,9 @@ import type { QuizAnswer } from "@/lib/quiz"
 import ContactForm from "@/components/ContactForm"
 import Hero from "@/components/Hero"
 import { castAndCrew, type CastCrewMember } from "@/data/cast-and-crew"
+import CastCrewCarousel from "@/components/CastCrewCarousel"
+import CastCrewGrid from "@/components/CastCrewGrid"
+
 
 interface QuizQuestion {
   id: number
@@ -675,19 +678,14 @@ function FilmWebsiteContent() {
       {/* Meet the Cast & Crew */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Meet the Cast & Crew</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              Thank you to all whose hands were involved in this exploration of young Asian-American financial psychology.
-            </p>
+          <div className="block md:hidden">
+            <CastCrewCarousel />
           </div>
 
           {/* Check if we have cast and crew data */}
           {castAndCrew && castAndCrew.length > 0 ? (
             <>
-              {/* Separate Cast and Crew */}
               {(() => {
-                // Filter cast (actors) and crew (production team)
                 const cast = castAndCrew.filter(person =>
                   person.role.toLowerCase().includes('samara') ||
                   person.role.toLowerCase().includes('boyfriend') ||
@@ -701,118 +699,16 @@ function FilmWebsiteContent() {
                 )
 
                 return (
-                  <>
-                    {/* Cast Section */}
-                    {cast.length > 0 && (
-                      <div className="mb-16">
-                        <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Cast</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                          {cast
-                            .sort((a, b) => (a.order || 0) - (b.order || 0))
-                            .map((person, index) => (
-                              <div key={`cast-${index}`} className="text-center space-y-4">
-                                <div className="relative w-32 h-32 mx-auto rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
-                                  {person.image ? (
-                                    <Image
-                                      src={person.image}
-                                      alt={person.name}
-                                      fill
-                                      className="object-cover"
-                                      onError={(e) => {
-                                        // Hide broken image and show placeholder
-                                        const target = e.target as HTMLImageElement
-                                        target.style.display = 'none'
-                                      }}
-                                    />
-                                  ) : null}
-                                  {/* Fallback placeholder */}
-                                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
-                                    <span className="text-gray-500 text-lg font-semibold">
-                                      {person.name.split(' ').map((n: string) => n[0]).join('')}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <h4 className="text-xl font-bold text-gray-900">{person.name}</h4>
-                                  <p className="text-[#B95D38] font-medium text-sm uppercase tracking-wide">{person.role}</p>
-                                  <p className="text-gray-600 text-sm leading-relaxed px-2">{person.description}</p>
-                                  {person.readMoreUrl && (
-                                    <a
-                                      href={person.readMoreUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-[#B95D38] text-sm hover:underline inline-flex items-center gap-1"
-                                    >
-                                      Read more <ExternalLink className="w-3 h-3" />
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Crew Section */}
-                    {crew.length > 0 && (
-                      <div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Production Team</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                          {crew
-                            .sort((a, b) => (a.order || 0) - (b.order || 0))
-                            .map((person, index) => (
-                              <div key={`crew-${index}`} className="text-center space-y-4">
-                                <div className="relative w-24 h-24 mx-auto rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
-                                  {person.image ? (
-                                    <Image
-                                      src={person.image}
-                                      alt={person.name}
-                                      fill
-                                      className="object-cover"
-                                      onError={(e) => {
-                                        const target = e.target as HTMLImageElement
-                                        target.style.display = 'none'
-                                      }}
-                                    />
-                                  ) : null}
-                                  {/* Fallback placeholder */}
-                                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
-                                    <span className="text-gray-400 text-sm font-semibold">
-                                      {person.name.split(' ').map((n: string) => n[0]).join('')}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <h4 className="text-lg font-bold text-gray-900">{person.name}</h4>
-                                  <p className="text-[#B95D38] font-medium text-xs uppercase tracking-wide">{person.role}</p>
-                                  <p className="text-gray-600 text-xs leading-relaxed px-1">{person.description}</p>
-                                  {person.readMoreUrl && (
-                                    <a
-                                      href={person.readMoreUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-[#B95D38] text-xs hover:underline inline-flex items-center gap-1"
-                                    >
-                                      Portfolio <ExternalLink className="w-2 h-2" />
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    )}
-                  </>
+                  <CastCrewGrid />
                 )
               })()}
             </>
           ) : (
-            // Loading or error state
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38] mx-auto mb-4"></div>
               <p className="text-gray-600">Loading cast and crew information...</p>
             </div>
-          )}
+          )} 
         </div>
       </section>
       {/* Contact & Social */}
