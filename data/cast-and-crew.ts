@@ -15,7 +15,7 @@ export const castAndCrew: CastCrewMember[] = [
     description: "Award-winning filmmaker with a passion for stories that explore human psychology and social issues. Jenna brings over a decade of experience in independent filmmaking, with previous work showcased at Sundance and SXSW.",
     image: "/cast/jenna-lam.jpg",
     order: 1,
-    readMoreUrl: "https://jennalamfilms.com"
+    readMoreUrl: "https://www.linkedin.com/in/jennalamx/"
   },
   {
     name: "Corey Brown",

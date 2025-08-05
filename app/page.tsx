@@ -377,8 +377,6 @@ function FilmWebsiteContent() {
     Realist: 0,
     Architect: 0
   })
-  const [castAndCrew, setCastAndCrew] = useState<CastCrewMember[]>([])
-  const [castCrewLoading, setCastCrewLoading] = useState(true)
 
   // Advanced randomization helper function:
   const createAdvancedRandomizedQuestions = (userClickPattern: number[] = []) => {
@@ -524,14 +522,14 @@ function FilmWebsiteContent() {
 
       console.log('Calculated scores:', scores)
 
-      // ✅ Fixed archetype calculation - get the key, not the array
+      // Fixed archetype calculation - get the key, not the array
       const winningArchetype = Object.entries(scores).reduce((a, b) =>
         a[1] > b[1] ? a : b
       )[0] // This gets the archetype name (key)
 
       console.log('Winning archetype:', winningArchetype)
 
-      // ✅ Fixed total score calculation
+      // Fixed total score calculation
       const totalScore = scores[winningArchetype as keyof typeof scores]
       console.log('Total score:', totalScore)
 
@@ -674,32 +672,6 @@ function FilmWebsiteContent() {
         onWatchFilm={() => setShowFilm(true)}
       />
 
-
-      {/* Sponsors Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-6">
-          <div className="text-center space-y-12">
-            <h2 className="text-lg font-medium text-gray-500 tracking-wide uppercase">Supported By</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-12 items-center justify-center max-w-4xl mx-auto">
-              {sponsors.map((sponsor, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-300"
-                >
-                  <Image
-                    src={sponsor.logo || "/placeholder.svg"}
-                    alt={sponsor.name}
-                    width={120}
-                    height={60}
-                    className="object-contain opacity-60 hover:opacity-100 transition-opacity duration-300"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Meet the Cast & Crew */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-6">
@@ -710,123 +682,139 @@ function FilmWebsiteContent() {
             </p>
           </div>
 
-          {/* Cast & Crew Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {castAndCrew.map((person, index) => (
-              <div key={index} className="text-center space-y-4">
-                <div className="relative w-32 h-32 mx-auto rounded-full overflow-hidden bg-gray-200">
-                  {person.image ? (
-                    <Image
-                      src={person.image}
-                      alt={person.name}
-                      fill
-                      className="object-cover"
-                      onError={(e) => {
-                        // Hide broken image and show placeholder
-                        const target = e.target as HTMLImageElement
-                        target.style.display = 'none'
-                      }}
-                    />
-                  ) : null}
-                  {/* Always show placeholder background */}
-                  <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-                    <span className="text-gray-500 text-xs">{person.name.split(' ').map((n: string) => n[0]).join('')}</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-gray-900">{person.name}</h3>
-                  {person.role && <p className="text-[#B95D38] font-medium">{person.role}</p>}
-                  <p className="text-gray-600 text-sm leading-relaxed px-2">{person.description}</p>
-                  {person.readMoreUrl && (
-                    <a
-                      href={person.readMoreUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#B95D38] text-sm hover:underline inline-block"
-                    >
-                      Read more →
-                    </a>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+          {/* Check if we have cast and crew data */}
+          {castAndCrew && castAndCrew.length > 0 ? (
+            <>
+              {/* Separate Cast and Crew */}
+              {(() => {
+                // Filter cast (actors) and crew (production team)
+                const cast = castAndCrew.filter(person =>
+                  person.role.toLowerCase().includes('samara') ||
+                  person.role.toLowerCase().includes('boyfriend') ||
+                  person.role.toLowerCase().includes('mom')
+                )
 
-      {/* Meet the Creators */}
-      <section className="py-24 bg-gray-50">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Meet the Creators</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              The passionate team behind this exploration of financial psychology and human nature.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
-            {[
-              {
-                name: "Jenna Lam",
-                role: "Producer & Director",
-                bio: "Award-winning filmmaker with a passion for stories that explore human psychology and social issues.",
-                expandedBio: "Jenna brings over a decade of experience in independent filmmaking, with previous work showcased at Sundance and SXSW. Her storytelling is rooted in truth, vulnerability, and cultural nuance.",
-                image: "/jenna.jpeg",
-              },
-              {
-                name: "Waskar Paulino",
-                role: "Software Engineer",
-                bio: "Engineer focused on creative, accessible, and community-first software solutions.",
-                expandedBio: "Waskar built the interactive experience powering the quiz and results system. He blends storytelling and technology to create tools that feel personal and empowering—especially for communities historically left out of the conversation.",
-                image: "/waskar.jpeg",
-              },
-              {
-                name: "Jason Arceo",
-                role: "UX/UI Designer",
-                bio: "Designer crafting intentional and intuitive user experiences that amplify storytelling.",
-                expandedBio: "Jason led the interface design for this project, creating a seamless journey from quiz to reflection. His work centers emotion, clarity, and thoughtful interaction design that serves both story and audience.",
-                image: "/jason.jpeg",
-              },
-            ].map((creator, index) => (
-              <div key={index} className="text-center space-y-6 group">
-                <div className="relative w-40 h-40 mx-auto rounded-full overflow-hidden bg-gray-100">
-                  <Image
-                    src={creator.image || "/placeholder.svg"}
-                    alt={creator.name}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">{creator.name}</h3>
-                    <p className="text-[#B95D38] font-medium text-lg">{creator.role}</p>
-                  </div>
-                  <p className="text-gray-600 leading-relaxed">
-                    {expandedCreator === index ? creator.expandedBio : creator.bio}
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setExpandedCreator(expandedCreator === index ? null : index)}
-                    className="text-[#B95D38] hover:text-[#B95D38]/90 hover:bg-[#B95D38]/10 rounded-full px-6"
-                  >
-                    {expandedCreator === index ? (
-                      <>
-                        Show Less <ChevronUp className="w-4 h-4 ml-1" />
-                      </>
-                    ) : (
-                      <>
-                        Read More <ChevronDown className="w-4 h-4 ml-1" />
-                      </>
+                const crew = castAndCrew.filter(person =>
+                  !person.role.toLowerCase().includes('samara') &&
+                  !person.role.toLowerCase().includes('boyfriend') &&
+                  !person.role.toLowerCase().includes('mom')
+                )
+
+                return (
+                  <>
+                    {/* Cast Section */}
+                    {cast.length > 0 && (
+                      <div className="mb-16">
+                        <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Cast</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                          {cast
+                            .sort((a, b) => (a.order || 0) - (b.order || 0))
+                            .map((person, index) => (
+                              <div key={`cast-${index}`} className="text-center space-y-4">
+                                <div className="relative w-32 h-32 mx-auto rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+                                  {person.image ? (
+                                    <Image
+                                      src={person.image}
+                                      alt={person.name}
+                                      fill
+                                      className="object-cover"
+                                      onError={(e) => {
+                                        // Hide broken image and show placeholder
+                                        const target = e.target as HTMLImageElement
+                                        target.style.display = 'none'
+                                      }}
+                                    />
+                                  ) : null}
+                                  {/* Fallback placeholder */}
+                                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
+                                    <span className="text-gray-500 text-lg font-semibold">
+                                      {person.name.split(' ').map((n: string) => n[0]).join('')}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <h4 className="text-xl font-bold text-gray-900">{person.name}</h4>
+                                  <p className="text-[#B95D38] font-medium text-sm uppercase tracking-wide">{person.role}</p>
+                                  <p className="text-gray-600 text-sm leading-relaxed px-2">{person.description}</p>
+                                  {person.readMoreUrl && (
+                                    <a
+                                      href={person.readMoreUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[#B95D38] text-sm hover:underline inline-flex items-center gap-1"
+                                    >
+                                      Read more <ExternalLink className="w-3 h-3" />
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
                     )}
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+
+                    {/* Crew Section */}
+                    {crew.length > 0 && (
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Production Team</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                          {crew
+                            .sort((a, b) => (a.order || 0) - (b.order || 0))
+                            .map((person, index) => (
+                              <div key={`crew-${index}`} className="text-center space-y-4">
+                                <div className="relative w-24 h-24 mx-auto rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+                                  {person.image ? (
+                                    <Image
+                                      src={person.image}
+                                      alt={person.name}
+                                      fill
+                                      className="object-cover"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement
+                                        target.style.display = 'none'
+                                      }}
+                                    />
+                                  ) : null}
+                                  {/* Fallback placeholder */}
+                                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
+                                    <span className="text-gray-400 text-sm font-semibold">
+                                      {person.name.split(' ').map((n: string) => n[0]).join('')}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <h4 className="text-lg font-bold text-gray-900">{person.name}</h4>
+                                  <p className="text-[#B95D38] font-medium text-xs uppercase tracking-wide">{person.role}</p>
+                                  <p className="text-gray-600 text-xs leading-relaxed px-1">{person.description}</p>
+                                  {person.readMoreUrl && (
+                                    <a
+                                      href={person.readMoreUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[#B95D38] text-xs hover:underline inline-flex items-center gap-1"
+                                    >
+                                      Portfolio <ExternalLink className="w-2 h-2" />
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
+            </>
+          ) : (
+            // Loading or error state
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38] mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading cast and crew information...</p>
+            </div>
+          )}
         </div>
       </section>
-
       {/* Contact & Social */}
       <section className="py-24 bg-gray-50">
         <div className="container mx-auto px-6">

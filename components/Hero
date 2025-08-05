@@ -29,9 +29,9 @@ export default function Hero({
     <div className="w-full">
       {/* Mobile-First Poster Section - Matches Figma */}
       <section className="relative w-full">
-        {/* Mobile Layout - Full poster with letterboxing */}
+        {/* Mobile Layout - Compact like wireframe */}
         <div className="block md:hidden">
-          <div className="relative w-full h-[50vh] min-h-[400px] max-h-[600px] flex items-center justify-center">
+          <div className="relative w-full aspect-[4/5] max-h-[450px] bg-black">
             <Image
               src="/desktop-poster.png"
               alt="Back Against the Wall Poster"
@@ -45,12 +45,12 @@ export default function Hero({
 
         {/* Desktop Layout - Full Screen */}
         <div className="hidden md:block">
-          <div className="relative w-full h-screen">
+          <div className="relative w-full h-screen flex items-center justify-center bg-black">
             <Image
               src="/desktop-poster.png"
               alt="Back Against the Wall Poster"
               fill
-              className="object-cover"
+              className="object-contain"
               priority
               sizes="100vw"
             />
