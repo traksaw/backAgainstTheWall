@@ -37,6 +37,9 @@ export default function ContactForm() {
                     />
                     <Input
                         type="email"
+                        id='email'
+                        name="email"
+                        required
                         placeholder="Email"
                         className="border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3"
                     />
@@ -49,6 +52,9 @@ export default function ContactForm() {
 
                 <Input
                     placeholder="Organization (optional)"
+                    id='organization'
+                    name="organization"
+                    type="text"
                     className="border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3"
                 />
                 <ValidationError
@@ -58,6 +64,9 @@ export default function ContactForm() {
                 />
                 <Textarea
                     placeholder="Message"
+                    id='message'
+                    name="message"
+                    required
                     rows={5}
                     className="border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg resize-none"
                 />
