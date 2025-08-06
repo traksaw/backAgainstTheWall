@@ -3,23 +3,13 @@ import { getUserIdFromRequest } from "@/lib/jwt"
 import { AuthService } from "@/lib/auth"
 
 export async function GET(req: NextRequest) {
-  console.log('=== AUTH DEBUG INFO ===')
-  
-  // Debug: Log all cookies
-  console.log('All cookies:', req.cookies.getAll())
-  
-  // Debug: Log specific token cookie
+
   const tokenCookie = req.cookies.get("token")
-  console.log('Token cookie:', tokenCookie)
-  
-  // Debug: Log authorization header (in case token is sent via header)
+
   const authHeader = req.headers.get('authorization')
-  console.log('Authorization header:', authHeader)
   
   try {
-    const userId = await getUserIdFromRequest(req)
-    console.log('Extracted userId:', userId)
-    
+    const userId = await getUserIdFromRequest(req)    
     // Check if userId exists
     if (!userId) {
       return NextResponse.json({ 

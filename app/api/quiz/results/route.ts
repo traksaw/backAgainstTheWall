@@ -5,7 +5,6 @@ import QuizResultModel from "@/models/QuizResult"
 import mongoose from "mongoose"
 
 export async function GET(req: NextRequest) {
-  console.log('=== QUIZ RESULTS DEBUG ===')
   
   // Debug: Check cookies
   const tokenCookie = req.cookies.get("token")

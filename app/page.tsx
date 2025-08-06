@@ -447,7 +447,7 @@ function FilmWebsiteContent() {
       const isRepetitive = lastFour.filter(pos => pos === lastFour[0]).length >= 3
 
       if (isRepetitive) {
-        console.log('🎯 Anti-gaming: Detected repetitive clicking - applying countermeasures')
+        
 
         // Regenerate remaining questions with anti-pattern logic
         const remainingQuestionCount = shuffledQuestions.length - currentQuestion - 1
@@ -500,11 +500,6 @@ function FilmWebsiteContent() {
 
   const handleQuizComplete = async (answers: Record<number, QuizAnswer>) => {
     try {
-      console.log('=== SUBMITTING QUIZ (FIXED ARCHETYPE) ===')
-      console.log('Raw answers:', answers)
-      console.log('Number of answers:', Object.keys(answers).length)
-      console.log('Shuffled questions length:', shuffledQuestions.length)
-
       const sessionId = Math.random().toString(36).substr(2, 9)
 
       // Calculate scores for each archetype
@@ -517,24 +512,18 @@ function FilmWebsiteContent() {
 
       // Count points for each archetype
       Object.values(answers).forEach(answer => {
-        console.log('Processing answer:', answer)
         if (answer.archetype && answer.points) {
           scores[answer.archetype as keyof typeof scores] += answer.points
         }
       })
-
-      console.log('Calculated scores:', scores)
 
       // Fixed archetype calculation - get the key, not the array
       const winningArchetype = Object.entries(scores).reduce((a, b) =>
         a[1] > b[1] ? a : b
       )[0] // This gets the archetype name (key)
 
-      console.log('Winning archetype:', winningArchetype)
-
       // Fixed total score calculation
       const totalScore = scores[winningArchetype as keyof typeof scores]
-      console.log('Total score:', totalScore)
 
       // Validate before sending
       if (!winningArchetype || totalScore === undefined) {
@@ -548,11 +537,9 @@ function FilmWebsiteContent() {
         score: totalScore
       }
 
-      console.log('Quiz data being submitted (validated):', quizData)
 
       await submitQuiz(quizData)
 
-      console.log('submitQuiz completed successfully!')
       setShowQuiz(false)
       setShowResults(true)
     } catch (error) {
