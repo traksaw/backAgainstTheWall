@@ -48,6 +48,8 @@ import Hero from "@/components/Hero"
 import { castAndCrew, type CastCrewMember } from "@/data/cast-and-crew"
 import CastCrewCarousel from "@/components/CastCrewCarousel"
 import CastCrewGrid from "@/components/CastCrewGrid"
+import SocialAndEvent from "@/components/SocialAndEvents"
+import Footer from "@/components/Footer"
 
 
 interface QuizQuestion {
@@ -698,7 +700,7 @@ function FilmWebsiteContent() {
           )} 
         </div>
       </section>
-      {/* Contact & Social */}
+       {/* Contact & Social */}
       <section className="py-24 bg-gray-50">
         <div className="container mx-auto px-6">
           <div className="max-w-6xl mx-auto">
@@ -707,86 +709,12 @@ function FilmWebsiteContent() {
               <ContactForm />
 
               {/* Social & Events */}
-              <div className="space-y-12">
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Follow Our Journey</h3>
-                  <div className="flex space-x-4">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="border-gray-300 text-gray-600 hover:border-[#B95D38] hover:text-[#B95D38] rounded-full w-12 h-12 bg-transparent"
-                    >
-                      <Instagram className="w-5 h-5" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="border-gray-300 text-gray-600 hover:border-[#B95D38] hover:text-[#B95D38] rounded-full w-12 h-12 bg-transparent"
-                    >
-                      <Twitter className="w-5 h-5" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="border-gray-300 text-gray-600 hover:border-[#B95D38] hover:text-[#B95D38] rounded-full w-12 h-12 bg-transparent"
-                    >
-                      <Facebook className="w-5 h-5" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <h3 className="text-2xl font-bold text-gray-900">Upcoming Events</h3>
-                  <div className="space-y-4">
-                    <Card className="border-gray-200 hover:border-[#B95D38] transition-colors duration-300">
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-2 text-[#B95D38]">
-                              <Users className="w-4 h-4" />
-                              <span className="text-sm font-medium">Panel Discussion</span>
-                            </div>
-                            <h4 className="font-semibold text-gray-900">Financial Psychology & Film</h4>
-                            <p className="text-sm text-gray-600">Post-screening discussion with creators</p>
-                          </div>
-                          <Button variant="ghost" size="sm" className="text-[#B95D38] hover:bg-[#B95D38]/10">
-                            <ExternalLink className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-gray-200 hover:border-[#B95D38] transition-colors duration-300">
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-2 text-[#B95D38]">
-                              <Calendar className="w-4 h-4" />
-                              <span className="text-sm font-medium">Private Screening</span>
-                            </div>
-                            <h4 className="font-semibold text-gray-900">For Investors & Partners</h4>
-                            <p className="text-sm text-gray-600">Exclusive viewing and networking</p>
-                          </div>
-                          <Button variant="ghost" size="sm" className="text-[#B95D38] hover:bg-[#B95D38]/10">
-                            <ExternalLink className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-              </div>
+              <SocialAndEvent />
             </div>
           </div>
+          <Footer />
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-12 bg-white border-t border-gray-200">
-        <div className="container mx-auto px-6 text-center">
-          <p className="text-gray-500">© 2024 Back Against the Wall. All rights reserved.</p>
-        </div>
-      </footer>
 
       {/* Auth Modals */}
       <SignUpModal
@@ -843,30 +771,6 @@ function FilmWebsiteContent() {
             )}
 
           </DialogHeader>
-
-          {/* Welcome Screen */}
-          {/* {showWelcome && profile && (
-            <div className="space-y-6 py-6">
-              <div className="text-center space-y-4">
-                <p className="text-xl text-gray-700 leading-relaxed">
-                  Welcome, {profile?.first_name || "Guest"}! Let's discover your financial personality.
-                </p>
-
-                <p className="text-gray-600">
-                  Your responses will reveal your financial archetype and help you connect more deeply with the film's
-                  characters.
-                </p>
-              </div>
-              <div className="flex justify-center">
-                <Button
-                  onClick={startQuiz}
-                  className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-8 py-3 rounded-lg"
-                >
-                  Start Quiz
-                </Button>
-              </div>
-            </div>
-          )} */}
 
 
           {/* Quiz Questions */}
@@ -1077,7 +981,7 @@ export default function Page() {
   return (
     <AuthProvider>
       <ClientOnly>
-        <FilmWebsiteContent />
+        <FilmWebsiteContent />   
       </ClientOnly>
     </AuthProvider>
   )
