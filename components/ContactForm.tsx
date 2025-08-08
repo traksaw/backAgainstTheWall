@@ -126,21 +126,20 @@ export default function ContactForm(): JSX.Element {
         );
     }
     return (
-        <section className="py-24 bg-gray-50">
+        <section className="py-8 bg-gray-50">
             <div className="container mx-auto px-6">
                 <div className="max-w-7xl mx-auto">
                     {/* Two Column Grid Layout */}
-                   
                         {/* Left Column - Contact Form */}
                         <div>
                             <FadeInLeft delay={200} duration={800}>
                                 <div className="space-y-8">
-
                                     <h2 className="text-4xl font-bold text-gray-900 mb-4">Get in Touch</h2>
-                                    <p className="text-xl text-gray-600 leading-relaxed">
+                                    <p className="text-xl text-gray-600 leading-relaxed mb-6">
                                         Interested in screenings, partnerships, or panel discussions? We'd love to connect with sponsors,
                                         grantors, and investors.
                                     </p>
+                                    <br />
                                 </div>
                                 {/* Form with staggered animations */}
                                 <div className="space-y-6">

@@ -86,20 +86,20 @@ export default function CastCrewCarousel() {
               {allPeople.map((person, idx) => (
                 <FadeIn key={idx} delay={800 + idx * 100} duration={600} direction="up">
                   <div className="flex-shrink-0 w-[75%] max-w-xs snap-start">
-                    <div className="bg-gray-50 rounded-xl shadow-sm p-6 text-center space-y-3 h-full transform hover:scale-105 transition-all duration-300 hover:shadow-lg">
+                    <div className="bg-gray-50 rounded-xl shadow-sm p-4 text-center space-y-2 h-full transform hover:scale-105 transition-all duration-300 hover:shadow-lg overflow-hidden">
                       {/* Movie credits style typography */}
-                      <div className="space-y-2">
-                        <h3 className="text-lg font-bold text-gray-900 leading-tight">
+                      <div className="space-y-1">
+                        <h3 className="text-base font-bold text-gray-900 leading-tight line-clamp-2">
                           {person.name}
                         </h3>
-                        <p className="text-[#B95D38] font-semibold text-sm uppercase tracking-wider">
+                        <p className="text-[#B95D38] font-semibold text-xs uppercase tracking-wider line-clamp-2">
                           {person.role}
                         </p>
                       </div>
 
                       {/* Description */}
                       <div className="pt-1">
-                        <p className="text-gray-600 text-xs leading-relaxed italic line-clamp-3 mb-2">
+                        <p className="text-gray-600 text-xs leading-relaxed italic line-clamp-4 mb-2">
                           {person.description}
                         </p>
                         {person.readMoreUrl && (
@@ -107,11 +107,11 @@ export default function CastCrewCarousel() {
                             href={person.readMoreUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[#B95D38] text-xs hover:underline inline-flex items-center gap-1 mt-2 font-medium transition-all duration-300 transform hover:scale-105"
+                            className="text-[#B95D38] text-xs hover:underline inline-flex items-center gap-1 mt-1 font-medium transition-all duration-300 transform hover:scale-105"
                           >
                             {/* Show different text based on role type */}
                             {cast.some(c => c.name === person.name) ? 'Read more' : 'Portfolio'}
-                            <ExternalLink className="w-3 h-3" />
+                            <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />
                           </a>
                         )}
                       </div>
