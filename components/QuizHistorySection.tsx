@@ -87,33 +87,16 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
     }
   }
 
-  const debugQuizData = (result: IQuizResult) => {
-  console.log('=== QUIZ RESULT DEBUG ===')
-  console.log('Full result object:', result)
-  console.log('result.answers:', result.answers)
-  console.log('result.answers?.totalQuestions:', result.answers?.totalQuestions)
-  console.log('result.answers?.responses:', result.answers?.responses)
-  if (result.answers?.responses) {
-    console.log('Number of responses:', Object.keys(result.answers.responses).length)
-    console.log('Response keys:', Object.keys(result.answers.responses))
-  }
-  console.log('=========================')
-}
-
   // Helper function to get the number of questions answered
   const getQuestionsAnswered = (result: IQuizResult) => {
-    debugQuizData(result) // Add this line for debugging
   
   if (result.answers?.totalQuestions) {
-    console.log('Using totalQuestions:', result.answers.totalQuestions)
     return result.answers.totalQuestions
   }
   if (result.answers?.responses) {
     const count = Object.keys(result.answers.responses).length
-    console.log('Using responses count:', count)
     return count
   }
-  console.log('Falling back to 0')
   return 0
   }
 

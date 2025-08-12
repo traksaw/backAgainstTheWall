@@ -28,9 +28,6 @@ export class QuizService {
     archetype: string
     score: number
   }): Promise<any> {
-    console.log('=== QUIZ SERVICE DEBUG ===')
-    console.log('Data being sent to API:', JSON.stringify(data, null, 2))
-
     try {
       const res = await fetch("/api/quiz/submit", {
         method: "POST",
@@ -38,10 +35,6 @@ export class QuizService {
         body: JSON.stringify(data),
         credentials: "include",
       })
-
-      console.log('Response status:', res.status)
-      console.log('Response ok:', res.ok)
-      console.log('Response headers:', Object.fromEntries(res.headers.entries()))
 
       if (!res.ok) {
         let errorData
@@ -62,7 +55,6 @@ export class QuizService {
       }
 
       const responseData = await res.json()
-      console.log('Quiz submission successful:', responseData)
       return responseData
 
     } catch (error) {
@@ -71,7 +63,6 @@ export class QuizService {
     }
   }
 
-
   static async updateQuizResult(resultId: string, updates: any): Promise<any> {
     const res = await fetch(`/api/quiz/${resultId}/update`, {
       method: "PUT",
@@ -79,8 +70,6 @@ export class QuizService {
       body: JSON.stringify(updates),
       credentials: "include",
     })
-    console.log("resultId passed to QuizService.updateQuizResult:", resultId)
-
 
     if (!res.ok) throw new Error("Failed to update quiz result")
     return await res.json()

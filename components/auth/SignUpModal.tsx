@@ -147,20 +147,8 @@ const handleSubmit = async (e: React.FormEvent) => {
   setLoading(true)
 
   try {
-    console.log("=== STARTING SIGNUP ===")
-    console.log("Starting signup process with data:", {
-      email: formData.email,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      zip_code: formData.zip_code,
-      occupationStatus: formData.occupationStatus,
-    })
-
-    console.log("Calling signUp function...")
+  
     await signUp(formData)
-    console.log("signUp function completed successfully!")
-
-    console.log("Signup completed successfully, closing modal and starting quiz...")
 
     // Reset form first
     setFormData({
@@ -180,10 +168,8 @@ const handleSubmit = async (e: React.FormEvent) => {
     // Close modal
     onOpenChange(false)
 
-    console.log("About to call onSuccess()...")
     // Call success callback
     onSuccess()
-    console.log("onSuccess() called successfully!")
 
   } catch (error) {
     console.error("=== SIGNUP FAILED ===")
@@ -211,7 +197,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     setError(errorMessage)
   } finally {
-    console.log("Setting loading to false")
     setLoading(false)
   }
 }

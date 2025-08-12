@@ -28,17 +28,12 @@ export function SignInModal({ open, onOpenChange, onSwitchToSignUp }: SignInModa
     setLoading(true)
 
     try {
-      console.log("Starting signin process...")
-
       // Validate form data
       if (!formData.email || !formData.password) {
         throw new Error("Email and password are required")
       }
 
       await signIn(formData)
-
-      console.log("Signin completed successfully")
-
       // Close modal
       onOpenChange(false)
 

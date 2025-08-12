@@ -90,13 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(responseData.error || "Signup failed")
       }
 
-      // ✅ After successful signup, fetch the current user to get the latest state
+      // After successful signup, fetch the current user to get the latest state
       const userData = await fetchCurrentUser()
       if (!userData) {
         throw new Error("Failed to authenticate after signup")
       }
-
-      console.log("Signup successful, user data:", userData)
     } catch (err) {
       console.error("Signup error:", err)
       throw err // Re-throw so the component can handle it
@@ -126,7 +124,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Failed to authenticate after signin")
       }
 
-      console.log("Signin successful, user data:", userData)
     } catch (err) {
       console.error("Signin error:", err)
       throw err

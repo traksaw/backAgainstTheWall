@@ -21,7 +21,6 @@ export default function TestSanity() {
     async function fetchData() {
       try {
         const data = await getCastAndCrew()
-        console.log('Fetched data:', data)
         setCastData(data)
       } catch (err) {
         console.error('Error fetching data:', err)
