@@ -52,14 +52,7 @@ import SocialAndEvent from "@/components/SocialAndEvents"
 import Footer from "@/components/Footer"
 import { getCastAndCrew } from '../lib/sanity'
 
-interface CastMember {
-  name: string;
-  role: string;
-  description: string;
-  image: string;
-  readMoreUrl?: string;
-  order: number;
-}
+
 interface QuizQuestion {
   id: number
   question: string
