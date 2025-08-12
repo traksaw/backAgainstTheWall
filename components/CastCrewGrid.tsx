@@ -1,5 +1,7 @@
-import { ExternalLink } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ExternalLink, Sparkles, Users, Star } from "lucide-react";
 import { FadeIn, FadeInUp } from "@/components/ui/fade-in";
+import { cn } from "@/lib/utils";
 
 interface CastMember {
   name: string;
@@ -14,8 +16,32 @@ interface CastCrewGridProps {
   castMembers: CastMember[];
 }
 
+// Enhanced loading skeleton
+const LoadingSkeleton = ({ type, index }: { type: 'cast' | 'crew', index: number }) => (
+  <div 
+    className={cn(
+      "text-center space-y-3 animate-pulse",
+      type === 'cast' ? "md:grid-cols-2 lg:grid-cols-3" : "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+    )}
+    style={{ animationDelay: `${index * 100}ms` }}
+  >
+    <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 animate-pulse"></div>
+    <div className="space-y-2">
+      <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
+      <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto animate-pulse"></div>
+      <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
+      <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto animate-pulse"></div>
+    </div>
+  </div>
+);
+
 export default function CastCrewGrid({ castMembers }: CastCrewGridProps) {
-  // Filter cast (actors) and crew (production team) from props
+  const [isVisible, setIsVisible] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<number[]>([]);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  // Filter cast and crew
   const cast = castMembers.filter(person =>
     person.role.toLowerCase().includes('samara') ||
     person.role.toLowerCase().includes('boyfriend') ||
@@ -28,14 +54,57 @@ export default function CastCrewGrid({ castMembers }: CastCrewGridProps) {
     !person.role.toLowerCase().includes('mom')
   );
 
-  // Return null if no cast members provided
+  // Intersection Observer for scroll-triggered animations
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Handle image loading
+  const handleImageLoad = (index: number) => {
+    setLoadedImages(prev => prev.includes(index) ? prev : [...prev, index]);
+  };
+
+  // Loading state
   if (!castMembers || castMembers.length === 0) {
     return (
-      <section className="hidden md:block py-24 bg-white">
+      <section ref={sectionRef} className="hidden md:block py-24 bg-white">
         <div className="container mx-auto px-6">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38] mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading cast and crew information...</p>
+          <div className="text-center mb-20">
+            <div className="h-12 bg-gray-200 rounded w-96 mx-auto mb-6 animate-pulse"></div>
+            <div className="h-6 bg-gray-200 rounded w-128 mx-auto animate-pulse"></div>
+          </div>
+
+          {/* Cast Loading */}
+          <div className="mb-16">
+            <div className="h-8 bg-gray-200 rounded w-32 mx-auto mb-12 animate-pulse"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {[0, 1, 2].map((index) => (
+                <LoadingSkeleton key={index} type="cast" index={index} />
+              ))}
+            </div>
+          </div>
+
+          {/* Crew Loading */}
+          <div>
+            <div className="h-8 bg-gray-200 rounded w-48 mx-auto mb-12 animate-pulse"></div>
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
+              {[0, 1, 2, 3].map((index) => (
+                <LoadingSkeleton key={index} type="crew" index={index} />
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -43,131 +112,241 @@ export default function CastCrewGrid({ castMembers }: CastCrewGridProps) {
   }
 
   return (
-    <section className="hidden md:block py-24 bg-white">
-      <div className="container mx-auto px-6">
+    <section ref={sectionRef} className="hidden md:block py-24 bg-white relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-[#B95D38] rounded-full animate-float blur-3xl"></div>
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-[#669CCB] rounded-full animate-float-delayed blur-2xl"></div>
+        <div className="absolute top-1/2 left-1/4 w-32 h-32 bg-[#B95D38]/30 rounded-full animate-bounce-slow"></div>
+      </div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        {/* Enhanced header */}
         <FadeInUp delay={200} duration={800}>
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+          <div className="text-center mb-20 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#B95D38]/5 to-transparent blur-xl"></div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 relative transform transition-all duration-500 hover:scale-105">
               Meet the Cast & Crew
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed relative transform transition-all duration-300 hover:text-gray-800">
               Thank you to all whose hands were involved in this exploration of young Asian-American financial psychology.
             </p>
           </div>
         </FadeInUp>
 
-        {/* Cast Section */}
+        {/* Enhanced Cast Section */}
         {cast.length > 0 && (
           <div className="mb-16">
             <FadeInUp delay={400} duration={800}>
-              <h3 className="text-3xl font-bold text-gray-900 mb-12 text-center">Cast</h3>
+              <div className="text-center mb-12 relative">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <h3 className="text-3xl font-bold text-gray-900 transform transition-all duration-300 hover:text-[#B95D38]">
+                    Cast
+                  </h3>
+                </div>
+                <div className="w-24 h-1 bg-gradient-to-r from-transparent via-[#B95D38] to-transparent mx-auto"></div>
+              </div>
             </FadeInUp>
+          
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {cast
                 .sort((a, b) => (a.order || 0) - (b.order || 0))
                 .map((person, index) => (
-                  <FadeIn
+                  <div
                     key={`cast-${index}`}
-                    delay={600 + index * 150}
-                    duration={800}
-                    direction="up"
+                    className={cn(
+                      "transform transition-all duration-700",
+                      isVisible ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
+                    )}
+                    style={{ transitionDelay: `${600 + index * 150}ms` }}
+                    onMouseEnter={() => setHoveredIndex(index)}
+                    onMouseLeave={() => setHoveredIndex(null)}
                   >
-                    <div className="text-center space-y-3 group hover:transform hover:scale-105 transition-all duration-300">
-                      {/* Only show image if it exists */}
-                      {person.image && (
-                        <img 
-                          src={person.image} 
-                          alt={person.name}
-                          className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-                        />
-                      )}
+                    <div className="group text-center space-y-3 transform transition-all duration-500 hover:scale-105 relative p-6 rounded-2xl hover:bg-gradient-to-br hover:from-white hover:to-[#B95D38]/5 hover:shadow-2xl hover:shadow-[#B95D38]/10">
                       
-                      <div className="space-y-2">
-                        <h4 className="text-2xl font-bold text-gray-900 group-hover:text-[#B95D38] transition-colors duration-300">
-                          {person.name}
-                        </h4>
-                        <p className="text-[#B95D38] font-semibold text-base uppercase tracking-wider">
-                          {person.role}
-                        </p>
-                      </div>
-                      <div className="pt-2">
-                        <p className="text-gray-600 text-sm leading-relaxed italic max-w-sm mx-auto">
-                          {person.description}
-                        </p>
-                        {person.readMoreUrl && (
-                          <a
-                            href={person.readMoreUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[#B95D38] text-sm hover:underline inline-flex items-center gap-1 mt-2 font-medium transition-all duration-300 hover:text-[#B95D38]/80"
-                          >
-                            Read more <ExternalLink className="w-3 h-3" />
-                          </a>
+                      {/* Hover glow effect */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#B95D38]/10 to-[#669CCB]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl blur-xl"></div>
+                      
+                      {/* Content */}
+                      <div className="relative z-10">
+                        {/* Enhanced image */}
+                        {person.image && (
+                          <div className="relative mb-4">
+                            <img 
+                              src={person.image} 
+                              alt={person.name}
+                              className={cn(
+                                "w-24 h-24 rounded-full mx-auto object-cover transition-all duration-500 ring-4 ring-transparent group-hover:ring-[#B95D38]/30 group-hover:scale-110 group-hover:shadow-xl",
+                                loadedImages.includes(index) ? "opacity-100 scale-100" : "opacity-0 scale-90"
+                              )}
+                              onLoad={() => handleImageLoad(index)}
+                            />
+                            {!loadedImages.includes(index) && (
+                              <div className="absolute inset-0 w-24 h-24 rounded-full mx-auto bg-gray-200 animate-pulse"></div>
+                            )}
+                            
+                            {/* Floating sparkle effect on hover */}
+                            {hoveredIndex === index && (
+                              <div className="absolute -top-2 -right-2 w-4 h-4 text-[#B95D38] animate-bounce">
+                                <Sparkles className="w-full h-full" />
+                              </div>
+                            )}
+                          </div>
                         )}
+
+                        {/* Enhanced typography */}
+                        <div className="space-y-2">
+                          <h4 className="text-2xl font-bold text-gray-900 group-hover:text-[#B95D38] transition-all duration-300 transform group-hover:scale-105">
+                            {person.name}
+                          </h4>
+                          <p className="text-[#B95D38] font-semibold text-base uppercase tracking-wider group-hover:tracking-widest transition-all duration-300">
+                            {person.role}
+                          </p>
+                        </div>
+
+                        {/* Enhanced description */}
+                        <div className="pt-2">
+                          <p className="text-gray-600 text-sm leading-relaxed italic max-w-sm mx-auto group-hover:text-gray-800 transition-colors duration-300">
+                            {person.description}
+                          </p>
+                          {person.readMoreUrl && (
+                            <a
+                              href={person.readMoreUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[#B95D38] text-sm hover:underline inline-flex items-center gap-1 mt-2 font-medium transition-all duration-300 hover:text-[#B95D38]/80 transform hover:scale-105 group-hover:gap-2"
+                            >
+                              Read more 
+                              <ExternalLink className="w-3 h-3 transform transition-transform duration-300 group-hover:rotate-12" />
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </FadeIn>
+                  </div>
                 ))}
             </div>
           </div>
         )}
 
-        {/* Crew Section */}
+        {/* Enhanced Crew Section */}
         {crew.length > 0 && (
           <div>
             <FadeInUp delay={400} duration={800}>
-              <h3 className="text-3xl font-bold text-gray-900 mb-12 text-center">Production Team</h3>
+              <div className="text-center mb-12 relative">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <Users className="w-6 h-6 text-[#669CCB] animate-pulse" />
+                  <h3 className="text-3xl font-bold text-gray-900 transform transition-all duration-300 hover:text-[#669CCB]">
+                    Production Team
+                  </h3>
+                  <Users className="w-6 h-6 text-[#669CCB] animate-pulse" />
+                </div>
+                <div className="w-32 h-1 bg-gradient-to-r from-transparent via-[#669CCB] to-transparent mx-auto"></div>
+              </div>
             </FadeInUp>
+            
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
               {crew
                 .sort((a, b) => (a.order || 0) - (b.order || 0))
                 .map((person, index) => (
-                  <FadeIn
+                  <div
                     key={`crew-${index}`}
-                    delay={600 + index * 100}
-                    duration={600}
-                    direction="up"
+                    className={cn(
+                      "transform transition-all duration-600",
+                      isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+                    )}
+                    style={{ transitionDelay: `${800 + index * 100}ms` }}
+                    onMouseEnter={() => setHoveredIndex(cast.length + index)}
+                    onMouseLeave={() => setHoveredIndex(null)}
                   >
-                    <div className="text-center space-y-2 group hover:transform hover:scale-105 transition-all duration-300">
-                      {/* Only show image if it exists */}
-                      {person.image && (
-                        <img 
-                          src={person.image} 
-                          alt={person.name}
-                          className="w-16 h-16 rounded-full mx-auto mb-3 object-cover"
-                        />
-                      )}
+                    <div className="group text-center space-y-2 transform transition-all duration-500 hover:scale-105 relative p-4 rounded-xl hover:bg-gradient-to-br hover:from-white hover:to-[#669CCB]/5 hover:shadow-xl hover:shadow-[#669CCB]/10">
                       
-                      <div className="space-y-1">
-                        <h4 className="text-lg font-bold text-gray-900 group-hover:text-[#B95D38] transition-colors duration-300">
-                          {person.name}
-                        </h4>
-                        <p className="text-[#B95D38] font-semibold text-sm uppercase tracking-wide">
-                          {person.role}
-                        </p>
-                      </div>
-                      <div className="pt-1">
-                        <p className="text-gray-600 text-xs leading-relaxed italic">
-                          {person.description}
-                        </p>
-                        {person.readMoreUrl && (
-                          <a
-                            href={person.readMoreUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[#B95D38] text-xs hover:underline inline-flex items-center gap-1 mt-1 font-medium transition-all duration-300 hover:text-[#B95D38]/80"
-                          >
-                            Portfolio <ExternalLink className="w-2 h-2" />
-                          </a>
+                      {/* Content */}
+                      <div className="relative z-10">
+                        {/* Enhanced image */}
+                        {person.image && (
+                          <div className="relative mb-3">
+                            <img 
+                              src={person.image} 
+                              alt={person.name}
+                              className={cn(
+                                "w-16 h-16 rounded-full mx-auto object-cover transition-all duration-500 ring-2 ring-transparent group-hover:ring-[#669CCB]/30 group-hover:scale-110",
+                                loadedImages.includes(cast.length + index) ? "opacity-100 scale-100" : "opacity-0 scale-90"
+                              )}
+                              onLoad={() => handleImageLoad(cast.length + index)}
+                            />
+                            {!loadedImages.includes(cast.length + index) && (
+                              <div className="absolute inset-0 w-16 h-16 rounded-full mx-auto bg-gray-200 animate-pulse"></div>
+                            )}
+                            
+                            {/* Floating sparkle effect */}
+                            {hoveredIndex === cast.length + index && (
+                              <div className="absolute -top-1 -right-1 w-3 h-3 text-[#669CCB] animate-bounce">
+                              </div>
+                            )}
+                          </div>
                         )}
+
+                        {/* Enhanced typography */}
+                        <div className="space-y-1">
+                          <h4 className="text-lg font-bold text-gray-900 group-hover:text-[#669CCB] transition-all duration-300 transform group-hover:scale-105">
+                            {person.name}
+                          </h4>
+                          <p className="text-[#669CCB] font-semibold text-sm uppercase tracking-wide group-hover:tracking-widest transition-all duration-300">
+                            {person.role}
+                          </p>
+                        </div>
+
+                        {/* Enhanced description */}
+                        <div className="pt-1">
+                          <p className="text-gray-600 text-xs leading-relaxed italic group-hover:text-gray-800 transition-colors duration-300">
+                            {person.description}
+                          </p>
+                          {person.readMoreUrl && (
+                            <a
+                              href={person.readMoreUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[#669CCB] text-xs hover:underline inline-flex items-center gap-1 mt-1 font-medium transition-all duration-300 hover:text-[#669CCB]/80 transform hover:scale-105 group-hover:gap-2"
+                            >
+                              Portfolio 
+                              <ExternalLink className="w-2 h-2 transform transition-transform duration-300 group-hover:rotate-12" />
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </FadeIn>
+                  </div>
                 ))}
             </div>
           </div>
         )}
       </div>  
+
+      {/* Custom CSS for advanced animations */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-30px) rotate(3deg); }
+        }
+        @keyframes float-delayed {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(-2deg); }
+        }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0px) scale(1); }
+          50% { transform: translateY(-10px) scale(1.05); }
+        }
+        .animate-float {
+          animation: float 8s ease-in-out infinite;
+        }
+        .animate-float-delayed {
+          animation: float-delayed 10s ease-in-out infinite 3s;
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 4s ease-in-out infinite 1s;
+        }
+      `}</style>
     </section>  
   );
 }
