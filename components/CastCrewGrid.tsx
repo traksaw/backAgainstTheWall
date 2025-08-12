@@ -4,12 +4,13 @@ import { FadeIn, FadeInUp } from "@/components/ui/fade-in";
 import { cn } from "@/lib/utils";
 
 interface CastMember {
-  name: string;
-  role: string;
-  description: string;
-  image: string;
-  readMoreUrl?: string;
-  order: number;
+  name: string
+  role: string
+  description: string
+  image: string
+  readMoreUrl?: string
+  order?: number
+  imageAlt?: string
 }
 
 interface CastCrewGridProps {
