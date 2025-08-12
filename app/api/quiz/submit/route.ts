@@ -4,39 +4,23 @@ import { connectDB } from "@/lib/mongoose"
 import mongoose from "mongoose"
 import { getUserIdFromRequest } from "@/lib/jwt"
 
-export async function POST(req: NextRequest) {
-  console.log('=== QUIZ SUBMIT BACKEND DEBUG ===')
-  
+export async function POST(req: NextRequest) {  
   try {
     await connectDB()
-    console.log('Database connected successfully')
-
     const userId = await getUserIdFromRequest(req)
-    console.log('Extracted userId in quiz submit:', userId)
     
     if (!userId) {
       console.log('No userId found in quiz submit - returning 401')
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await req.json()
-    console.log('Quiz submission body received:', JSON.stringify(body, null, 2))
-    
-    // ✅ Fix: The actual data is nested inside body.answers
+    const body = await req.json()    
+    // The actual data is nested inside body.answers
     const actualData = body.answers || body // Handle both structures
     const quizAnswers = actualData.answers
     const sessionId = actualData.sessionId
     const archetype = actualData.archetype
     const score = actualData.score
-    
-    console.log('Extracted values from nested structure:', { 
-      answersCount: Object.keys(quizAnswers || {}).length,
-      sessionId, 
-      archetype, 
-      score,
-      archetypeType: typeof archetype,
-      scoreType: typeof score
-    })
 
     // Validate required fields
     if (!quizAnswers) {

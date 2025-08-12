@@ -45,13 +45,21 @@ import { QuizAnswersDisplay } from "@/components/QuizAnswersDisplay"
 import type { QuizAnswer } from "@/lib/quiz"
 import ContactForm from "@/components/ContactForm"
 import Hero from "@/components/Hero"
-import { castAndCrew, type CastCrewMember } from "@/data/cast-and-crew"
+// import { castAndCrew, type CastCrewMember } from "@/data/cast-and-crew"
 import CastCrewCarousel from "@/components/CastCrewCarousel"
 import CastCrewGrid from "@/components/CastCrewGrid"
 import SocialAndEvent from "@/components/SocialAndEvents"
 import Footer from "@/components/Footer"
+import { getCastAndCrew } from '../lib/sanity'
 
-
+interface CastMember {
+  name: string;
+  role: string;
+  description: string;
+  image: string;
+  readMoreUrl?: string;
+  order: number;
+}
 interface QuizQuestion {
   id: number
   question: string
@@ -362,12 +370,14 @@ type Archetype = keyof typeof archetypeResults
 
 // This component now uses the auth context properly
 function FilmWebsiteContent() {
-  const { user, profile, signOut, loading: authLoading, isHydrated, loading } = useAuth()
+  const { user, profile, signOut, loading: authLoading, isHydrated } = useAuth()
   const { latestResult, submitQuiz, updateQuizResult, loading: quizLoading } = useQuiz()
   const [showSignup, setShowSignup] = useState(false)
   const [showSignin, setShowSignin] = useState(false)
   const [showQuiz, setShowQuiz] = useState(false)
   const [showResults, setShowResults] = useState(false)
+  const [castMembers, setCastMembers] = useState<CastMember[]>([])
+  const [loading, setLoading] = useState(true)
   const [showFilm, setShowFilm] = useState(false)
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [quizAnswers, setQuizAnswers] = useState<Record<number, QuizAnswer>>({})
@@ -422,6 +432,29 @@ function FilmWebsiteContent() {
 
   // Shuffle questions on component mount
   useEffect(() => {
+    async function fetchCastData() {
+      try {
+        setLoading(true)
+        const data = await getCastAndCrew()
+
+        // Ensure data is an array
+        if (Array.isArray(data)) {
+          setCastMembers(data)
+        } else {
+          console.error('getCastAndCrew did not return an array:', data)
+          setCastMembers([])
+        }
+      } catch (error) {
+        console.error('Error fetching cast data:', error)
+        setCastMembers([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchCastData()
+  }, [])
+
+  useEffect(() => {
     setShuffledQuestions(createAdvancedRandomizedQuestions())
   }, [])
 
@@ -449,7 +482,6 @@ function FilmWebsiteContent() {
       const isRepetitive = lastFour.filter(pos => pos === lastFour[0]).length >= 3
 
       if (isRepetitive) {
-        
 
         // Regenerate remaining questions with anti-pattern logic
         const remainingQuestionCount = shuffledQuestions.length - currentQuestion - 1
@@ -538,8 +570,6 @@ function FilmWebsiteContent() {
         archetype: winningArchetype,
         score: totalScore
       }
-
-
       await submitQuiz(quizData)
 
       setShowQuiz(false)
@@ -665,42 +695,27 @@ function FilmWebsiteContent() {
       />
 
       {/* Meet the Cast & Crew */}
+      {/* Meet the Cast & Crew */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-6">
           <div className="block md:hidden">
-            <CastCrewCarousel />
+            <CastCrewCarousel castMembers={castMembers} />
           </div>
-
-          {/* Check if we have cast and crew data */}
-          {castAndCrew && castAndCrew.length > 0 ? (
-            <>
-              {(() => {
-                const cast = castAndCrew.filter(person =>
-                  person.role.toLowerCase().includes('samara') ||
-                  person.role.toLowerCase().includes('boyfriend') ||
-                  person.role.toLowerCase().includes('mom')
-                )
-
-                const crew = castAndCrew.filter(person =>
-                  !person.role.toLowerCase().includes('samara') &&
-                  !person.role.toLowerCase().includes('boyfriend') &&
-                  !person.role.toLowerCase().includes('mom')
-                )
-
-                return (
-                  <CastCrewGrid />
-                )
-              })()}
-            </>
-          ) : (
+          {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38] mx-auto mb-4"></div>
               <p className="text-gray-600">Loading cast and crew information...</p>
             </div>
-          )} 
+          ) : Array.isArray(castMembers) && castMembers.length > 0 ? (
+            <CastCrewGrid castMembers={castMembers} />
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No cast and crew information available.</p>
+            </div>
+          )}
         </div>
       </section>
-       {/* Contact & Social */}
+      {/* Contact & Social */}
       <section className="py-24 bg-gray-50">
         <div className="container mx-auto px-6">
           <div className="max-w-6xl mx-auto">
@@ -725,15 +740,12 @@ function FilmWebsiteContent() {
           setShowSignin(true)
         }}
         onSuccess={() => {
-          console.log('=== OPENING QUIZ IMMEDIATELY ===')
           setShowQuiz(true)
           setShowWelcome(true)
           setCurrentQuestion(0)
           setQuizAnswers({})
-          console.log('Quiz modal should now be open')
         }}
       />
-
       <SignInModal
         open={showSignin}
         onOpenChange={setShowSignin}
@@ -742,7 +754,6 @@ function FilmWebsiteContent() {
           setShowSignup(true)
         }}
       />
-
       {/* Quiz Modal */}
       <Dialog open={showQuiz} onOpenChange={setShowQuiz}>
         <DialogContent className="max-w-2xl bg-white text-gray-900 border-0 shadow-2xl">
@@ -769,10 +780,7 @@ function FilmWebsiteContent() {
                 </div>
               </div>
             )}
-
           </DialogHeader>
-
-
           {/* Quiz Questions */}
           {!showWelcome && shuffledQuestions.length > 0 && currentQuestion < shuffledQuestions.length && (
             <div className="space-y-8 py-6">
@@ -981,7 +989,7 @@ export default function Page() {
   return (
     <AuthProvider>
       <ClientOnly>
-        <FilmWebsiteContent />   
+        <FilmWebsiteContent />
       </ClientOnly>
     </AuthProvider>
   )

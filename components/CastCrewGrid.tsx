@@ -1,22 +1,46 @@
-// components/CastCrewGrid.tsx - Animated Version
-import Image from "next/image";
-import { castAndCrew } from "@/data/cast-and-crew";
 import { ExternalLink } from "lucide-react";
 import { FadeIn, FadeInUp } from "@/components/ui/fade-in";
 
-export default function CastCrewGrid() {
-  // Filter cast (actors) and crew (production team)
-  const cast = castAndCrew.filter(person =>
+interface CastMember {
+  name: string;
+  role: string;
+  description: string;
+  image: string;
+  readMoreUrl?: string;
+  order: number;
+}
+
+interface CastCrewGridProps {
+  castMembers: CastMember[];
+}
+
+export default function CastCrewGrid({ castMembers }: CastCrewGridProps) {
+  // Filter cast (actors) and crew (production team) from props
+  const cast = castMembers.filter(person =>
     person.role.toLowerCase().includes('samara') ||
     person.role.toLowerCase().includes('boyfriend') ||
     person.role.toLowerCase().includes('mom')
   );
 
-  const crew = castAndCrew.filter(person =>
+  const crew = castMembers.filter(person =>
     !person.role.toLowerCase().includes('samara') &&
     !person.role.toLowerCase().includes('boyfriend') &&
     !person.role.toLowerCase().includes('mom')
   );
+
+  // Return null if no cast members provided
+  if (!castMembers || castMembers.length === 0) {
+    return (
+      <section className="hidden md:block py-24 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38] mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading cast and crew information...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="hidden md:block py-24 bg-white">
@@ -49,6 +73,15 @@ export default function CastCrewGrid() {
                     direction="up"
                   >
                     <div className="text-center space-y-3 group hover:transform hover:scale-105 transition-all duration-300">
+                      {/* Only show image if it exists */}
+                      {person.image && (
+                        <img 
+                          src={person.image} 
+                          alt={person.name}
+                          className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
+                        />
+                      )}
+                      
                       <div className="space-y-2">
                         <h4 className="text-2xl font-bold text-gray-900 group-hover:text-[#B95D38] transition-colors duration-300">
                           {person.name}
@@ -96,6 +129,15 @@ export default function CastCrewGrid() {
                     direction="up"
                   >
                     <div className="text-center space-y-2 group hover:transform hover:scale-105 transition-all duration-300">
+                      {/* Only show image if it exists */}
+                      {person.image && (
+                        <img 
+                          src={person.image} 
+                          alt={person.name}
+                          className="w-16 h-16 rounded-full mx-auto mb-3 object-cover"
+                        />
+                      )}
+                      
                       <div className="space-y-1">
                         <h4 className="text-lg font-bold text-gray-900 group-hover:text-[#B95D38] transition-colors duration-300">
                           {person.name}

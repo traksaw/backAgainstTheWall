@@ -1,22 +1,33 @@
-import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { ExternalLink } from "lucide-react";
 import { FadeIn, FadeInUp } from "@/components/ui/fade-in";
-import { castAndCrew } from "@/data/cast-and-crew";
 
-export default function CastCrewCarousel() {
+interface CastMember {
+  name: string;
+  role: string;
+  description: string;
+  image: string;
+  readMoreUrl?: string;
+  order: number;
+}
+
+interface CastCrewCarouselProps {
+  castMembers?: CastMember[];
+}
+
+export default function CastCrewCarousel({ castMembers = [] }: CastCrewCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Filter cast (actors) and crew (production team)
-  const cast = castAndCrew.filter(person =>
+  // Filter cast (actors) and crew (production team) from the props
+  const cast = castMembers.filter(person =>
     person.role.toLowerCase().includes('samara') ||
     person.role.toLowerCase().includes('boyfriend') ||
     person.role.toLowerCase().includes('mom')
   );
 
-  const crew = castAndCrew.filter(person =>
+  const crew = castMembers.filter(person =>
     !person.role.toLowerCase().includes('samara') &&
     !person.role.toLowerCase().includes('boyfriend') &&
     !person.role.toLowerCase().includes('mom')
@@ -54,6 +65,18 @@ export default function CastCrewCarousel() {
     }
   }, []);
 
+  // Return null or loading state if no cast members
+  if (!castMembers || castMembers.length === 0) {
+    return (
+      <section className="relative py-12 bg-white md:hidden">
+        <div className="px-6 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B95D38] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading cast and crew information...</p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="relative py-12 bg-white md:hidden">
       {/* Header with staggered animations */}
@@ -87,6 +110,15 @@ export default function CastCrewCarousel() {
                 <FadeIn key={idx} delay={800 + idx * 100} duration={600} direction="up">
                   <div className="flex-shrink-0 w-[75%] max-w-xs snap-start">
                     <div className="bg-gray-50 rounded-xl shadow-sm p-4 text-center space-y-2 h-full transform hover:scale-105 transition-all duration-300 hover:shadow-lg overflow-hidden">
+                      {/* Only show image if it exists */}
+                      {person.image && (
+                        <img 
+                          src={person.image} 
+                          alt={person.name}
+                          className="w-16 h-16 rounded-full mx-auto mb-3 object-cover"
+                        />
+                      )}
+
                       {/* Movie credits style typography */}
                       <div className="space-y-1">
                         <h3 className="text-base font-bold text-gray-900 leading-tight line-clamp-2">
@@ -125,23 +157,25 @@ export default function CastCrewCarousel() {
       </FadeIn>
 
       {/* Interactive scroll indicator dots with animation */}
-      <FadeInUp delay={1000} duration={600}>
-        <div className="flex justify-center mt-6 space-x-2">
-          {allPeople.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => scrollToCard(idx)}
-              className={cn(
-                "w-2 h-2 rounded-full transition-all duration-300 transform hover:scale-125",
-                activeIndex === idx 
-                  ? "bg-[#B95D38] scale-110" 
-                  : "bg-gray-300 hover:bg-gray-400"
-              )}
-              aria-label={`Scroll to ${allPeople[idx].name}`}
-            />
-          ))}
-        </div>
-      </FadeInUp>
+      {allPeople.length > 1 && (
+        <FadeInUp delay={1000} duration={600}>
+          <div className="flex justify-center mt-6 space-x-2">
+            {allPeople.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => scrollToCard(idx)}
+                className={cn(
+                  "w-2 h-2 rounded-full transition-all duration-300 transform hover:scale-125",
+                  activeIndex === idx 
+                    ? "bg-[#B95D38] scale-110" 
+                    : "bg-gray-300 hover:bg-gray-400"
+                )}
+                aria-label={`Scroll to ${allPeople[idx].name}`}
+              />
+            ))}
+          </div>
+        </FadeInUp>
+      )}
     </section>
   );
 }

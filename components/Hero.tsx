@@ -28,14 +28,15 @@ export default function Hero({
 }: HeroProps) {
   return (
     <div className="w-full">
-      {/* Mobile-First Poster Section - Matches Figma */}
+      {/* Mobile-First Poster Section - Fixed Height Issues */}
       <section className="relative w-full">
-        {/* Mobile Layout - Full poster with letterboxing */}
+        {/* Mobile Layout - Fixed height with better constraints */}
         <div className="block md:hidden">
           <FadeIn duration={1200} delay={200}>
-            <div className="relative w-full h-[50vh] min-h-[400px] max-h-[600px]">
+            {/* Option 1: Use aspect ratio instead of fixed height */}
+            <div className="relative w-full aspect-[3/4] max-h-[60vh]">
               <Image
-                src="/assets/mobile-poster.png"
+                src="/assets/mobile-movie-poster.png"
                 alt="Back Against the Wall Poster"
                 fill
                 className="object-cover"
@@ -51,7 +52,7 @@ export default function Hero({
           <FadeIn duration={1200} delay={200}>
             <div className="relative w-full h-screen">
               <Image
-                src="/assets/desktop-poster.png"
+                src="/assets/desktop-movie-poster.png"
                 alt="Back Against the Wall Poster"
                 fill
                 className="object-cover"
@@ -63,8 +64,8 @@ export default function Hero({
         </div>
       </section>
 
-      {/* Mobile-Optimized Content Section - Matches Figma Layout */}
-      <section className="bg-white text-black">
+      {/* Mobile-Optimized Content Section - Ensure proper spacing */}
+      <section className="bg-white text-black relative z-10">
         {/* Mobile Content */}
         <div className="block md:hidden px-6 py-8">
           <div className="text-center space-y-6">
