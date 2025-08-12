@@ -12,8 +12,8 @@ export function useQuizHandlers() {
    */
   const handleQuizComplete = async (answers: Record<number, QuizAnswer>) => {
     try {
-      // Process the quiz completion
-      const quizData = quizLogic.processQuizCompletion(answers)
+      // Process the quiz completion to get submission data
+      const quizData: QuizSubmissionData = quizLogic.processQuizCompletion(answers)
       
       // Submit to backend
       await submitQuiz(answers)
@@ -32,9 +32,14 @@ export function useQuizHandlers() {
    * Handle results viewed update
    */
   const handleResultsViewed = async (latestResult: any) => {
-    if (latestResult && !latestResult.hasViewedResults) {
+    if (latestResult && !latestResult.hasViewedResults && !latestResult.has_viewed_results) {
       try {
-        await updateQuizResult(latestResult._id, { hasViewedResults: true })
+        const resultId = latestResult._id || latestResult.id
+        if (!resultId) {
+          console.error("No valid ID found in latestResult:", latestResult)
+          return
+        }
+        await updateQuizResult(resultId, { hasViewedResults: true })
       } catch (error) {
         console.error("Error updating results viewed:", error)
       }
@@ -45,9 +50,14 @@ export function useQuizHandlers() {
    * Handle film completion update
    */
   const handleFilmComplete = async (latestResult: any) => {
-    if (latestResult && !latestResult.hasWatchedFilm) {
+    if (latestResult && !latestResult.hasWatchedFilm && !latestResult.has_watched_film) {
       try {
-        await updateQuizResult(latestResult._id, { hasWatchedFilm: true })
+        const resultId = latestResult._id || latestResult.id
+        if (!resultId) {
+          console.error("No valid ID found in latestResult:", latestResult)
+          return
+        }
+        await updateQuizResult(resultId, { hasWatchedFilm: true })
       } catch (error) {
         console.error("Error updating film watched:", error)
       }

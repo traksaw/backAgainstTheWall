@@ -15,8 +15,10 @@ export interface QuizQuestion {
 
 export type Archetype = "Avoider" | "Gambler" | "Realist" | "Architect";
 
+// Updated to match your actual data structure
 export interface QuizResult {
-  id: string;
+  _id: string; // MongoDB ID - make this required since your data has it
+  id?: string; // Optional alternative ID
   user_id: string;
   archetype: Archetype;
   score: number;
@@ -28,13 +30,12 @@ export interface QuizResult {
   };
   completed_at?: string;
   session_id?: string;
-  has_viewed_results: boolean;
-  has_watched_film: boolean;
+  has_viewed_results?: boolean;
+  has_watched_film?: boolean;
+  hasViewedResults?: boolean; // Alternative naming
+  hasWatchedFilm?: boolean;   // Alternative naming
   created_at?: string;
   updated_at?: string;
-  _id?: string;
-  hasViewedResults?: boolean;
-  hasWatchedFilm?: boolean;
 }
 
 export interface ArchetypeExploration {

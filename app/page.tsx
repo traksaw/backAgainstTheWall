@@ -1,12 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useAuth, AuthProvider } from "@/hooks/useAuth"
 import { useQuiz } from "@/hooks/useQuiz"
@@ -15,708 +9,125 @@ import { SignInModal } from "@/components/auth/SignInModal"
 import { VideoPlayer } from "@/components/VideoPlayer"
 import { QuizHistorySection } from "@/components/QuizHistorySection"
 import { ClientOnly } from "@/components/ClientOnly"
-import {
-  Play,
-  ArrowRight,
-  Award,
-  Instagram,
-  Twitter,
-  Facebook,
-  ChevronDown,
-  ChevronUp,
-  ExternalLink,
-  Calendar,
-  Users,
-  BookOpen,
-  TrendingUp,
-  Shield,
-  Target,
-  Eye,
-  CheckCircle,
-  Brain,
-  LogOut,
-  User,
-  BarChart3,
-  MessageSquare,
-  List,
-  EyeOff,
-} from "lucide-react"
-import { QuizAnswersDisplay } from "@/components/QuizAnswersDisplay"
-import type { QuizAnswer } from "@/lib/quiz"
 import ContactForm from "@/components/ContactForm"
 import Hero from "@/components/Hero"
-// import { castAndCrew, type CastCrewMember } from "@/data/cast-and-crew"
 import CastCrewCarousel from "@/components/CastCrewCarousel"
 import CastCrewGrid from "@/components/CastCrewGrid"
 import SocialAndEvent from "@/components/SocialAndEvents"
 import Footer from "@/components/Footer"
-import { getCastAndCrew } from '../lib/sanity'
 
-
-interface QuizQuestion {
-  id: number
-  question: string
-  options: QuizAnswer[]
-}
-export interface QuizResult {
-  id: string
-  user_id: string
-  archetype: "Avoider" | "Gambler" | "Realist" | "Architect"
-  score: number
-  answers: {
-    responses: Record<number, QuizAnswer>
-    scores: Record<string, number>
-    totalQuestions: number
-    completedAt: string
-  }
-  completed_at?: string
-  session_id?: string
-  has_viewed_results: boolean
-  has_watched_film: boolean
-  created_at?: string
-  updated_at?: string
-}
-// Quiz Types and Data
-const quizQuestions: QuizQuestion[] = [
-  {
-    id: 1,
-    question: "When you receive unexpected money, what's your first instinct?",
-    options: [
-      { id: 1, text: "Save it immediately for emergencies", archetype: "Avoider", points: 3 },
-      { id: 2, text: "Invest it in something with high potential returns", archetype: "Gambler", points: 3 },
-      { id: 3, text: "Research the best balanced investment options", archetype: "Realist", points: 3 },
-      { id: 4, text: "Create a detailed plan for how to allocate it", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 2,
-    question: "How do you feel about taking financial risks?",
-    options: [
-      { id: 1, text: "I prefer to avoid them entirely", archetype: "Avoider", points: 3 },
-      { id: 2, text: "The bigger the risk, the bigger the reward", archetype: "Gambler", points: 3 },
-      { id: 3, text: "Calculated risks are necessary for growth", archetype: "Realist", points: 3 },
-      { id: 4, text: "I analyze every risk thoroughly before deciding", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 3,
-    question: "What's your approach to budgeting?",
-    options: [
-      { id: 1, text: "I keep things simple and spend conservatively", archetype: "Avoider", points: 3 },
-      { id: 2, text: "Budgets are too restrictive for my lifestyle", archetype: "Gambler", points: 3 },
-      { id: 3, text: "I track expenses but allow for flexibility", archetype: "Realist", points: 3 },
-      { id: 4, text: "I have detailed spreadsheets for everything", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 4,
-    question: "When making a major purchase, you:",
-    options: [
-      { id: 1, text: "Research extensively and often decide not to buy", archetype: "Avoider", points: 3 },
-      { id: 2, text: "Go with your gut feeling in the moment", archetype: "Gambler", points: 3 },
-      { id: 3, text: "Compare options and make a practical choice", archetype: "Realist", points: 3 },
-      { id: 4, text: "Create a detailed cost-benefit analysis", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 5,
-    question: "Your ideal investment portfolio would be:",
-    options: [
-      { id: 1, text: "Mostly savings accounts and bonds", archetype: "Avoider", points: 3 },
-      { id: 2, text: "High-growth stocks and cryptocurrency", archetype: "Gambler", points: 3 },
-      { id: 3, text: "A balanced mix of stocks and bonds", archetype: "Realist", points: 3 },
-      { id: 4, text: "Carefully diversified across multiple asset classes", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 6,
-    question: "How do you handle financial setbacks?",
-    options: [
-      { id: 1, text: "I become more cautious and conservative", archetype: "Avoider", points: 3 },
-      { id: 2, text: "I look for the next big opportunity to recover", archetype: "Gambler", points: 3 },
-      { id: 3, text: "I adjust my strategy based on what I learned", archetype: "Realist", points: 3 },
-      { id: 4, text: "I analyze what went wrong and create a recovery plan", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 7,
-    question: "Your relationship with money is best described as:",
-    options: [
-      { id: 1, text: "A source of security and stability", archetype: "Avoider", points: 3 },
-      { id: 2, text: "A tool for exciting opportunities", archetype: "Gambler", points: 3 },
-      { id: 3, text: "A means to achieve life goals", archetype: "Realist", points: 3 },
-      { id: 4, text: "A system that requires careful management", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 8,
-    question: "When friends ask for financial advice, you:",
-    options: [
-      { id: 1, text: "Suggest they be very careful and conservative", archetype: "Avoider", points: 3 },
-      { id: 2, text: "Share exciting investment opportunities you've heard about", archetype: "Gambler", points: 3 },
-      { id: 3, text: "Give practical, balanced suggestions", archetype: "Realist", points: 3 },
-      { id: 4, text: "Recommend they create a comprehensive financial plan", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 9,
-    question: "Your emergency fund should be:",
-    options: [
-      { id: 1, text: "As large as possible for maximum security", archetype: "Avoider", points: 3 },
-      { id: 2, text: "Minimal - money should be working for you", archetype: "Gambler", points: 3 },
-      { id: 3, text: "3-6 months of expenses", archetype: "Realist", points: 3 },
-      { id: 4, text: "Precisely calculated based on your risk profile", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 10,
-    question: "How do you research investments?",
-    options: [
-      { id: 1, text: "I stick to what I know is safe", archetype: "Avoider", points: 3 },
-      { id: 2, text: "I follow trends and hot tips", archetype: "Gambler", points: 3 },
-      { id: 3, text: "I read reputable financial sources", archetype: "Realist", points: 3 },
-      { id: 4, text: "I conduct thorough fundamental analysis", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 11,
-    question: "Your biggest financial fear is:",
-    options: [
-      { id: 1, text: "Losing what I've already saved", archetype: "Avoider", points: 3 },
-      { id: 2, text: "Missing out on the next big opportunity", archetype: "Gambler", points: 3 },
-      { id: 3, text: "Not having enough for retirement", archetype: "Realist", points: 3 },
-      { id: 4, text: "Making a poorly calculated decision", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 12,
-    question: "When markets are volatile, you:",
-    options: [
-      { id: 1, text: "Move everything to safer investments", archetype: "Avoider", points: 3 },
-      { id: 2, text: "See it as a chance to make big gains", archetype: "Gambler", points: 3 },
-      { id: 3, text: "Stay the course with your long-term plan", archetype: "Realist", points: 3 },
-      { id: 4, text: "Rebalance based on your predetermined strategy", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 13,
-    question: "Your approach to retirement planning is:",
-    options: [
-      { id: 1, text: "Save as much as possible in safe accounts", archetype: "Avoider", points: 3 },
-      { id: 2, text: "I'll figure it out when I get closer", archetype: "Gambler", points: 3 },
-      { id: 3, text: "Consistent contributions to a 401k and IRA", archetype: "Realist", points: 3 },
-      { id: 4, text: "A detailed plan with multiple scenarios", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 14,
-    question: "How do you feel about debt?",
-    options: [
-      { id: 1, text: "I avoid it at all costs", archetype: "Avoider", points: 3 },
-      { id: 2, text: "Good debt can accelerate wealth building", archetype: "Gambler", points: 3 },
-      { id: 3, text: "Some debt is necessary, but should be managed", archetype: "Realist", points: 3 },
-      { id: 4, text: "I optimize debt as part of my overall strategy", archetype: "Architect", points: 3 },
-    ],
-  },
-  {
-    id: 15,
-    question: "Your financial role model would be someone who:",
-    options: [
-      { id: 1, text: "Built wealth slowly and safely over time", archetype: "Avoider", points: 3 },
-      { id: 2, text: "Made bold moves and struck it rich", archetype: "Gambler", points: 3 },
-      { id: 3, text: "Achieved financial independence through discipline", archetype: "Realist", points: 3 },
-      { id: 4, text: "Mastered complex financial strategies", archetype: "Architect", points: 3 },
-    ],
-  },
-]
-
-const archetypeResults = {
-  Avoider: {
-    archetype: "Avoider",
-    summary:
-      "You prioritize financial security and prefer to minimize risk, even if it means missing potential opportunities.",
-    strengths: ["Strong emergency fund", "Debt-free lifestyle", "Consistent saving habits"],
-    blindSpots: ["May miss growth opportunities", "Inflation risk", "Over-conservative approach"],
-    reflectionQuestion: "How might your desire for security be limiting your financial growth?",
-    filmCharacterTieIn:
-      "Like Samara at the beginning, you value safety above all else. Watch how her journey unfolds when security isn't enough.",
-    exploration: {
-      description:
-        "As an Avoider, you excel at building financial stability but may benefit from gradually expanding your comfort zone. Your cautious nature is a strength that can be balanced with calculated growth strategies.",
-      tips: [
-        "Start with low-risk investments like index funds",
-        "Set aside a small 'opportunity fund' for calculated risks",
-        "Educate yourself about inflation and its long-term effects",
-        "Consider dollar-cost averaging for gradual market exposure",
-      ],
-      resources: [
-        "Books: 'The Bogleheads' Guide to Investing'",
-        "Podcasts: 'The Investors Podcast'",
-        "Tools: Personal Capital for tracking net worth",
-        "Courses: Khan Academy's Personal Finance",
-      ],
-      nextSteps: [
-        "Calculate your true risk tolerance",
-        "Research low-cost index funds",
-        "Set up automatic investing with small amounts",
-        "Consider working with a fee-only financial advisor",
-      ],
-    },
-  },
-  Gambler: {
-    archetype: "Gambler",
-    summary: "You're willing to take big risks for potentially big rewards, driven by optimism and opportunity.",
-    strengths: ["High growth potential", "Adaptable to opportunities", "Not paralyzed by fear"],
-    blindSpots: ["Lack of diversification", "Emotional decision making", "Insufficient emergency planning"],
-    reflectionQuestion: "When has your risk-taking served you well, and when has it backfired?",
-    filmCharacterTieIn:
-      "You share Marcus's bold approach to financial opportunities. See where his confidence leads him.",
-    exploration: {
-      description:
-        "As a Gambler, your willingness to take risks can lead to significant rewards, but balancing this with prudent planning will help you sustain long-term success. Your optimism is an asset when channeled strategically.",
-      tips: [
-        "Implement the 'core and satellite' investment strategy",
-        "Never invest more than you can afford to lose in high-risk ventures",
-        "Build an emergency fund before taking big risks",
-        "Set stop-loss limits to protect against major losses",
-      ],
-      resources: [
-        "Books: 'A Random Walk Down Wall Street'",
-        "Podcasts: 'Chat with Traders'",
-        "Tools: Portfolio rebalancing calculators",
-        "Communities: Bogleheads forum for balanced perspectives",
-      ],
-      nextSteps: [
-        "Assess your current risk exposure",
-        "Create a diversified 'boring' foundation portfolio",
-        "Limit speculative investments to 5-10% of total portfolio",
-        "Build a 6-month emergency fund before high-risk investing",
-      ],
-    },
-  },
-  Realist: {
-    archetype: "Realist",
-    summary: "You take a balanced, practical approach to money, understanding both risks and rewards.",
-    strengths: ["Balanced portfolio", "Long-term thinking", "Practical decision making"],
-    blindSpots: ["May lack conviction", "Could miss exceptional opportunities", "Sometimes too middle-ground"],
-    reflectionQuestion: "How do you decide when to be more aggressive or more conservative?",
-    filmCharacterTieIn:
-      "Like Elena, you seek balance between security and growth. Discover what happens when balance isn't enough.",
-    exploration: {
-      description:
-        "As a Realist, you have the advantage of seeing both sides of financial decisions. Your balanced approach serves you well, but occasionally taking a stronger stance can accelerate your progress toward financial goals.",
-      tips: [
-        "Use the 'barbell strategy' - safe core with targeted aggressive positions",
-        "Regularly review and rebalance your portfolio",
-        "Set specific triggers for when to be more aggressive or conservative",
-        "Consider life-cycle investing based on your age and goals",
-      ],
-      resources: [
-        "Books: 'The Intelligent Investor' by Benjamin Graham",
-        "Podcasts: 'The Meb Faber Research Podcast'",
-        "Tools: Morningstar's Portfolio X-Ray",
-        "Advisors: Fee-only financial planners",
-      ],
-      nextSteps: [
-        "Define your specific financial goals and timelines",
-        "Create decision-making criteria for portfolio adjustments",
-        "Consider working with a fee-only financial advisor",
-        "Set up automatic rebalancing for your investments",
-      ],
-    },
-  },
-  Architect: {
-    archetype: "Architect",
-    summary:
-      "You approach finances systematically, with detailed planning and thorough analysis guiding every decision.",
-    strengths: ["Comprehensive planning", "Data-driven decisions", "Risk management"],
-    blindSpots: ["Analysis paralysis", "Over-complexity", "May miss time-sensitive opportunities"],
-    reflectionQuestion: "How do you balance thorough planning with the need to act quickly?",
-    filmCharacterTieIn:
-      "You embody David's methodical approach to building wealth. Watch what happens when the plan meets reality.",
-    exploration: {
-      description:
-        "As an Architect, your systematic approach to finances is a significant strength. Your challenge is to balance thorough analysis with timely action, ensuring your detailed plans translate into real-world results.",
-      tips: [
-        "Set decision deadlines to avoid analysis paralysis",
-        "Create 'good enough' criteria for investment decisions",
-        "Automate routine financial tasks to focus on strategy",
-        "Build flexibility into your financial plans",
-      ],
-      resources: [
-        "Books: 'Your Money or Your Life' by Vicki Robin",
-        "Software: Personal Capital, YNAB for detailed tracking",
-        "Podcasts: 'The White Coat Investor'",
-        "Tools: Monte Carlo simulation calculators",
-      ],
-      nextSteps: [
-        "Simplify your investment strategy to reduce complexity",
-        "Set up automated investing to reduce decision fatigue",
-        "Create contingency plans for different market scenarios",
-        "Schedule regular portfolio reviews with specific action items",
-      ],
-    },
-  },
-}
-
-type Archetype = keyof typeof archetypeResults
+// Import our new hooks and components
+import { useModalState } from "@/hooks/useModalState"
+import { useCastData } from "@/hooks/useCastData"
+import { useQuizHandlers } from "@/hooks/useQuizHandlers"
+import { useQuizState } from "@/hooks/useQuizState"
+import { QuizModal } from "@/components/quiz/QuizModal"
+import { ResultsModal } from "@/components/results/ResultsModal"
+import { UserMenu } from "@/components/layout/UserMenu"
+import { LoadingScreen } from "@/components/layout/LoadingScreen"
 
 // This component now uses the auth context properly
 function FilmWebsiteContent() {
   const { user, profile, signOut, loading: authLoading, isHydrated } = useAuth()
-  const { latestResult, submitQuiz, updateQuizResult, loading: quizLoading } = useQuiz()
-  const [showSignup, setShowSignup] = useState(false)
-  const [showSignin, setShowSignin] = useState(false)
-  const [showQuiz, setShowQuiz] = useState(false)
-  const [showResults, setShowResults] = useState(false)
-  const [castMembers, setCastMembers] = useState<CastMember[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showFilm, setShowFilm] = useState(false)
-  const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [quizAnswers, setQuizAnswers] = useState<Record<number, QuizAnswer>>({})
-  const [expandedCreator, setExpandedCreator] = useState<number | null>(null)
-  const [shuffledQuestions, setShuffledQuestions] = useState<QuizQuestion[]>([])
-  const [showWelcome, setShowWelcome] = useState(true)
-  const [showQuizHistory, setShowQuizHistory] = useState(false)
-  const [clickPattern, setClickPattern] = useState<number[]>([])
-  const [archetypeDistribution, setArchetypeDistribution] = useState({
-    Avoider: 0,
-    Gambler: 0,
-    Realist: 0,
-    Architect: 0
-  })
+  const { latestResult } = useQuiz()
+  
+  // Replace 15+ useState calls with clean hooks
+  const modals = useModalState()
+  const castData = useCastData()
+  const quizHandlers = useQuizHandlers()
+  const quizState = useQuizState()
 
-  // Advanced randomization helper function:
-  const createAdvancedRandomizedQuestions = (userClickPattern: number[] = []) => {
-    // Detect if user has a pattern (clicking same position repeatedly)
-    const isRepetitive = userClickPattern.length >= 3 &&
-      userClickPattern.slice(-3).every(pos => pos === userClickPattern[userClickPattern.length - 1])
-
-    return [...quizQuestions].map((question, questionIndex) => {
-      let shuffledOptions = [...question.options]
-
-      if (isRepetitive) {
-        // If user is being repetitive, shuffle more aggressively
-        shuffledOptions = shuffledOptions.sort(() => Math.random() - 0.5)
-
-        // Sometimes swap the first two options to break the pattern
-        if (Math.random() > 0.6) {
-          [shuffledOptions[0], shuffledOptions[1]] = [shuffledOptions[1], shuffledOptions[0]]
-        }
-      } else {
-        // Normal randomization
-        shuffledOptions = shuffledOptions.sort(() => Math.random() - 0.5)
-      }
-
-      // Add slight point variations to prevent identical scores (10% chance)
-      if (Math.random() > 0.9) {
-        shuffledOptions = shuffledOptions.map(option => ({
-          ...option,
-          points: Math.max(1, option.points + (Math.random() > 0.5 ? 1 : -1))
-        }))
-      }
-
-      return {
-        ...question,
-        options: shuffledOptions
-      }
-    }).sort(() => Math.random() - 0.5) // Always shuffle question order
-  }
-
-  // Shuffle questions on component mount
-  useEffect(() => {
-    async function fetchCastData() {
-      try {
-        setLoading(true)
-        const data = await getCastAndCrew()
-
-        // Ensure data is an array
-        if (Array.isArray(data)) {
-          setCastMembers(data)
-        } else {
-          console.error('getCastAndCrew did not return an array:', data)
-          setCastMembers([])
-        }
-      } catch (error) {
-        console.error('Error fetching cast data:', error)
-        setCastMembers([])
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchCastData()
-  }, [])
-
-  useEffect(() => {
-    setShuffledQuestions(createAdvancedRandomizedQuestions())
-  }, [])
-
-  const startQuiz = () => {
-    setShowWelcome(false)
-    setCurrentQuestion(0)
-    setQuizAnswers({})
-  }
-
-  // Enhanced handleQuizAnswer function:
-  const handleQuizAnswer = (answer: QuizAnswer) => {
-    // Track which position was clicked (0-3)
-    const optionIndex = shuffledQuestions[currentQuestion]?.options.findIndex(opt => opt.id === answer.id) || 0
-    const newClickPattern = [...clickPattern, optionIndex]
-    setClickPattern(newClickPattern)
-
-    // Track archetype distribution
-    const newDistribution = { ...archetypeDistribution }
-    newDistribution[answer.archetype as keyof typeof newDistribution]++
-    setArchetypeDistribution(newDistribution)
-
-    // Detect repetitive behavior and counter it
-    if (newClickPattern.length >= 4) {
-      const lastFour = newClickPattern.slice(-4)
-      const isRepetitive = lastFour.filter(pos => pos === lastFour[0]).length >= 3
-
-      if (isRepetitive) {
-
-        // Regenerate remaining questions with anti-pattern logic
-        const remainingQuestionCount = shuffledQuestions.length - currentQuestion - 1
-        if (remainingQuestionCount > 0) {
-          const currentQuestions = shuffledQuestions.slice(0, currentQuestion + 1)
-          const remainingQuestions = shuffledQuestions.slice(currentQuestion + 1)
-
-          // Apply aggressive randomization to remaining questions
-          const antiPatternQuestions = remainingQuestions.map(question => {
-            const options = [...question.options]
-
-            // Ensure the most commonly clicked position gets different archetypes
-            const mostClickedPosition = lastFour[0]
-
-            // Sort so that different archetypes appear in the user's preferred position
-            const rearranged = options.sort((a, b) => {
-              // Prefer putting different archetypes in the commonly clicked position
-              if (newDistribution[a.archetype as keyof typeof newDistribution] >
-                newDistribution[b.archetype as keyof typeof newDistribution]) {
-                return 1
-              }
-              return Math.random() - 0.5
-            })
-
-            return {
-              ...question,
-              options: rearranged
-            }
-          })
-
-          setShuffledQuestions([...currentQuestions, ...antiPatternQuestions])
-        }
-      }
-    }
-
-    // Add question text to the answer for better history display
-    const enhancedAnswer = {
-      ...answer,
-      question: shuffledQuestions[currentQuestion]?.question,
-    }
-    const newAnswers = { ...quizAnswers, [currentQuestion]: enhancedAnswer }
-    setQuizAnswers(newAnswers)
-
-    if (currentQuestion < shuffledQuestions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1)
-    } else {
-      handleQuizComplete(newAnswers)
-    }
-  }
-
-  const handleQuizComplete = async (answers: Record<number, QuizAnswer>) => {
+  // Handle quiz completion
+  const handleQuizComplete = async (quizData: any) => {
     try {
-      const sessionId = Math.random().toString(36).substr(2, 9)
-
-      // Calculate scores for each archetype
-      const scores = {
-        Avoider: 0,
-        Gambler: 0,
-        Realist: 0,
-        Architect: 0
-      }
-
-      // Count points for each archetype
-      Object.values(answers).forEach(answer => {
-        if (answer.archetype && answer.points) {
-          scores[answer.archetype as keyof typeof scores] += answer.points
-        }
-      })
-
-      // Fixed archetype calculation - get the key, not the array
-      const winningArchetype = Object.entries(scores).reduce((a, b) =>
-        a[1] > b[1] ? a : b
-      )[0] // This gets the archetype name (key)
-
-      // Fixed total score calculation
-      const totalScore = scores[winningArchetype as keyof typeof scores]
-
-      // Validate before sending
-      if (!winningArchetype || totalScore === undefined) {
-        throw new Error(`Invalid quiz calculation - archetype: ${winningArchetype}, score: ${totalScore}`)
-      }
-
-      const quizData = {
-        answers: answers,
-        sessionId: sessionId,
-        archetype: winningArchetype,
-        score: totalScore
-      }
-      await submitQuiz(quizData)
-
-      setShowQuiz(false)
-      setShowResults(true)
+      await quizHandlers.handleQuizComplete(Object.values(quizState.answers))
+      modals.setShowQuiz(false)
+      modals.setShowResults(true)
     } catch (error) {
-      console.error('=== QUIZ SUBMISSION ERROR ===')
-      console.error('Full error object:', error)
-      console.error('================================')
-
-      alert(`Quiz submission failed: ${(error as any)?.message || 'Unknown error'}`)
+      console.error('Quiz completion error:', error)
     }
   }
 
+  // Handle results viewed
   const handleResultsViewed = async () => {
-    if (latestResult && !latestResult.hasViewedResults) {
-      try {
-        await updateQuizResult(latestResult._id, { hasViewedResults: true })
-      } catch (error) {
-        console.error("Error updating results viewed:", error)
-      }
-    }
-    setShowResults(false)
-    setShowFilm(true)
+    await quizHandlers.handleResultsViewed(latestResult)
+    modals.setShowResults(false)
+    modals.setShowFilm(true)
   }
 
+  // Handle film completion
   const handleFilmComplete = async () => {
-    if (latestResult && !latestResult.hasWatchedFilm) {
-      try {
-        await updateQuizResult(latestResult._id, { hasWatchedFilm: true })
-      } catch (error) {
-        console.error("Error updating film watched:", error)
-      }
-    }
-    setShowFilm(false)
+    await quizHandlers.handleFilmComplete(latestResult)
+    modals.setShowFilm(false)
   }
 
-  const handleVideoError = (error: string) => {
-    console.error("Video playback error:", error)
-    // Could show a toast notification or other user feedback here
+  // Handle starting new quiz
+  const handleStartQuiz = () => {
+    quizState.resetQuiz()
+    modals.openQuiz()
   }
-
-  const getArchetypeIcon = (archetype: string) => {
-    switch (archetype) {
-      case "Avoider":
-        return Shield
-      case "Gambler":
-        return TrendingUp
-      case "Realist":
-        return Target
-      case "Architect":
-        return Eye
-      default:
-        return Award
-    }
-  }
-
-
-  const sponsors = [
-    { name: "AAPI Foundation", logo: "/placeholder.svg?height=60&width=120" },
-    { name: "Independent Film Grant", logo: "/placeholder.svg?height=60&width=120" },
-    { name: "Community Arts Council", logo: "/placeholder.svg?height=60&width=120" },
-    { name: "Financial Literacy Initiative", logo: "/placeholder.svg?height=60&width=120" },
-  ]
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="Loading..." />
   }
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      {/* User Menu */}
-      {user && (
-        <div className="fixed top-4 right-4 z-50">
-          <div className="flex items-center space-x-4 bg-white rounded-full shadow-lg px-4 py-2 border">
-            <div className="flex items-center space-x-2">
-              <User className="w-4 h-4 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">
-                {profile?.first_name} {profile?.last_name}
-              </span>
-            </div>
-            {/* Add Quiz History Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowQuizHistory(true)}
-              className="text-gray-600 hover:text-[#B95D38]/90"
-              title="View Quiz History"
-            >
-              <BarChart3 className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={signOut} className="text-gray-600 hover:text-red-600">
-              <LogOut className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+      {/* Clean User Menu Component */}
+      <UserMenu 
+        user={user}
+        profile={profile}
+        onSignOut={signOut}
+        onShowQuizHistory={modals.openQuizHistory}
+      />
 
+      {/* Hero Section */}
       <Hero
         user={user}
         profile={profile}
         latestResult={latestResult}
-        onSignUp={() => setShowSignup(true)}
-        onSignIn={() => setShowSignin(true)}
-        onStartQuiz={() => {
-          setShowQuiz(true)
-          setShowWelcome(true)
-          setCurrentQuestion(0)
-          setQuizAnswers({})
-          setClickPattern([]) // Reset click pattern tracking
-          setArchetypeDistribution({ Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 }) // Reset distribution
-          // Create fresh randomized questions
-          setShuffledQuestions(createAdvancedRandomizedQuestions())
-        }}
-        onShowResults={() => setShowResults(true)}
-        onWatchFilm={() => setShowFilm(true)}
+        onSignUp={modals.openSignup}
+        onSignIn={modals.openSignin}
+        onStartQuiz={handleStartQuiz}
+        onShowResults={modals.openResults}
+        onWatchFilm={modals.openFilm}
       />
 
-      {/* Meet the Cast & Crew */}
-      {/* Meet the Cast & Crew */}
+      {/* Cast & Crew Section - Using our refactored data */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-6">
           <div className="block md:hidden">
-            <CastCrewCarousel castMembers={castMembers} />
+            <CastCrewCarousel castMembers={castData.castMembers} />
           </div>
-          {loading ? (
+          {castData.loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38] mx-auto mb-4"></div>
               <p className="text-gray-600">Loading cast and crew information...</p>
             </div>
-          ) : Array.isArray(castMembers) && castMembers.length > 0 ? (
-            <CastCrewGrid castMembers={castMembers} />
+          ) : castData.hasData ? (
+            <CastCrewGrid castMembers={castData.castMembers} />
           ) : (
             <div className="text-center py-12">
               <p className="text-gray-600">No cast and crew information available.</p>
+              {castData.error && (
+                <button 
+                  onClick={castData.retry}
+                  className="text-[#B95D38] hover:underline mt-2"
+                >
+                  Try again
+                </button>
+              )}
             </div>
           )}
         </div>
       </section>
+
       {/* Contact & Social */}
       <section className="py-24 bg-gray-50">
         <div className="container mx-auto px-6">
           <div className="max-w-6xl mx-auto">
             <div className="grid lg:grid-cols-2 gap-16">
-              {/* Contact Form */}
               <ContactForm />
-
-              {/* Social & Events */}
               <SocialAndEvent />
             </div>
           </div>
@@ -726,223 +137,39 @@ function FilmWebsiteContent() {
 
       {/* Auth Modals */}
       <SignUpModal
-        open={showSignup}
-        onOpenChange={setShowSignup}
-        onSwitchToSignIn={() => {
-          setShowSignup(false)
-          setShowSignin(true)
-        }}
+        open={modals.showSignup}
+        onOpenChange={modals.setShowSignup}
+        onSwitchToSignIn={modals.switchToSignIn}
         onSuccess={() => {
-          setShowQuiz(true)
-          setShowWelcome(true)
-          setCurrentQuestion(0)
-          setQuizAnswers({})
+          modals.setShowSignup(false)
+          handleStartQuiz()
         }}
       />
+      
       <SignInModal
-        open={showSignin}
-        onOpenChange={setShowSignin}
-        onSwitchToSignUp={() => {
-          setShowSignin(false)
-          setShowSignup(true)
-        }}
+        open={modals.showSignin}
+        onOpenChange={modals.setShowSignin}
+        onSwitchToSignUp={modals.switchToSignUp}
       />
-      {/* Quiz Modal */}
-      <Dialog open={showQuiz} onOpenChange={setShowQuiz}>
-        <DialogContent className="max-w-2xl bg-white text-gray-900 border-0 shadow-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-3xl font-bold text-center text-gray-900">Financial Mindset Quiz</DialogTitle>
-            {showWelcome && profile && (
-              <div className="space-y-6 py-6">
-                <div className="text-center space-y-4">
-                  <p className="text-xl text-gray-700 leading-relaxed">
-                    Welcome! Let's discover your financial personality.
-                  </p>
-                  <p className="text-gray-600">
-                    Your responses will reveal your financial archetype and help you connect more deeply with the film's
-                    characters.
-                  </p>
-                </div>
-                <div className="flex justify-center">
-                  <Button
-                    onClick={startQuiz}
-                    className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-8 py-3 rounded-lg"
-                  >
-                    Start Quiz
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogHeader>
-          {/* Quiz Questions */}
-          {!showWelcome && shuffledQuestions.length > 0 && currentQuestion < shuffledQuestions.length && (
-            <div className="space-y-8 py-6">
-              <h3 className="text-xl font-semibold text-center text-gray-800 leading-relaxed">
-                {shuffledQuestions[currentQuestion]?.question}
-              </h3>
-              <div className="space-y-3">
-                {shuffledQuestions[currentQuestion]?.options.map((option: QuizAnswer, index: number) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    onClick={() => handleQuizAnswer(option)}
-                    disabled={quizLoading}
-                    className="w-full text-left justify-start p-6 h-auto border-gray-300 hover:border-[#B95D38] hover:bg-[#B95D38]/10 transition-all duration-300 rounded-lg text-wrap"
-                  >
-                    <span className="text-gray-700">{option.text}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
-      {/* Results Modal */}
-      <Dialog open={showResults} onOpenChange={setShowResults}>
-        <DialogContent className="max-w-4xl bg-white text-gray-900 border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-3xl font-bold text-center text-gray-900">Your Financial Archetype</DialogTitle>
-          </DialogHeader>
-
-          {latestResult &&
-            (() => {
-              const currentArchetype = archetypeResults[latestResult.archetype as Archetype]
-              return (
-                <div className="space-y-8 py-6">
-                  <div className="text-center space-y-6">
-                    <div className="w-24 h-24 bg-[#B95D38]/10 rounded-full flex items-center justify-center mx-auto">
-                      {(() => {
-                        const IconComponent = getArchetypeIcon(currentArchetype.archetype)
-                        return <IconComponent className="w-12 h-12 text-[#B95D38]" />
-                      })()}
-                    </div>
-                    <div>
-                      <h3 className="text-4xl font-bold text-[#B95D38] mb-3">The {currentArchetype.archetype}</h3>
-                      <p className="text-xl text-gray-700 leading-relaxed max-w-2xl mx-auto">
-                        {currentArchetype.summary}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Quiz Answers Display - NEW SECTION */}
-                  <QuizAnswersDisplay latestResult={latestResult} />
-
-                  {/* Strengths and Blind Spots */}
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <Card className="border-green-200 bg-green-50">
-                      <CardHeader>
-                        <CardTitle className="text-green-700 text-lg">Your Strengths</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {currentArchetype.strengths.map((strength, index) => (
-                          <div key={index} className="text-gray-700 flex items-start">
-                            <span className="text-green-500 mr-2">•</span>
-                            {strength}
-                          </div>
-                        ))}
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-yellow-200 bg-yellow-50">
-                      <CardHeader>
-                        <CardTitle className="text-yellow-700 text-lg">Potential Blind Spots</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {currentArchetype.blindSpots.map((blindSpot, index) => (
-                          <div key={index} className="text-gray-700 flex items-start">
-                            <span className="text-yellow-500 mr-2">•</span>
-                            {blindSpot}
-                          </div>
-                        ))}
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <Card className="border-blue-200 bg-blue-50">
-                    <CardHeader>
-                      <CardTitle className="text-blue-700 text-lg">Reflection Question</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-700 text-lg leading-relaxed">{currentArchetype.reflectionQuestion}</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-[#B95D38]/20 bg-[#B95D38]/10">
-                    <CardHeader>
-                      <CardTitle className="text-[#B95D38] text-lg">Your Film Connection</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-700 text-lg leading-relaxed">{currentArchetype.filmCharacterTieIn}</p>
-                    </CardContent>
-                  </Card>
-
-                  {/* Exploration Section */}
-                  <Card className="border-[#669CCB]/20 bg-[#669CCB]/10">
-                    <CardHeader>
-                      <CardTitle className="text-[#669CCB] text-xl flex items-center">
-                        <BookOpen className="w-5 h-5 mr-2" />
-                        Explore Your {currentArchetype.archetype} Mindset
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <p className="text-gray-700 leading-relaxed">{currentArchetype.exploration.description}</p>
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <h4 className="font-semibold text-[#669CCB] mb-3">Actionable Tips</h4>
-                          <ul className="space-y-2">
-                            {currentArchetype.exploration.tips.map((tip, index) => (
-                              <li key={index} className="text-sm text-gray-700 flex items-start">
-                                <span className="text-[#669CCB] mr-2">•</span>
-                                {tip}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-[#669CCB] mb-3">Recommended Resources</h4>
-                          <ul className="space-y-2">
-                            {currentArchetype.exploration.resources.map((resource, index) => (
-                              <li key={index} className="text-sm text-gray-700 flex items-start">
-                                <span className="text-[#669CCB] mr-2">•</span>
-                                {resource}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-[#669CCB] mb-3">Next Steps</h4>
-                        <ul className="space-y-2">
-                          {currentArchetype.exploration.nextSteps.map((step, index) => (
-                            <li key={index} className="text-sm text-gray-700 flex items-start">
-                              <span className="text-[#669CCB] mr-2">•</span>
-                              {step}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <div className="flex justify-center">
-                    <Button
-                      onClick={handleResultsViewed}
-                      disabled={quizLoading}
-                      className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold py-4 px-12 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
-                    >
-                      <Play className="w-5 h-5 mr-2" />
-                      Now Watch the Film
-                    </Button>
-                  </div>
-                </div>
-              )
-            })()}
-        </DialogContent>
-      </Dialog>
+      {/* Clean Modal Components */}
+      <QuizModal 
+        open={modals.showQuiz}
+        onOpenChange={modals.setShowQuiz}
+        onQuizComplete={handleQuizComplete}
+        profile={profile}
+      />
+      
+      <ResultsModal 
+        open={modals.showResults}
+        onOpenChange={modals.setShowResults}
+        latestResult={latestResult}
+        onResultsViewed={handleResultsViewed}
+        loading={quizHandlers.quizLoading}
+      />
 
       {/* Film Modal */}
-      <Dialog open={showFilm} onOpenChange={setShowFilm}>
+      <Dialog open={modals.showFilm} onOpenChange={modals.setShowFilm}>
         <DialogContent className="max-w-5xl bg-black border-0">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-center text-white">
@@ -966,14 +193,17 @@ function FilmWebsiteContent() {
             src="/videos/ambitious-film-compressed.mp4"
             title="Back Against the Wall"
             onEnded={handleFilmComplete}
-            onError={handleVideoError}
-            archetype={latestResult?.archetype} // Only pass if exists, VideoPlayer handles the conditional display
+            onError={quizHandlers.handleVideoError}
+            archetype={latestResult?.archetype}
             className="aspect-video"
           />
         </DialogContent>
       </Dialog>
 
-      <QuizHistorySection open={showQuizHistory} onOpenChange={setShowQuizHistory} />
+      <QuizHistorySection 
+        open={modals.showQuizHistory} 
+        onOpenChange={modals.setShowQuizHistory} 
+      />
     </div>
   )
 }
