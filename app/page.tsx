@@ -163,7 +163,7 @@ function FilmWebsiteContent() {
       <ResultsModal 
         open={modals.showResults}
         onOpenChange={modals.setShowResults}
-        latestResult={latestResult}
+        latestResult={latestResult ? { user_id: user?.id ?? '', ...latestResult } : null}
         onResultsViewed={handleResultsViewed}
         loading={quizHandlers.quizLoading}
       />
