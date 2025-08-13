@@ -42,7 +42,7 @@ function FilmWebsiteContent() {
   // Handle quiz completion
   const handleQuizComplete = async (quizData: any) => {
     try {
-      await quizHandlers.handleQuizComplete(Object.values(quizState.answers))
+     await quizHandlers.handleQuizComplete(quizState.answers)
       modals.setShowQuiz(false)
 
       // Force refresh the quiz results to ensure we have the latest data

@@ -1,8 +1,14 @@
 // lib/quiz/utils.ts - Updated version with enhanced scoring
 
-import { QuizQuestion, QuizAnswer, Archetype } from '@/types/quiz';
+import { QuizQuestion, QuizAnswer, Archetype, QuizScores } from '@/types/quiz';
 import { Shield, TrendingUp, Target, Eye, Award } from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
+
+export const ARCHETYPES: Archetype[] = ['Avoider', 'Gambler', 'Realist', 'Architect']
+export const EMPTY_SCORES: QuizScores = ARCHETYPES.reduce((acc, a) => {
+  acc[a] = 0
+  return acc
+}, {} as QuizScores)
 
 /**
  * Creates randomized quiz questions with anti-pattern detection
@@ -51,26 +57,27 @@ export function createAdvancedRandomizedQuestions(
   }).sort(() => Math.random() - 0.5); // Always shuffle question order
 }
 
+function canonicalizeArchetype(a?: string): Archetype | null {
+  if (!a) return null
+  const norm = a.trim().toLowerCase()
+  const found = ARCHETYPES.find(x => x.toLowerCase() === norm)
+  return (found ?? null) as Archetype | null
+}
+
 /**
  * Enhanced quiz scoring with better tie-breaking
  */
-export function calculateQuizScores(answers: Record<number, QuizAnswer>): Record<Archetype, number> {
-  const scores: Record<Archetype, number> = {
-    Avoider: 0,
-    Gambler: 0,
-    Realist: 0,
-    Architect: 0
-  };
+export function calculateQuizScores(answers: Record<number, QuizAnswer>): QuizScores {
+  const scores: QuizScores = { ...EMPTY_SCORES }
 
-  // Count points for each archetype
-  Object.values(answers).forEach(answer => {
-    if (answer.archetype && answer.points) {
-      scores[answer.archetype] += answer.points;
-    }
-  });
+  for (const ans of Object.values(answers)) {
+    const arch = canonicalizeArchetype(ans.archetype)
+    const pts = Number(ans.points ?? 0)
+    if (!arch || Number.isNaN(pts)) continue
+    scores[arch] += pts
+  }
 
-  console.log('🎯 Raw archetype scores:', scores);
-  return scores;
+  return scores
 }
 
 /**

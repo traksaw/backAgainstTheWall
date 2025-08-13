@@ -3,14 +3,14 @@ import { QuizAnswer, QuizSubmissionData, Archetype } from '@/types/quiz';
 import { calculateQuizScores, getWinningArchetype, generateSessionId } from '@/lib/quiz/utils';
 
 export function useQuizLogic() {
-  
+
   /**
    * Process quiz completion and generate submission data
    */
-    const processQuizCompletion = (answers: Record<number, QuizAnswer>): QuizSubmissionData => {
+  const processQuizCompletion = (answers: Record<number, QuizAnswer>): QuizSubmissionData => {
     const sessionId = generateSessionId()
     const scores = calculateQuizScores(answers)
-    const winningArchetype = getWinningArchetype(scores)
+    const winningArchetype = getWinningArchetype(scores, answers)
     const totalScore = scores[winningArchetype]
 
     if (!winningArchetype || totalScore === undefined) {
