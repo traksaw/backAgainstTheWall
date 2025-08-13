@@ -1,44 +1,67 @@
-// types/quiz.ts - Complete type definitions
-export type Archetype = "Avoider" | "Gambler" | "Realist" | "Architect";
+// types/quiz.ts
+
+// ---- Core enums / aliases
+export type Archetype = 'Avoider' | 'Gambler' | 'Realist' | 'Architect'
+
+// ---- Question / answer / state
+export interface QuizQuestion {
+  id: number
+  text: string
+  options: Array<{
+    text: string
+    archetype: Archetype
+    points: number
+  }>
+}
 
 export interface QuizAnswer {
-  text: string;
-  archetype: Archetype;
-  points: number;
-  confidence?: number; // Optional confidence score 0-100
-  selectedAt?: string; // ISO timestamp when answer was selected
-}
-
-export interface QuizMetrics {
-  totalAnswers: number;
-  answerBreakdown: Record<string, number>;
-  diversityScore: number;
-  averageConfidence: number;
-}
-
-export interface QuizSubmissionData {
-  sessionId: string;
-  answers: Record<number, QuizAnswer>;
-  scores: Record<Archetype, number>;
-  winningArchetype: Archetype;
-  totalScore: number;
-  metrics: QuizMetrics;
-  completedAt: string;
-  timeToComplete: number;
-}
-
-export interface QuizQuestion {
-  id: number;
-  text: string;
-  options: QuizAnswer[];
-  category?: string;
-  required?: boolean;
+  // key is usually the question index; this shape is for each stored answer
+  questionId?: number
+  text: string
+  archetype: Archetype
+  points: number
 }
 
 export interface QuizState {
-  answers: Record<number, QuizAnswer>;
-  currentQuestion: number;
-  isComplete: boolean;
-  submissionData: QuizSubmissionData | null;
-  startedAt?: string;
+  currentQuestionIndex: number
+  answers: Record<number, QuizAnswer>
+  totalQuestions: number
+  isSubmitting?: boolean
+}
+
+// ---- Scores & results
+export type QuizScores = Record<Archetype, number>
+
+export interface ArchetypeExploration {
+  archetype: Archetype
+  description: string
+  tips?: string[]
+}
+
+export interface ArchetypeResult {
+  archetype: Archetype
+  score: number
+  breakdown: QuizScores
+}
+
+/**
+ * Result shown to the user after submission
+ * (Extend if you already store more fields elsewhere)
+ */
+export interface QuizResult {
+  id?: string
+  archetype: Archetype
+  score: number
+  scores: QuizScores
+  createdAt?: string   // use string, not Date, for UI components
+}
+
+
+// ---- Submission payload your logic returns (and handlers consume)
+export interface QuizSubmissionData {
+  answers: Record<number, QuizAnswer>
+  sessionId: string
+  archetype: Archetype
+  score: number
+  scores: QuizScores
 }

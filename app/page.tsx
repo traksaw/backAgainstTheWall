@@ -25,10 +25,12 @@ import { QuizModal } from "@/components/quiz/QuizModal"
 import { ResultsModal } from "@/components/results/ResultsModal"
 import { UserMenu } from "@/components/layout/UserMenu"
 import { LoadingScreen } from "@/components/layout/LoadingScreen"
+import type { QuizResult, Archetype, QuizScores } from '@/types/quiz'
+
 
 // This component now uses the auth context properly
 function FilmWebsiteContent() {
- const { user, profile, signOut, loading: authLoading, isHydrated } = useAuth()
+  const { user, profile, signOut, loading: authLoading, isHydrated } = useAuth()
   const { latestResult, refreshResults, loading: quizLoading } = useQuiz()
 
   // Replace 15+ useState calls with clean hooks
@@ -38,14 +40,14 @@ function FilmWebsiteContent() {
   const quizState = useQuizState()
 
   // Handle quiz completion
-const handleQuizComplete = async (quizData: any) => {
+  const handleQuizComplete = async (quizData: any) => {
     try {
       await quizHandlers.handleQuizComplete(Object.values(quizState.answers))
       modals.setShowQuiz(false)
-      
+
       // Force refresh the quiz results to ensure we have the latest data
       await refreshResults()
-      
+
       // Small delay to ensure state has propagated
       setTimeout(() => {
         modals.setShowResults(true)
@@ -58,41 +60,41 @@ const handleQuizComplete = async (quizData: any) => {
   }
 
   // Handle results viewed
- const handleResultsViewed = async () => {
+  const handleResultsViewed = async () => {
     await quizHandlers.handleResultsViewed(latestResult)
     modals.setShowResults(false)
     modals.setShowFilm(true)
   }
 
   // Handle film completion
-   const handleFilmComplete = async () => {
+  const handleFilmComplete = async () => {
     await quizHandlers.handleFilmComplete(latestResult)
     modals.setShowFilm(false)
   }
 
 
   // Handle starting new quiz
-   const handleStartQuiz = () => {
+  const handleStartQuiz = () => {
     console.log('🎯 Starting new quiz - resetting state');
-    
+
     // First, completely reset the quiz state
     quizState.hardReset() // Use hardReset for complete restart
-    
+
     // Small delay to ensure state is reset before opening modal
     setTimeout(() => {
       modals.openQuiz()
     }, 100)
   }
 
-const handleRetakeQuiz = () => {
+  const handleRetakeQuiz = () => {
     console.log('🎯 Retaking quiz - complete reset');
-    
+
     // Close any open modals first
     modals.closeAllModals()
-    
+
     // Completely reset quiz state
     quizState.hardReset()
-    
+
     // Small delay then open quiz
     setTimeout(() => {
       console.log('🎯 Opening quiz after reset');
@@ -103,11 +105,29 @@ const handleRetakeQuiz = () => {
   if (authLoading) {
     return <LoadingScreen message="Loading..." />
   }
+  // Convert whatever the backend returns into a UI-friendly QuizResult
+  function normalizeLatestResult(raw: any): QuizResult | null {
+    if (!raw) return null
+
+    const scores: QuizScores =
+      raw.scores ??
+      ({ Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 } as QuizScores)
+
+    return {
+      id: String(raw._id ?? raw.id ?? ''),                 // stringify ObjectId
+      archetype: raw.archetype as Archetype,
+      score: Number(raw.score ?? 0),
+      scores,
+      createdAt: raw.createdAt
+        ? new Date(raw.createdAt).toISOString()            // Date -> string
+        : undefined,
+    }
+  }
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
       {/* Clean User Menu Component */}
-      <UserMenu 
+      <UserMenu
         user={user}
         profile={profile}
         onSignOut={signOut}
@@ -195,7 +215,7 @@ const handleRetakeQuiz = () => {
       />
 
       {/* Clean Modal Components */}
-      <QuizModal 
+      <QuizModal
         open={modals.showQuiz}
         onOpenChange={(open) => {
           if (!open) {
@@ -209,16 +229,17 @@ const handleRetakeQuiz = () => {
         profile={profile}
       />
 
-      <ResultsModal 
+      <ResultsModal
         open={modals.showResults}
         onOpenChange={(open) => {
           console.log("=== RESULTS MODAL OPEN CHANGE ===", open)
           modals.setShowResults(open)
         }}
-        latestResult={latestResult ? { user_id: user?.id ?? '', ...latestResult } : null}
+        latestResult={normalizeLatestResult(latestResult)}
         onResultsViewed={handleResultsViewed}
         loading={quizLoading}
       />
+
 
       {/* Film Modal */}
       <Dialog open={modals.showFilm} onOpenChange={modals.setShowFilm}>

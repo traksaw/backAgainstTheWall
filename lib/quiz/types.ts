@@ -8,7 +8,8 @@ export type {
   ArchetypeExploration,
   ArchetypeResult,
   QuizState,
-  QuizSubmissionData
+  QuizSubmissionData,
+  QuizScores, // now truly exported by '@/types/quiz'
 } from '@/types/quiz'
 
 // Additional quiz-specific types that are only used within the quiz logic
@@ -18,13 +19,6 @@ export interface QuizConfiguration {
   shuffleQuestions: boolean
   shuffleOptions: boolean
   antiPatternDetection: boolean
-}
-
-export interface QuizScores {
-  Avoider: number
-  Gambler: number
-  Realist: number
-  Architect: number
 }
 
 export interface QuizAnalytics {
