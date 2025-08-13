@@ -1,4 +1,5 @@
-// components/quiz/QuizModal.tsx
+// Update your components/quiz/QuizModal.tsx
+
 "use client"
 
 import { Button } from "@/components/ui/button"
@@ -30,16 +31,40 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
   } = quizState
 
   const handleAnswerClick = async (answer: QuizAnswer) => {
+    console.log("=== QUIZ MODAL: ANSWER CLICKED ===")
+    console.log("Answer:", answer)
+    console.log("Current question:", currentQuestion)
+    console.log("Total questions:", shuffledQuestions.length)
+    console.log("Current answers count:", Object.keys(answers).length)
+    
     const isComplete = handleQuizAnswer(answer)
+    console.log("Is quiz complete:", isComplete)
     
     if (isComplete) {
       try {
-        const quizData = quizLogic.processQuizCompletion(answers)
+        console.log("🎯 Quiz completed! Processing submission...")
+        
+        // Get the final answers including the last answer
+        const finalAnswers = { ...answers, [currentQuestion]: answer }
+        console.log("Final answers for submission:", {
+          count: Object.keys(finalAnswers).length,
+          answers: finalAnswers
+        })
+        
+        const quizData = quizLogic.processQuizCompletion(finalAnswers)
+        console.log("Processed quiz data:", quizData)
+        
+        console.log("🎯 Calling onQuizComplete...")
         await onQuizComplete(quizData)
+        console.log("✅ onQuizComplete finished successfully")
+        
       } catch (error) {
-        console.error('Quiz completion error:', error)
-        alert(`Quiz submission failed: ${(error as any)?.message || 'Unknown error'}`)
+        console.error('=== QUIZ MODAL: COMPLETION ERROR ===')
+        console.error('Error details:', error)
+        alert(`Quiz completion failed: ${(error as any)?.message || 'Unknown error'}`)
       }
+    } else {
+      console.log("Quiz not complete yet, continuing...")
     }
   }
 
@@ -65,7 +90,10 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
               </div>
               <div className="flex justify-center">
                 <Button
-                  onClick={startQuiz}
+                  onClick={() => {
+                    console.log("🎯 Starting quiz...")
+                    startQuiz()
+                  }}
                   className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-8 py-3 rounded-lg"
                 >
                   Start Quiz
@@ -78,6 +106,11 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
         {/* Quiz Questions */}
         {!showWelcome && shuffledQuestions.length > 0 && currentQuestion < shuffledQuestions.length && (
           <div className="space-y-8 py-6">
+            {/* Progress indicator */}
+            <div className="text-center text-sm text-gray-500">
+              Question {currentQuestion + 1} of {shuffledQuestions.length}
+            </div>
+            
             <h3 className="text-xl font-semibold text-center text-gray-800 leading-relaxed">
               {shuffledQuestions[currentQuestion]?.question}
             </h3>

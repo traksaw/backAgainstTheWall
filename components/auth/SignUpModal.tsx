@@ -138,6 +138,7 @@ export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }:
     }
   }
 
+// Add this debugging to your SignUpModal.tsx handleSubmit function
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault()
 
@@ -147,8 +148,10 @@ const handleSubmit = async (e: React.FormEvent) => {
   setLoading(true)
 
   try {
-  
+    console.log("=== SIGNUP PROCESS START ===")
+    
     await signUp(formData)
+    console.log("✅ Signup successful!")
 
     // Reset form first
     setFormData({
@@ -165,11 +168,16 @@ const handleSubmit = async (e: React.FormEvent) => {
     setErrors({})
     setError("")
 
+    console.log("🔄 Form reset complete")
+
     // Close modal
     onOpenChange(false)
+    console.log("❌ Signup modal closed")
 
-    // Call success callback
+    // Call success callback - THIS SHOULD OPEN THE QUIZ
+    console.log("🎯 Calling onSuccess callback...")
     onSuccess()
+    console.log("✅ onSuccess callback completed")
 
   } catch (error) {
     console.error("=== SIGNUP FAILED ===")

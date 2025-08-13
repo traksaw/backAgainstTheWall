@@ -1,3 +1,5 @@
+// Make sure your hooks/useQuiz.ts has this structure:
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -14,6 +16,11 @@ export function useQuiz() {
   useEffect(() => {
     if (user?._id) {
       fetchQuizResults()
+    } else {
+      // Clear results when user logs out
+      setQuizResults([])
+      setLatestResult(null)
+      setLoading(false)
     }
   }, [user?._id])
 
@@ -22,9 +29,22 @@ export function useQuiz() {
 
     setLoading(true)
     try {
+      console.log("📊 Fetching quiz results for user:", user._id)
       const results = await QuizService.getUserQuizResults()
+      console.log("✅ Quiz results fetched:", results.length, "results")
+      
       setQuizResults(results)
       setLatestResult(results[0] || null)
+      
+      if (results[0]) {
+        console.log("📈 Latest result:", {
+          id: results[0]._id,
+          archetype: results[0].archetype,
+          score: results[0].score,
+          hasViewedResults: results[0].hasViewedResults,
+          hasWatchedFilm: results[0].hasWatchedFilm
+        })
+      }
     } catch (error) {
       console.error("Error loading quiz results:", error)
       setQuizResults([])
@@ -37,14 +57,22 @@ export function useQuiz() {
   const submitQuiz = async (answers: Record<number, any>, sessionId?: string) => {
     if (!user?._id) throw new Error("User not authenticated")
 
+    console.log("=== QUIZ SUBMISSION START ===")
+    console.log("Answers to submit:", Object.keys(answers).length)
+
     const scores = { Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 }
     Object.values(answers).forEach((answer) => {
-      scores[answer.archetype as keyof typeof scores] += answer.points
+      if (answer.archetype && answer.points) {
+        scores[answer.archetype as keyof typeof scores] += answer.points
+      }
     })
 
     const topArchetype = Object.entries(scores).reduce((a, b) =>
       a[1] > b[1] ? a : b
     )[0] as keyof typeof scores
+
+    console.log("Calculated scores:", scores)
+    console.log("Winning archetype:", topArchetype)
 
     setLoading(true)
     try {
@@ -54,8 +82,13 @@ export function useQuiz() {
         answers,
         sessionId,
       })
+      
+      console.log("✅ Quiz submitted successfully:", result)
+      
+      // Update local state immediately
       setLatestResult(result)
       setQuizResults((prev) => [result, ...prev])
+      
       return result
     } catch (error) {
       console.error("Error submitting quiz:", error)
@@ -71,12 +104,14 @@ export function useQuiz() {
   ) => {
     setLoading(true)
     try {
-      console.log("Updating quiz result with ID:", resultId, "Updates:", updates)
+      console.log("🔄 Updating quiz result:", resultId, updates)
+      
       if (!resultId) {
         throw new Error("No resultId passed to updateQuizResult")
       }
 
       const updatedResult = await QuizService.updateQuizResult(resultId, updates)
+      console.log("✅ Quiz result updated:", updatedResult)
 
       setQuizResults((prev) =>
         prev.map((result) =>
@@ -97,21 +132,12 @@ export function useQuiz() {
     }
   }
 
-
   return {
     quizResults,
     latestResult,
     loading,
     submitQuiz,
     updateQuizResult,
-    refreshResults: fetchQuizResults,
+    refreshResults: fetchQuizResults, // Make sure this is exposed
   }
-}
-
-export async function fetchQuizResultsFromApi() {
-  const res = await fetch("/api/quiz/results", {
-    credentials: "include",
-  })
-  if (!res.ok) throw new Error("Failed to fetch quiz results")
-  return await res.json()
 }

@@ -1,3 +1,5 @@
+// Update your components/QuizAnswersDisplay.tsx
+
 "use client"
 
 import { useState } from "react"
@@ -13,13 +15,6 @@ interface QuizAnswer {
   points: number
   question?: string
 }
-
-// interface QuizResponse {
-//   question: string
-//   text: string
-//   archetype: string
-//   points: number
-// }
 
 interface QuizResult {
   _id: string
@@ -57,7 +52,38 @@ function getArchetypeColor(archetype: string): string {
 function QuizAnswersDisplay({ latestResult }: QuizAnswersDisplayProps) {
   const [showAnswers, setShowAnswers] = useState(false)
 
-  if (!latestResult?.answers?.responses || Object.keys(latestResult.answers.responses).length === 0) {
+  console.log("=== QUIZ ANSWERS DISPLAY ===")
+  console.log("Latest result:", latestResult)
+  console.log("Has answers:", !!latestResult?.answers)
+  console.log("Has responses:", !!latestResult?.answers?.responses)
+
+  // Early return with better error handling
+  if (!latestResult) {
+    console.log("No latest result provided")
+    return (
+      <Card className="border-gray-200 bg-gray-50">
+        <CardContent className="p-6 text-center">
+          <MessageSquare className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-600">No quiz results available.</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!latestResult.answers) {
+    console.log("No answers object in result")
+    return (
+      <Card className="border-gray-200 bg-gray-50">
+        <CardContent className="p-6 text-center">
+          <MessageSquare className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-600">Quiz answers are not available.</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!latestResult.answers.responses || Object.keys(latestResult.answers.responses).length === 0) {
+    console.log("No responses in answers object")
     return (
       <Card className="border-gray-200 bg-gray-50">
         <CardContent className="p-6 text-center">
@@ -69,11 +95,16 @@ function QuizAnswersDisplay({ latestResult }: QuizAnswersDisplayProps) {
   }
 
   const answersArray = Object.entries(latestResult.answers.responses).map(
-    ([questionIndex, answer]) => ({
-      questionIndex: Number(questionIndex),
-      ...answer,
-    })
+    ([questionIndex, answer]) => {
+      console.log("Processing answer:", questionIndex, answer)
+      return {
+        questionIndex: Number(questionIndex),
+        ...answer,
+      }
+    }
   ).sort((a, b) => a.questionIndex - b.questionIndex)
+
+  console.log("Processed answers array:", answersArray.length)
 
   return (
     <div className="space-y-4">
@@ -85,7 +116,10 @@ function QuizAnswersDisplay({ latestResult }: QuizAnswersDisplayProps) {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setShowAnswers(!showAnswers)}
+          onClick={() => {
+            console.log("Toggle answers visibility:", !showAnswers)
+            setShowAnswers(!showAnswers)
+          }}
           className="flex items-center gap-2"
         >
           {showAnswers ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -97,27 +131,37 @@ function QuizAnswersDisplay({ latestResult }: QuizAnswersDisplayProps) {
         <Card className="border-gray-200">
           <CardContent className="p-6">
             <div className="space-y-6">
-              {answersArray.map((answer, index) => (
-                <div key={answer.questionIndex} className="border-b border-gray-100 pb-4 last:border-b-0">
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between">
-                      <h4 className="font-medium text-gray-800 flex-1">
-                        <span className="text-[#B95D38] mr-2">Q{index + 1}:</span>
-                        {answer.question || `Question ${index + 1}`}
-                      </h4>
-                    </div>
-                    <div className="ml-8">
-                      <div className="flex items-center space-x-3">
-                        <Badge className={`${getArchetypeColor(answer.archetype)} text-xs`}>
-                          {answer.archetype}
-                        </Badge>
-                        <span className="text-gray-700">{answer.text}</span>
-                        <span className="text-sm text-gray-500">({answer.points} pts)</span>
+              {answersArray.map((answer, index) => {
+                console.log("Rendering answer:", index, answer)
+                
+                // Safely handle missing or invalid answer data
+                const questionText = answer.question || `Question ${index + 1}`
+                const answerText = answer.text || "No answer text available"
+                const archetype = answer.archetype || "Unknown"
+                const points = answer.points || 0
+
+                return (
+                  <div key={answer.questionIndex} className="border-b border-gray-100 pb-4 last:border-b-0">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between">
+                        <h4 className="font-medium text-gray-800 flex-1">
+                          <span className="text-[#B95D38] mr-2">Q{index + 1}:</span>
+                          {questionText}
+                        </h4>
+                      </div>
+                      <div className="ml-8">
+                        <div className="flex items-center space-x-3">
+                          <Badge className={`${getArchetypeColor(archetype)} text-xs`}>
+                            {archetype}
+                          </Badge>
+                          <span className="text-gray-700">{answerText}</span>
+                          <span className="text-sm text-gray-500">({points} pts)</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             {/* Summary Stats */}

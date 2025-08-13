@@ -1,3 +1,5 @@
+// components/Hero.tsx - Updated type and retake handling
+
 "use client"
 
 import Image from "next/image"
@@ -11,7 +13,7 @@ type HeroProps = {
   onSignUp: () => void
   onSignIn: () => void
   onStartQuiz: () => void
-  onRetakeQuiz?: () => void
+  onRetakeQuiz?: () => void // Added this prop
   onShowResults: () => void
   onWatchFilm: () => void
 }
@@ -23,9 +25,21 @@ export default function Hero({
   onSignUp,
   onSignIn,
   onStartQuiz,
+  onRetakeQuiz, // Added this
   onShowResults,
   onWatchFilm,
 }: HeroProps) {
+
+  // Helper function to handle retake - use onRetakeQuiz if provided, otherwise onStartQuiz
+  const handleRetakeQuiz = () => {
+    console.log('🎯 Hero: Retake quiz clicked');
+    if (onRetakeQuiz) {
+      onRetakeQuiz()
+    } else {
+      onStartQuiz()
+    }
+  }
+
   return (
     <div className="w-full">
       {/* Mobile-First Poster Section - Fixed Height Issues */}
@@ -112,7 +126,7 @@ export default function Hero({
                         </Button>
                         <div className="flex space-x-2">
                           <Button
-                            onClick={() => onStartQuiz()}
+                            onClick={handleRetakeQuiz} // FIXED: Use handleRetakeQuiz
                             variant="outline"
                             className="border-[#B95D38] text-[#B95D38] hover:bg-[#B95D38]/10 flex-1 py-3 rounded-full text-sm transform hover:scale-105 transition-all duration-300"
                           >
@@ -149,7 +163,7 @@ export default function Hero({
                           {latestResult.hasViewedResults ? "Watch the Film" : "View Results & Watch"}
                         </Button>
                         <Button
-                          onClick={() => onStartQuiz()}
+                          onClick={handleRetakeQuiz} // FIXED: Use handleRetakeQuiz
                           variant="outline"
                           className="border-[#B95D38] text-[#B95D38] hover:bg-[#B95D38]/10 w-full py-3 rounded-full transform hover:scale-105 transition-all duration-300"
                         >
@@ -226,7 +240,7 @@ export default function Hero({
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4">
                       <Button
-                        onClick={() => onStartQuiz()}
+                        onClick={handleRetakeQuiz} // FIXED: Use handleRetakeQuiz
                         variant="outline"
                         className="border-[#B95D38] text-[#B95D38] hover:bg-[#B95D38]/10 transform hover:scale-105 transition-all duration-300"
                       >
@@ -268,7 +282,7 @@ export default function Hero({
                         {latestResult.hasViewedResults ? "Watch the Film" : "View Results & Watch"}
                       </Button>
                       <Button
-                        onClick={() => onStartQuiz()}
+                        onClick={handleRetakeQuiz} // FIXED: Use handleRetakeQuiz
                         variant="outline"
                         className="border-[#B95D38] text-[#B95D38] hover:bg-[#B95D38]/10 transform hover:scale-105 transition-all duration-300"
                       >

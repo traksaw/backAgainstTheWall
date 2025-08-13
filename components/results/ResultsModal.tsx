@@ -1,4 +1,4 @@
-// components/results/ResultsModal.tsx
+// components/results/ResultsModal.tsx - Fixed version
 "use client"
 
 import { Button } from "@/components/ui/button"
@@ -25,11 +25,45 @@ export function ResultsModal({
   onResultsViewed, 
   loading = false 
 }: ResultsModalProps) {
+  console.log('🎯 ResultsModal rendering with:', { 
+    open, 
+    hasLatestResult: !!latestResult, 
+    latestResultId: latestResult?._id,
+    archetype: latestResult?.archetype,
+    loading 
+  })
+
+  // Show loading state if modal is open but no result yet
+  if (open && !latestResult && !loading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl bg-white text-gray-900 border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-3xl font-bold text-center text-gray-900">
+              Loading Your Results...
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38] mx-auto mb-4"></div>
+            <p className="text-gray-600 ml-4">Processing your financial personality...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  // Don't render if no result and modal is supposed to be open
   if (!latestResult || !latestResult._id) {
+    console.log('🎯 ResultsModal: No valid latestResult, not rendering')
     return null
   }
 
   const currentArchetype = archetypeResults[latestResult.archetype as Archetype]
+  if (!currentArchetype) {
+    console.error('🎯 ResultsModal: No archetype data found for:', latestResult.archetype)
+    return null
+  }
+
   const IconComponent = getArchetypeIcon(currentArchetype.archetype)
 
   return (

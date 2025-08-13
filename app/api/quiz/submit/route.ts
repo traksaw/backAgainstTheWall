@@ -1,3 +1,4 @@
+// Update your app/api/quiz/submit/route.ts
 import { NextResponse, NextRequest } from "next/server"
 import QuizResultModel from "@/models/QuizResult"
 import { connectDB } from "@/lib/mongoose"
@@ -13,24 +14,48 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await req.json()    
-    // The actual data is nested inside body.answers
-    const actualData = body.answers || body // Handle both structures
-    const quizAnswers = actualData.answers
-    const sessionId = actualData.sessionId
-    const archetype = actualData.archetype
-    const score = actualData.score
+    const body = await req.json()
+    console.log("=== QUIZ SUBMIT API DEBUG ===")
+    console.log("Raw request body:", body)
+    
+    // ✅ FIXED: Better data extraction logic
+    let quizAnswers, sessionId, archetype, score
+    
+    if (body.answers) {
+      // Data structure: { answers: {...}, sessionId: "...", archetype: "...", score: 123 }
+      quizAnswers = body.answers
+      sessionId = body.sessionId
+      archetype = body.archetype
+      score = body.score
+    } else {
+      // Legacy data structure or different format
+      console.log("Using legacy data structure")
+      quizAnswers = body.quizAnswers || body
+      sessionId = body.sessionId
+      archetype = body.archetype
+      score = body.score
+    }
+
+    console.log("Extracted data:", {
+      quizAnswers: quizAnswers ? Object.keys(quizAnswers).length : 0,
+      sessionId,
+      archetype,
+      score
+    })
 
     // Validate required fields
     if (!quizAnswers) {
+      console.error("Missing quiz answers field")
       return NextResponse.json({ error: "Missing quiz answers field" }, { status: 400 })
     }
     
     if (!archetype || archetype === 'undefined') {
+      console.error("Missing or invalid archetype field:", archetype)
       return NextResponse.json({ error: "Missing or invalid archetype field" }, { status: 400 })
     }
     
     if (score === undefined || score === null || isNaN(score)) {
+      console.error("Missing or invalid score field:", score)
       return NextResponse.json({ error: "Missing or invalid score field" }, { status: 400 })
     }
 
@@ -53,6 +78,7 @@ export async function POST(req: NextRequest) {
         answerStructure.scores[answer.archetype as keyof typeof answerStructure.scores] += answer.points
       }
     })
+    
     const quizResultData = {
       userId: new mongoose.Types.ObjectId(userId),
       answers: answerStructure,
@@ -60,7 +86,16 @@ export async function POST(req: NextRequest) {
       archetype: archetype,
       score: Number(score),
     }
+
+    console.log("Creating quiz result with data:", {
+      userId,
+      archetype,
+      score,
+      totalQuestions: answerStructure.totalQuestions
+    })
+
     const newResult = await QuizResultModel.create(quizResultData)
+    console.log("Quiz result created successfully:", newResult._id)
 
     return NextResponse.json(newResult)
     

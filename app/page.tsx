@@ -28,9 +28,9 @@ import { LoadingScreen } from "@/components/layout/LoadingScreen"
 
 // This component now uses the auth context properly
 function FilmWebsiteContent() {
-  const { user, profile, signOut, loading: authLoading, isHydrated } = useAuth()
-  const { latestResult } = useQuiz()
-  
+ const { user, profile, signOut, loading: authLoading, isHydrated } = useAuth()
+  const { latestResult, refreshResults, loading: quizLoading } = useQuiz()
+
   // Replace 15+ useState calls with clean hooks
   const modals = useModalState()
   const castData = useCastData()
@@ -38,33 +38,66 @@ function FilmWebsiteContent() {
   const quizState = useQuizState()
 
   // Handle quiz completion
-  const handleQuizComplete = async (quizData: any) => {
+const handleQuizComplete = async (quizData: any) => {
     try {
       await quizHandlers.handleQuizComplete(Object.values(quizState.answers))
       modals.setShowQuiz(false)
-      modals.setShowResults(true)
+      
+      // Force refresh the quiz results to ensure we have the latest data
+      await refreshResults()
+      
+      // Small delay to ensure state has propagated
+      setTimeout(() => {
+        modals.setShowResults(true)
+      }, 200)
     } catch (error) {
       console.error('Quiz completion error:', error)
+      modals.setShowQuiz(false)
+      alert(`Quiz submission failed: ${(error as any)?.message || 'Unknown error'}`)
     }
   }
 
   // Handle results viewed
-  const handleResultsViewed = async () => {
+ const handleResultsViewed = async () => {
     await quizHandlers.handleResultsViewed(latestResult)
     modals.setShowResults(false)
     modals.setShowFilm(true)
   }
 
   // Handle film completion
-  const handleFilmComplete = async () => {
+   const handleFilmComplete = async () => {
     await quizHandlers.handleFilmComplete(latestResult)
     modals.setShowFilm(false)
   }
 
+
   // Handle starting new quiz
-  const handleStartQuiz = () => {
-    quizState.resetQuiz()
-    modals.openQuiz()
+   const handleStartQuiz = () => {
+    console.log('🎯 Starting new quiz - resetting state');
+    
+    // First, completely reset the quiz state
+    quizState.hardReset() // Use hardReset for complete restart
+    
+    // Small delay to ensure state is reset before opening modal
+    setTimeout(() => {
+      modals.openQuiz()
+    }, 100)
+  }
+
+const handleRetakeQuiz = () => {
+    console.log('🎯 Retaking quiz - complete reset');
+    
+    // Close any open modals first
+    modals.closeAllModals()
+    
+    // Completely reset quiz state
+    quizState.hardReset()
+    
+    // Small delay then open quiz
+    setTimeout(() => {
+      console.log('🎯 Opening quiz after reset');
+      modals.openQuiz()
+    }, 200)
   }
 
   if (authLoading) {
@@ -88,7 +121,8 @@ function FilmWebsiteContent() {
         latestResult={latestResult}
         onSignUp={modals.openSignup}
         onSignIn={modals.openSignin}
-        onStartQuiz={handleStartQuiz}
+        onStartQuiz={handleStartQuiz} // For first time
+        onRetakeQuiz={handleRetakeQuiz} // For retaking - pass this function
         onShowResults={modals.openResults}
         onWatchFilm={modals.openFilm}
       />
@@ -110,7 +144,7 @@ function FilmWebsiteContent() {
             <div className="text-center py-12">
               <p className="text-gray-600">No cast and crew information available.</p>
               {castData.error && (
-                <button 
+                <button
                   onClick={castData.retry}
                   className="text-[#B95D38] hover:underline mt-2"
                 >
@@ -141,11 +175,19 @@ function FilmWebsiteContent() {
         onOpenChange={modals.setShowSignup}
         onSwitchToSignIn={modals.switchToSignIn}
         onSuccess={() => {
+          console.log("=== SIGNUP SUCCESS CALLBACK ===")
           modals.setShowSignup(false)
-          handleStartQuiz()
+          console.log("❌ Signup modal closed via callback")
+
+          // Add a small delay to ensure the signup modal closes first
+          setTimeout(() => {
+            console.log("🎯 About to call handleStartQuiz (after delay)...")
+            handleStartQuiz()
+            console.log("✅ handleStartQuiz completed")
+          }, 100) // 100ms delay
         }}
       />
-      
+
       <SignInModal
         open={modals.showSignin}
         onOpenChange={modals.setShowSignin}
@@ -155,17 +197,27 @@ function FilmWebsiteContent() {
       {/* Clean Modal Components */}
       <QuizModal 
         open={modals.showQuiz}
-        onOpenChange={modals.setShowQuiz}
+        onOpenChange={(open) => {
+          if (!open) {
+            // When closing quiz, reset it
+            console.log('🎯 Quiz modal closing - resetting state');
+            quizState.hardReset()
+          }
+          modals.setShowQuiz(open)
+        }}
         onQuizComplete={handleQuizComplete}
         profile={profile}
       />
-      
+
       <ResultsModal 
         open={modals.showResults}
-        onOpenChange={modals.setShowResults}
+        onOpenChange={(open) => {
+          console.log("=== RESULTS MODAL OPEN CHANGE ===", open)
+          modals.setShowResults(open)
+        }}
         latestResult={latestResult ? { user_id: user?.id ?? '', ...latestResult } : null}
         onResultsViewed={handleResultsViewed}
-        loading={quizHandlers.quizLoading}
+        loading={quizLoading}
       />
 
       {/* Film Modal */}
@@ -200,9 +252,9 @@ function FilmWebsiteContent() {
         </DialogContent>
       </Dialog>
 
-      <QuizHistorySection 
-        open={modals.showQuizHistory} 
-        onOpenChange={modals.setShowQuizHistory} 
+      <QuizHistorySection
+        open={modals.showQuizHistory}
+        onOpenChange={modals.setShowQuizHistory}
       />
     </div>
   )
