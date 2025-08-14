@@ -481,4 +481,4 @@ export const quizQuestions: QuizQuestion[] = [
   }
 ];
 
-console.log(validateQuizBalance(quizQuestions)); // should print per-archetype totals
+console.log(validateQuizBalance(quizQuestions)); // should print per-archetype totals 
