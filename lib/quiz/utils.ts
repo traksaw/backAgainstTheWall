@@ -41,14 +41,14 @@ export function createAdvancedRandomizedQuestions(
     }
 
     // Add slight point variations to prevent identical scores (20% chance instead of 10%)
-    if (Math.random() > 0.8) {
-      console.log('🎯 Adding point variations to question', questionIndex + 1);
-      shuffledOptions = shuffledOptions.map(option => {
-        const variation = Math.random() > 0.5 ? 1 : -1;
-        const newPoints = Math.max(1, Math.min(5, option.points + variation)); // Keep between 1-5 points
-        return { ...option, points: newPoints };
-      });
-    }
+    // if (Math.random() > 0.8) {
+    //   console.log('🎯 Adding point variations to question', questionIndex + 1);
+    //   shuffledOptions = shuffledOptions.map(option => {
+    //     const variation = Math.random() > 0.5 ? 1 : -1;
+    //     const newPoints = Math.max(1, Math.min(5, option.points + variation)); // Keep between 1-5 points
+    //     return { ...option, points: newPoints };
+    //   });
+    // }
 
     return {
       ...question,
@@ -68,92 +68,76 @@ function canonicalizeArchetype(a?: string): Archetype | null {
  * Enhanced quiz scoring with better tie-breaking
  */
 export function calculateQuizScores(answers: Record<number, QuizAnswer>): QuizScores {
-  const scores: QuizScores = { ...EMPTY_SCORES }
+  const scores: QuizScores = { Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 }
 
-  for (const ans of Object.values(answers)) {
-    const arch = canonicalizeArchetype(ans.archetype)
-    const pts = Number(ans.points ?? 0)
-    if (!arch || Number.isNaN(pts)) continue
+  console.log('[calculateQuizScores] answers ->', answers)
+
+  for (const [key, ans] of Object.entries(answers)) {
+    const arch = ans?.archetype?.trim()
+    const pts = Number(ans?.points ?? 0)
+    console.log(`  · Q${key}: archetype=${arch} points=${pts}`)
+
+    if (!arch || !(arch in scores)) {
+      console.warn(`  ⚠️ invalid archetype for Q${key}:`, ans)
+      continue
+    }
+    if (Number.isNaN(pts)) {
+      console.warn(`  ⚠️ NaN points for Q${key}:`, ans)
+      continue
+    }
+    // @ts-expect-error narrowing above guarantees key exists
     scores[arch] += pts
   }
 
+  console.log('[calculateQuizScores] scores ->', scores)
   return scores
 }
+
 
 /**
  * Enhanced winner determination with proper tie-breaking
  */
-export function getWinningArchetype(scores: Record<Archetype, number>, answers?: Record<number, QuizAnswer>): Archetype {
-  console.log('🎯 Determining winner from scores:', scores);
-  
-  // Get sorted entries by score
-  const sortedEntries = Object.entries(scores).sort(([,a], [,b]) => b - a);
-  const highestScore = sortedEntries[0][1];
-  const tiedArchetypes = sortedEntries.filter(([,score]) => score === highestScore).map(([archetype]) => archetype);
-  
-  console.log('🎯 Highest score:', highestScore);
-  console.log('🎯 Tied archetypes:', tiedArchetypes);
-  
-  // If no tie, return the winner
-  if (tiedArchetypes.length === 1) {
-    const winner = tiedArchetypes[0] as Archetype;
-    console.log('🎯 Clear winner:', winner);
-    return winner;
+// replace your current getWinningArchetype with this deterministic version
+export function getWinningArchetype(
+  scores: QuizScores,
+  answers?: Record<number, QuizAnswer>
+): Archetype {
+  // 1) if everything is zero, fail loudly so we can fix the root cause
+  const values = Object.values(scores)
+  const allZero = values.every(v => Number(v) === 0)
+  if (allZero) {
+    throw new Error(
+      `[getWinningArchetype] All scores are 0. Upstream issue: answers missing points/archetypes.`
+    )
   }
-  
-  // Handle ties with advanced logic
-  console.log('🎯 TIE DETECTED - applying tie-breaking logic');
-  
-  // Method 1: Check recent answer patterns (last 30% of answers)
+
+  // 2) pick the max score
+  const maxScore = Math.max(...values)
+  const tied = (Object.keys(scores) as Archetype[]).filter(a => scores[a] === maxScore)
+
+  if (tied.length === 1) return tied[0]
+
+  // 3) tie-breaker #1: who appears more in answers
+  const counts: Record<Archetype, number> = { Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 }
   if (answers) {
-    const answerValues = Object.values(answers);
-    const recentCount = Math.max(3, Math.floor(answerValues.length * 0.3));
-    const recentAnswers = answerValues.slice(-recentCount);
-    
-    const recentScores: Record<string, number> = {};
-    tiedArchetypes.forEach(archetype => { recentScores[archetype] = 0; });
-    
-    recentAnswers.forEach(answer => {
-      if (answer.archetype && tiedArchetypes.includes(answer.archetype)) {
-        recentScores[answer.archetype]++;
-      }
-    });
-    
-    console.log('🎯 Recent answer bias:', recentScores);
-    
-    const recentWinner = Object.entries(recentScores)
-      .filter(([archetype]) => tiedArchetypes.includes(archetype))
-      .sort(([,a], [,b]) => b - a)[0];
-    
-    if (recentWinner && recentWinner[1] > 0) {
-      const winner = recentWinner[0] as Archetype;
-      console.log('🎯 Tie broken by recent answers:', winner);
-      return winner;
+    for (const a of Object.values(answers)) {
+      const arch = a?.archetype?.trim() as Archetype
+      if (arch && counts[arch] !== undefined) counts[arch] += 1
     }
   }
-  
-  // Method 2: Weighted randomness with slight archetype preferences
-  const tieBreakingWeights = {
-    Avoider: 1.0,
-    Gambler: 1.05,   // Slight preference for risk-takers (more interesting)
-    Realist: 1.1,    // Preference for balanced approach (most relatable)
-    Architect: 1.08  // Preference for planners
-  };
-  
-  // Add controlled randomness (±5%)
-  const weightedScores = tiedArchetypes.map(archetype => ({
-    archetype,
-    weightedScore: scores[archetype as Archetype] * 
-                  tieBreakingWeights[archetype as Archetype] * 
-                  (0.95 + Math.random() * 0.1) // 5% randomness
-  }));
-  
-  const finalWinner = weightedScores.sort((a, b) => b.weightedScore - a.weightedScore)[0];
-  const winner = finalWinner.archetype as Archetype;
-  
-  console.log('🎯 Tie broken by weighted selection:', winner, 'score:', finalWinner.weightedScore);
-  return winner;
+  const maxCount = Math.max(...tied.map(a => counts[a]))
+  const countWinners = tied.filter(a => counts[a] === maxCount)
+  if (countWinners.length === 1) return countWinners[0]
+
+  // 4) final tie-break: fixed order so it’s predictable
+  const ORDER: Archetype[] = ['Avoider', 'Gambler', 'Realist', 'Architect']
+  for (const a of ORDER) {
+    if (countWinners.includes(a)) return a
+  }
+  // should never get here, but keep a safe default
+  return ORDER[0]
 }
+
 
 /**
  * Gets the appropriate icon for an archetype

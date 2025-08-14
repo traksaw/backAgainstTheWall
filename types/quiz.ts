@@ -3,15 +3,19 @@
 // ---- Core enums / aliases
 export type Archetype = 'Avoider' | 'Gambler' | 'Realist' | 'Architect'
 
+export interface QuizOption {
+  id?: number          // <-- allow ids for UI keys
+  text: string
+  question: string
+  archetype: Archetype
+  points: number
+}
+
 // ---- Question / answer / state
 export interface QuizQuestion {
   id: number
   text: string
-  options: Array<{
-    text: string
-    archetype: Archetype
-    points: number
-  }>
+  options: QuizOption[]
 }
 
 export interface QuizAnswer {

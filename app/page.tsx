@@ -1,8 +1,9 @@
+// app/page.tsx
 "use client"
 
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { useAuth, AuthProvider } from "@/hooks/useAuth"
+import { useAuth } from "@/hooks/useAuth" // Remove AuthProvider import
 import { useQuiz } from "@/hooks/useQuiz"
 import { SignUpModal } from "@/components/auth/SignUpModal"
 import { SignInModal } from "@/components/auth/SignInModal"
@@ -26,7 +27,6 @@ import { ResultsModal } from "@/components/results/ResultsModal"
 import { UserMenu } from "@/components/layout/UserMenu"
 import { LoadingScreen } from "@/components/layout/LoadingScreen"
 import type { QuizResult, Archetype, QuizScores } from '@/types/quiz'
-
 
 // This component now uses the auth context properly
 function FilmWebsiteContent() {
@@ -72,7 +72,6 @@ function FilmWebsiteContent() {
     modals.setShowFilm(false)
   }
 
-
   // Handle starting new quiz
   const handleStartQuiz = () => {
     console.log('🎯 Starting new quiz - resetting state');
@@ -105,6 +104,7 @@ function FilmWebsiteContent() {
   if (authLoading) {
     return <LoadingScreen message="Loading..." />
   }
+
   // Convert whatever the backend returns into a UI-friendly QuizResult
   function normalizeLatestResult(raw: any): QuizResult | null {
     if (!raw) return null
@@ -240,7 +240,6 @@ function FilmWebsiteContent() {
         loading={quizLoading}
       />
 
-
       {/* Film Modal */}
       <Dialog open={modals.showFilm} onOpenChange={modals.setShowFilm}>
         <DialogContent className="max-w-5xl bg-black border-0">
@@ -283,10 +282,8 @@ function FilmWebsiteContent() {
 
 export default function Page() {
   return (
-    <AuthProvider>
-      <ClientOnly>
-        <FilmWebsiteContent />
-      </ClientOnly>
-    </AuthProvider>
+    <ClientOnly>
+      <FilmWebsiteContent />
+    </ClientOnly>
   )
 }

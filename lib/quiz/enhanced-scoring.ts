@@ -329,7 +329,7 @@ export function improvedCalculateQuizScores(answers: Record<number, any>) {
 
 // Helper function to detect if quiz is giving same results
 export function analyzeQuizBias(quizResults: any[]) {
-    const archetypeCounts = quizResults.reduce<Record<string, number>>((acc, result) => {
+    const archetypeCounts: Record<string, number> = quizResults.reduce((acc: Record<string, number>, result) => {
         acc[result.archetype] = (acc[result.archetype] || 0) + 1
         return acc
     }, {})

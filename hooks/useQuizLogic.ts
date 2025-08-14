@@ -11,6 +11,8 @@ export function useQuizLogic() {
     const sessionId = generateSessionId()
     const scores = calculateQuizScores(answers)
     const winningArchetype = getWinningArchetype(scores, answers)
+    console.log('[useQuizLogic] winner ->', winningArchetype)
+
     const totalScore = scores[winningArchetype]
 
     if (!winningArchetype || totalScore === undefined) {
