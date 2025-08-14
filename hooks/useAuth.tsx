@@ -30,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchCurrentUser = async () => {
     try {
       const res = await fetch("/api/auth/me")
+      if (!res.ok) { /* show signed-out UI */ }
       if (res.ok) {
         const userData = await res.json()
         setUser(userData)
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null)
         return null
       }
+      
     } catch (err) {
       console.error("Failed to fetch current user:", err)
       setUser(null)
