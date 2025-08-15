@@ -15,11 +15,13 @@ export interface QuizOption {
 export interface QuizQuestion {
   id: number
   text: string
+  question?: string
   options: QuizOption[]
 }
 
 export interface QuizAnswer {
   // key is usually the question index; this shape is for each stored answer
+  id?: number          // <-- allow ids for UI keys
   questionId?: number
   text: string
   archetype: Archetype

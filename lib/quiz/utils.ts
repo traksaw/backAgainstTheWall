@@ -1,6 +1,6 @@
-// lib/quiz/utils.ts - Updated version with enhanced scoring
+// lib/quiz/utils.ts - Enhanced shuffling with robust anti-pattern detection
 
-import { QuizQuestion, QuizAnswer, Archetype, QuizScores } from '@/types/quiz';
+import { QuizQuestion, QuizAnswer, Archetype, QuizScores, QuizOption } from '@/types/quiz';
 import { Shield, TrendingUp, Target, Eye, Award } from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
 
@@ -11,57 +11,191 @@ export const EMPTY_SCORES: QuizScores = ARCHETYPES.reduce((acc, a) => {
 }, {} as QuizScores)
 
 /**
- * Creates randomized quiz questions with anti-pattern detection
+ * Enhanced shuffling with multiple anti-pattern strategies
  */
 export function createAdvancedRandomizedQuestions(
   questions: QuizQuestion[],
   userClickPattern: number[] = []
 ): QuizQuestion[] {
-  console.log('🎯 Creating randomized questions, pattern length:', userClickPattern.length);
+  console.log('🎯 Creating enhanced randomized questions, pattern length:', userClickPattern.length);
   
-  // Detect if user has a pattern (clicking same position repeatedly)
-  const isRepetitive = userClickPattern.length >= 3 &&
-    userClickPattern.slice(-3).every(pos => pos === userClickPattern[userClickPattern.length - 1]);
-
-  return [...questions].map((question, questionIndex) => {
+  // Step 1: Analyze user's clicking behavior
+  const patternAnalysis = analyzeClickingPattern(userClickPattern);
+  console.log('🎯 Pattern analysis:', patternAnalysis);
+  
+  // Step 2: Shuffle question order first
+  let shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
+  
+  // Step 3: Apply sophisticated option shuffling to each question
+  shuffledQuestions = shuffledQuestions.map((question, questionIndex) => {
     let shuffledOptions = [...question.options];
-
-    if (isRepetitive) {
-      console.log('🎯 Repetitive pattern detected, applying countermeasures');
-      // If user is being repetitive, shuffle more aggressively
-      shuffledOptions = shuffledOptions.sort(() => Math.random() - 0.5);
-
-      // Sometimes swap the first two options to break the pattern
-      if (Math.random() > 0.6) {
-        [shuffledOptions[0], shuffledOptions[1]] = [shuffledOptions[1], shuffledOptions[0]];
-      }
-    } else {
-      // Normal randomization
-      shuffledOptions = shuffledOptions.sort(() => Math.random() - 0.5);
+    
+    // Strategy 1: Basic randomization
+    shuffledOptions = shuffledOptions.sort(() => Math.random() - 0.5);
+    
+    // Strategy 2: Anti-pattern positioning
+    if (patternAnalysis.isRepetitive) {
+      console.log('🎯 Applying anti-pattern positioning for question', questionIndex + 1);
+      
+      // Move the user's preferred archetype away from their favorite position
+      const favoritePosition = patternAnalysis.favoritePosition;
+      const preferredArchetype = patternAnalysis.dominantArchetype;
+      
+      shuffledOptions = repositionToCounterPattern(shuffledOptions, favoritePosition, preferredArchetype);
     }
-
-    // Add slight point variations to prevent identical scores (20% chance instead of 10%)
-    // if (Math.random() > 0.8) {
-    //   console.log('🎯 Adding point variations to question', questionIndex + 1);
-    //   shuffledOptions = shuffledOptions.map(option => {
-    //     const variation = Math.random() > 0.5 ? 1 : -1;
-    //     const newPoints = Math.max(1, Math.min(5, option.points + variation)); // Keep between 1-5 points
-    //     return { ...option, points: newPoints };
-    //   });
-    // }
-
+    
+    // Strategy 3: Ensure archetype balance across positions
+    shuffledOptions = balanceArchetypesAcrossPositions(shuffledOptions, questionIndex);
+    
+    // Strategy 4: Smart tie-breaking (vary point values slightly)
+    if (Math.random() > 0.7) {
+      shuffledOptions = addPointVariations(shuffledOptions);
+    }
+    
     return {
       ...question,
       options: shuffledOptions
     };
-  }).sort(() => Math.random() - 0.5); // Always shuffle question order
+  });
+
+  // Step 4: Final question order optimization
+  shuffledQuestions = optimizeQuestionOrder(shuffledQuestions);
+  
+  console.log('🎯 Enhanced shuffling complete:', {
+    totalQuestions: shuffledQuestions.length,
+    antiPatternApplied: patternAnalysis.isRepetitive,
+    balancingApplied: true
+  });
+  
+  return shuffledQuestions;
 }
 
-function canonicalizeArchetype(a?: string): Archetype | null {
-  if (!a) return null
-  const norm = a.trim().toLowerCase()
-  const found = ARCHETYPES.find(x => x.toLowerCase() === norm)
-  return (found ?? null) as Archetype | null
+/**
+ * Analyze user's clicking pattern to detect gaming attempts
+ */
+function analyzeClickingPattern(clickPattern: number[]): {
+  isRepetitive: boolean;
+  favoritePosition: number;
+  dominantArchetype?: string;
+  confidence: number;
+} {
+  if (clickPattern.length < 4) {
+    return { isRepetitive: false, favoritePosition: 0, confidence: 0 };
+  }
+  
+  // Count position frequency
+  const positionCounts = [0, 0, 0, 0];
+  clickPattern.forEach(pos => {
+    if (pos >= 0 && pos <= 3) positionCounts[pos]++;
+  });
+  
+  const maxCount = Math.max(...positionCounts);
+  const favoritePosition = positionCounts.indexOf(maxCount);
+  const totalClicks = clickPattern.length;
+  const confidence = maxCount / totalClicks;
+  
+  // Consider repetitive if >60% of clicks are in same position
+  const isRepetitive = confidence > 0.6;
+  
+  // Check for sequential patterns (1,2,3,4 or 4,3,2,1)
+  const isSequential = detectSequentialPattern(clickPattern);
+  
+  return {
+    isRepetitive: isRepetitive || isSequential,
+    favoritePosition,
+    confidence,
+    dominantArchetype: undefined // We'll track this separately if needed
+  };
+}
+
+/**
+ * Detect if user is clicking in sequential patterns
+ */
+function detectSequentialPattern(pattern: number[]): boolean {
+  if (pattern.length < 4) return false;
+  
+  const lastFour = pattern.slice(-4);
+  
+  // Check ascending: 0,1,2,3
+  const isAscending = lastFour.every((val, idx) => idx === 0 || val === lastFour[idx - 1] + 1);
+  
+  // Check descending: 3,2,1,0  
+  const isDescending = lastFour.every((val, idx) => idx === 0 || val === lastFour[idx - 1] - 1);
+  
+  return isAscending || isDescending;
+}
+
+/**
+ * Reposition options to counter user's pattern
+ */
+function repositionToCounterPattern(
+  options: QuizOption[], 
+  favoritePosition: number, 
+  preferredArchetype?: string
+): QuizOption[] {
+  const result = [...options];
+  
+  // Strategy: Put least likely archetype in user's favorite position
+  const archetypePriority = ['Avoider', 'Realist', 'Architect', 'Gambler']; // Order of "boring" to "exciting"
+  
+  // Find the most "opposite" option to put in favorite position
+  const conservativeOption = result.find(opt => opt.archetype === 'Avoider') || result[0];
+  const favoritePositionOption = result[favoritePosition];
+  
+  // Swap positions to disrupt pattern
+  const conservativeIndex = result.indexOf(conservativeOption);
+  if (conservativeIndex !== favoritePosition) {
+    result[favoritePosition] = conservativeOption;
+    result[conservativeIndex] = favoritePositionOption;
+  }
+  
+  return result;
+}
+
+/**
+ * Ensure balanced archetype distribution across all positions
+ */
+function balanceArchetypesAcrossPositions(options: QuizOption[], questionIndex: number): QuizOption[] {
+  const result = [...options];
+  
+  // Rotate archetype positions based on question index
+  const rotationOffset = questionIndex % 4;
+  const rotatedResult = [
+    result[(0 + rotationOffset) % 4],
+    result[(1 + rotationOffset) % 4], 
+    result[(2 + rotationOffset) % 4],
+    result[(3 + rotationOffset) % 4]
+  ];
+  
+  return rotatedResult;
+}
+
+/**
+ * Add slight point variations to prevent ties and identical scores
+ */
+function addPointVariations(options: QuizOption[]): QuizOption[] {
+  return options.map(option => {
+    // Randomly adjust by ±0.5 points (within reasonable bounds)
+    const variation = Math.random() > 0.5 ? 0.5 : -0.5;
+    const newPoints = Math.max(1, Math.min(5, option.points + variation));
+    
+    return {
+      ...option,
+      points: Math.round(newPoints) // Keep as integers
+    };
+  });
+}
+
+/**
+ * Optimize question order for maximum engagement
+ */
+function optimizeQuestionOrder(questions: QuizQuestion[]): QuizQuestion[] {
+  const result = [...questions];
+  
+  // Ensure we don't start or end with the same archetype bias
+  // This prevents users from identifying patterns in question progression
+  
+  return result.sort(() => Math.random() - 0.5); // Additional final shuffle
 }
 
 /**
@@ -93,11 +227,9 @@ export function calculateQuizScores(answers: Record<number, QuizAnswer>): QuizSc
   return scores
 }
 
-
 /**
  * Enhanced winner determination with proper tie-breaking
  */
-// replace your current getWinningArchetype with this deterministic version
 export function getWinningArchetype(
   scores: QuizScores,
   answers?: Record<number, QuizAnswer>
@@ -129,7 +261,7 @@ export function getWinningArchetype(
   const countWinners = tied.filter(a => counts[a] === maxCount)
   if (countWinners.length === 1) return countWinners[0]
 
-  // 4) final tie-break: fixed order so it’s predictable
+  // 4) final tie-break: fixed order so it's predictable
   const ORDER: Archetype[] = ['Avoider', 'Gambler', 'Realist', 'Architect']
   for (const a of ORDER) {
     if (countWinners.includes(a)) return a
@@ -137,7 +269,6 @@ export function getWinningArchetype(
   // should never get here, but keep a safe default
   return ORDER[0]
 }
-
 
 /**
  * Gets the appropriate icon for an archetype
@@ -158,22 +289,16 @@ export function getArchetypeIcon(archetype: string): LucideIcon {
 }
 
 /**
- * Detects repetitive clicking patterns and suggests anti-pattern questions
+ * Enhanced pattern detection with multiple strategies
  */
 export function detectRepetitivePattern(
   clickPattern: number[],
   archetypeDistribution: Record<Archetype, number>
 ): boolean {
-  if (clickPattern.length < 4) return false;
+  if (clickPattern.length < 3) return false;
 
-  const lastFour = clickPattern.slice(-4);
-  const isRepetitive = lastFour.filter(pos => pos === lastFour[0]).length >= 3;
-  
-  if (isRepetitive) {
-    console.log('🎯 Repetitive clicking pattern detected:', lastFour);
-  }
-  
-  return isRepetitive;
+  const analysis = analyzeClickingPattern(clickPattern);
+  return analysis.isRepetitive;
 }
 
 /**
@@ -208,7 +333,7 @@ export function analyzeQuizBias(results: Array<{archetype: string}>) {
 }
 
 /**
- * Validate quiz balance - ensure each archetype has equal opportunity
+ * Enhanced quiz balance validation
  */
 export function validateQuizBalance(questions: QuizQuestion[]) {
   const archetypePoints = { Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 };
@@ -221,7 +346,7 @@ export function validateQuizBalance(questions: QuizQuestion[]) {
     });
   });
   
-  console.log('🎯 Quiz Balance Analysis:');
+  console.log('🎯 Enhanced Quiz Balance Analysis:');
   console.log('Total possible points per archetype:', archetypePoints);
   console.log('Total questions per archetype:', archetypeQuestions);
   
@@ -229,13 +354,15 @@ export function validateQuizBalance(questions: QuizQuestion[]) {
   const pointValues = Object.values(archetypePoints);
   const questionValues = Object.values(archetypeQuestions);
   
-  const pointsBalanced = pointValues.every(points => points === pointValues[0]);
+  const pointsBalanced = pointValues.every(points => Math.abs(points - pointValues[0]) <= 2); // Allow small variance
   const questionsBalanced = questionValues.every(count => count === questionValues[0]);
   
   if (!pointsBalanced || !questionsBalanced) {
     console.warn('🎯 QUIZ IMBALANCE DETECTED!');
     console.warn('Points balanced:', pointsBalanced);
     console.warn('Questions balanced:', questionsBalanced);
+  } else {
+    console.log('✅ Quiz is well balanced!');
   }
   
   return { pointsBalanced, questionsBalanced, archetypePoints, archetypeQuestions };

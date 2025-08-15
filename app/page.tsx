@@ -40,24 +40,26 @@ function FilmWebsiteContent() {
   const quizState = useQuizState()
 
   // Handle quiz completion
-  const handleQuizComplete = async (quizData: any) => {
-    try {
-     await quizHandlers.handleQuizComplete(quizState.answers)
-      modals.setShowQuiz(false)
-
-      // Force refresh the quiz results to ensure we have the latest data
-      await refreshResults()
-
-      // Small delay to ensure state has propagated
-      setTimeout(() => {
-        modals.setShowResults(true)
-      }, 200)
-    } catch (error) {
-      console.error('Quiz completion error:', error)
-      modals.setShowQuiz(false)
-      alert(`Quiz submission failed: ${(error as any)?.message || 'Unknown error'}`)
-    }
+const handleQuizComplete = async (quizData: any) => {
+  try {
+    // 🔍 DEBUG: Log the received data
+    console.log('🔍 Received quiz data:', quizData);
+    
+    // 🔧 FIX: Use the quizData parameter, not quizState.answers
+    await quizHandlers.handleQuizComplete(quizData) // ✅ Correct!
+    
+    modals.setShowQuiz(false)
+    await refreshResults()
+    
+    setTimeout(() => {
+      modals.setShowResults(true)
+    }, 200)
+  } catch (error) {
+    console.error('Quiz completion error:', error)
+    modals.setShowQuiz(false)
+    alert(`Quiz submission failed: ${(error as any)?.message || 'Unknown error'}`)
   }
+}
 
   // Handle results viewed
   const handleResultsViewed = async () => {

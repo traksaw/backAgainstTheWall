@@ -1,4 +1,4 @@
-// Update your components/quiz/QuizModal.tsx
+// components/quiz/QuizModal.tsx - FIXED VERSION
 
 "use client"
 
@@ -37,6 +37,24 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
     console.log("Total questions:", shuffledQuestions.length)
     console.log("Current answers count:", Object.keys(answers).length)
     
+    // 🔧 FIX: Build final answers BEFORE calling handleQuizAnswer
+    const finalAnswers = { ...answers, [currentQuestion]: answer }
+    
+    console.log("🔍 Final answers being submitted:", {
+      count: Object.keys(finalAnswers).length,
+      answers: finalAnswers,
+      lastAnswer: answer
+    });
+    
+    // Validate each answer has required fields
+    console.log("🔍 Answer validation:", Object.entries(finalAnswers).map(([key, ans]) => ({
+      question: key,
+      text: ans?.text,
+      archetype: ans?.archetype,
+      points: ans?.points,
+      isValid: !!(ans?.archetype && typeof ans?.points === 'number')
+    })));
+    
     const isComplete = handleQuizAnswer(answer)
     console.log("Is quiz complete:", isComplete)
     
@@ -44,23 +62,21 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
       try {
         console.log("🎯 Quiz completed! Processing submission...")
         
-        // Get the final answers including the last answer
-        const finalAnswers = { ...answers, [currentQuestion]: answer }
+        // 🔧 FIX: Use the finalAnswers we built above (not state)
         console.log("Final answers for submission:", {
           count: Object.keys(finalAnswers).length,
           answers: finalAnswers
         })
         
-        const quizData = quizLogic.processQuizCompletion(finalAnswers)
-        console.log("Processed quiz data:", quizData)
-        
-        console.log("🎯 Calling onQuizComplete...")
-        await onQuizComplete(quizData)
+        // 🔧 FIX: Pass raw answers, let useQuizHandlers do the processing
+        console.log("🎯 Calling onQuizComplete with raw answers...")
+        await onQuizComplete(finalAnswers)
         console.log("✅ onQuizComplete finished successfully")
         
       } catch (error) {
         console.error('=== QUIZ MODAL: COMPLETION ERROR ===')
         console.error('Error details:', error)
+        console.error('Error stack:', (error as Error)?.stack)
         alert(`Quiz completion failed: ${(error as any)?.message || 'Unknown error'}`)
       }
     } else {
@@ -112,7 +128,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
             </div>
             
             <h3 className="text-xl font-semibold text-center text-gray-800 leading-relaxed">
-              {shuffledQuestions[currentQuestion]?.question}
+              {shuffledQuestions[currentQuestion]?.question || shuffledQuestions[currentQuestion]?.text}
             </h3>
             <div className="space-y-3">
               {shuffledQuestions[currentQuestion]?.options.map((option: QuizAnswer, index: number) => (
