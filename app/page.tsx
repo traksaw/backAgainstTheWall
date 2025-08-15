@@ -26,46 +26,99 @@ import { QuizModal } from "@/components/quiz/QuizModal"
 import { ResultsModal } from "@/components/results/ResultsModal"
 import { UserMenu } from "@/components/layout/UserMenu"
 import { LoadingScreen } from "@/components/layout/LoadingScreen"
-import type { QuizResult, Archetype, QuizScores } from '@/types/quiz'
+import type { QuizResult, Archetype, QuizScores, QuizAnswer } from '@/types/quiz'
+import { useQuizLogic } from "@/hooks/useQuizLogic"
 
 // This component now uses the auth context properly
 function FilmWebsiteContent() {
   const { user, profile, signOut, loading: authLoading, isHydrated } = useAuth()
   const { latestResult, refreshResults, loading: quizLoading } = useQuiz()
+  const [localLatestResult, setLocalLatestResult] = useState<QuizResult | null>(null)
 
   // Replace 15+ useState calls with clean hooks
   const modals = useModalState()
   const castData = useCastData()
   const quizHandlers = useQuizHandlers()
   const quizState = useQuizState()
+  const quizLogic = useQuizLogic()
 
   // Handle quiz completion
-const handleQuizComplete = async (quizData: any) => {
-  try {
-    // 🔍 DEBUG: Log the received data
-    console.log('🔍 Received quiz data:', quizData);
-    
-    // 🔧 FIX: Use the quizData parameter, not quizState.answers
-    await quizHandlers.handleQuizComplete(quizData) // ✅ Correct!
-    
-    modals.setShowQuiz(false)
-    await refreshResults()
-    
-    setTimeout(() => {
-      modals.setShowResults(true)
-    }, 200)
-  } catch (error) {
-    console.error('Quiz completion error:', error)
-    modals.setShowQuiz(false)
-    alert(`Quiz submission failed: ${(error as any)?.message || 'Unknown error'}`)
+  const handleQuizComplete = async (finalAnswers: Record<number, QuizAnswer>) => {
+    try {
+      console.log('🎯 Processing quiz completion with', Object.keys(finalAnswers).length, 'answers');
+
+      // Step 1: Process quiz data locally first
+      const quizData = quizLogic.processQuizCompletion(finalAnswers);
+      console.log('🎯 Quiz data processed:', quizData);
+
+      // Step 2: Close quiz modal immediately
+      modals.setShowQuiz(false);
+
+      // Step 3: Create a properly formatted result object
+      const formattedResult: QuizResult = {
+        _id: quizData.sessionId,
+        id: quizData.sessionId,
+        archetype: quizData.archetype,
+        score: quizData.score,
+        scores: quizData.scores,
+        createdAt: new Date().toISOString(),
+        hasViewedResults: false,
+        hasWatchedFilm: false,
+        answers: finalAnswers,
+        sessionId: quizData.sessionId
+      };
+
+      console.log('🎯 Formatted result for existing UI:', formattedResult);
+
+      // Step 4: Set the local result immediately
+      setLocalLatestResult(formattedResult);
+
+      // Step 5: Show results with the formatted data
+      setTimeout(() => {
+        console.log('🎯 Opening results modal with formatted data');
+        modals.setShowResults(true);
+      }, 300);
+
+      // Step 6: Try backend submission in background
+      try {
+        await quizHandlers.handleQuizComplete(finalAnswers);
+        console.log('✅ Backend submission successful');
+        await refreshResults();
+      } catch (error) {
+        console.warn('⚠️ Backend submission failed (but showing results anyway):', error);
+      }
+
+    } catch (error) {
+      console.error('❌ Quiz completion error:', error);
+      modals.setShowQuiz(false);
+      alert(`Quiz failed: ${(error as any)?.message}`);
+    }
   }
-}
 
   // Handle results viewed
   const handleResultsViewed = async () => {
-    await quizHandlers.handleResultsViewed(latestResult)
-    modals.setShowResults(false)
-    modals.setShowFilm(true)
+    try {
+      // Update local state immediately
+      if (localLatestResult) {
+        setLocalLatestResult({
+          ...localLatestResult,
+          hasViewedResults: true
+        });
+      }
+
+      // Try to update backend
+      const resultToUpdate = normalizeLatestResult(latestResult) || localLatestResult;
+      if (resultToUpdate) {
+        await quizHandlers.handleResultsViewed(resultToUpdate);
+      }
+
+      modals.setShowResults(false);
+      modals.setShowFilm(true);
+    } catch (error) {
+      console.warn('Failed to update results viewed status:', error);
+      modals.setShowResults(false);
+      modals.setShowFilm(true);
+    }
   }
 
   // Handle film completion
@@ -109,21 +162,31 @@ const handleQuizComplete = async (quizData: any) => {
 
   // Convert whatever the backend returns into a UI-friendly QuizResult
   function normalizeLatestResult(raw: any): QuizResult | null {
-    if (!raw) return null
+    // First, try the backend result
+    if (raw && (raw._id || raw.id)) {
+      const scores: QuizScores = raw.scores ?? { Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 };
 
-    const scores: QuizScores =
-      raw.scores ??
-      ({ Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 } as QuizScores)
-
-    return {
-      id: String(raw._id ?? raw.id ?? ''),                 // stringify ObjectId
-      archetype: raw.archetype as Archetype,
-      score: Number(raw.score ?? 0),
-      scores,
-      createdAt: raw.createdAt
-        ? new Date(raw.createdAt).toISOString()            // Date -> string
-        : undefined,
+      return {
+        _id: raw._id || raw.id,
+        id: String(raw._id ?? raw.id ?? ''),
+        archetype: raw.archetype as Archetype,
+        score: Number(raw.score ?? 0),
+        scores,
+        createdAt: raw.createdAt ? new Date(raw.createdAt).toISOString() : undefined,
+        hasViewedResults: raw.hasViewedResults ?? false,
+        hasWatchedFilm: raw.hasWatchedFilm ?? false,
+        answers: raw.answers,
+        sessionId: raw.sessionId
+      }
     }
+
+    // Fallback to local result
+    if (localLatestResult) {
+      console.log('🎯 Using local result as fallback:', localLatestResult);
+      return localLatestResult;
+    }
+
+    return null;
   }
 
   return (
@@ -241,7 +304,6 @@ const handleQuizComplete = async (quizData: any) => {
         onResultsViewed={handleResultsViewed}
         loading={quizLoading}
       />
-
       {/* Film Modal */}
       <Dialog open={modals.showFilm} onOpenChange={modals.setShowFilm}>
         <DialogContent className="max-w-5xl bg-black border-0">

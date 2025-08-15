@@ -1,12 +1,12 @@
-// types/quiz.ts
+// types/quiz.ts - COMPLETE FIXED VERSION
 
 // ---- Core enums / aliases
 export type Archetype = 'Avoider' | 'Gambler' | 'Realist' | 'Architect'
 
 export interface QuizOption {
-  id?: number          // <-- allow ids for UI keys
+  id?: number          // allow ids for UI keys
   text: string
-  question: string
+  question?: string    // optional for backward compatibility
   archetype: Archetype
   points: number
 }
@@ -14,24 +14,29 @@ export interface QuizOption {
 // ---- Question / answer / state
 export interface QuizQuestion {
   id: number
-  text: string
-  question?: string
+  text: string         // ✅ Main question text
+  question?: string    // ✅ Alternative property name for compatibility
   options: QuizOption[]
 }
 
 export interface QuizAnswer {
   // key is usually the question index; this shape is for each stored answer
-  id?: number          // <-- allow ids for UI keys
+  id?: number          // allow ids for UI keys
   questionId?: number
   text: string
+  question?: string    // ✅ Added for compatibility
   archetype: Archetype
   points: number
 }
 
 export interface QuizState {
-  currentQuestionIndex: number
+  currentQuestion: number      // ✅ Match what useQuizState exports
   answers: Record<number, QuizAnswer>
-  totalQuestions: number
+  shuffledQuestions: QuizQuestion[]  // ✅ Match what useQuizState exports
+  showWelcome: boolean         // ✅ Match what useQuizState exports
+  clickPattern: number[]       // ✅ Match what useQuizState exports
+  archetypeDistribution: Record<Archetype, number>  // ✅ Match what useQuizState exports
+  totalQuestions?: number
   isSubmitting?: boolean
 }
 
@@ -51,17 +56,20 @@ export interface ArchetypeResult {
 }
 
 /**
- * Result shown to the user after submission
- * (Extend if you already store more fields elsewhere)
+ * FIXED: Complete QuizResult interface with ALL required properties
  */
 export interface QuizResult {
-  id?: string
-  archetype: Archetype
-  score: number
-  scores: QuizScores
-  createdAt?: string   // use string, not Date, for UI components
+  _id?: string                          // Your ResultsModal expects _id
+  id?: string                          // Backup id field
+  archetype: Archetype                 // Required
+  score: number                        // Required
+  scores: QuizScores                   // Required
+  createdAt?: string                   // ISO string format
+  hasViewedResults?: boolean           // For your UI state tracking
+  hasWatchedFilm?: boolean            // For your UI state tracking
+  answers?: Record<number, QuizAnswer> // For QuizAnswersDisplay component
+  sessionId?: string                   // Session tracking
 }
-
 
 // ---- Submission payload your logic returns (and handlers consume)
 export interface QuizSubmissionData {

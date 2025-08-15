@@ -1,14 +1,10 @@
-// components/results/ResultsModal.tsx - Fixed version
+// components/results/ResultsModal.tsx - Enhanced debugging version
+
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Play, BookOpen } from "lucide-react"
-import { QuizAnswersDisplay } from "@/components/QuizAnswersDisplay"
-import { archetypeResults } from "@/lib/quiz/archetypes"
-import { getArchetypeIcon } from "@/lib/quiz/utils"
-import type { QuizResult, Archetype } from "@/types/quiz"
+import { Button } from "@/components/ui/button"
+import { QuizResult } from "@/types/quiz"
 
 interface ResultsModalProps {
   open: boolean
@@ -25,201 +21,152 @@ export function ResultsModal({
   onResultsViewed, 
   loading = false 
 }: ResultsModalProps) {
-  console.log('🎯 ResultsModal rendering with:', { 
-    open, 
-    hasLatestResult: !!latestResult, 
-    latestResultId: latestResult?._id,
-    archetype: latestResult?.archetype,
-    loading 
-  })
+  
+  // Enhanced debugging
+  console.log('🎯 ResultsModal render:', {
+    open,
+    hasLatestResult: !!latestResult,
+    latestResult,
+    loading,
+    latestResultId: latestResult?.id,
+    archetype: latestResult?.archetype
+  });
 
-  // Show loading state if modal is open but no result yet
-  if (open && !latestResult && !loading) {
+  // Show loading state
+  if (loading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl bg-white text-gray-900 border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-3xl font-bold text-center text-gray-900">
-              Loading Your Results...
-            </DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-2xl bg-white text-gray-900">
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38] mx-auto mb-4"></div>
-            <p className="text-gray-600 ml-4">Processing your financial personality...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38]"></div>
+            <p className="ml-4 text-gray-600">Processing your results...</p>
           </div>
         </DialogContent>
       </Dialog>
-    )
+    );
   }
 
-  // Don't render if no result and modal is supposed to be open
-  if (!latestResult || !latestResult._id) {
-    console.log('🎯 ResultsModal: No valid latestResult, not rendering')
-    return null
-  }
-
-  const currentArchetype = archetypeResults[latestResult.archetype as Archetype]
-  if (!currentArchetype) {
-    console.error('🎯 ResultsModal: No archetype data found for:', latestResult.archetype)
-    return null
-  }
-
-  const IconComponent = getArchetypeIcon(currentArchetype.archetype)
-
+  // Show results or debug info
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl bg-white text-gray-900 border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl bg-white text-gray-900">
         <DialogHeader>
-          <DialogTitle className="text-3xl font-bold text-center text-gray-900">
+          <DialogTitle className="text-3xl font-bold text-center">
             Your Financial Archetype
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-8 py-6">
-          {/* Archetype Header */}
-          <div className="text-center space-y-6">
-            <div className="w-24 h-24 bg-[#B95D38]/10 rounded-full flex items-center justify-center mx-auto">
-              <IconComponent className="w-12 h-12 text-[#B95D38]" />
-            </div>
-            <div>
-              <h3 className="text-4xl font-bold text-[#B95D38] mb-3">
-                The {currentArchetype.archetype}
-              </h3>
-              <p className="text-xl text-gray-700 leading-relaxed max-w-2xl mx-auto">
-                {currentArchetype.summary}
-              </p>
-            </div>
-          </div>
-
-          {/* Quiz Answers Display */}
-          {latestResult._id && (
-            <QuizAnswersDisplay
-              latestResult={{
-                ...latestResult,
-                hasViewedResults: latestResult.hasViewedResults ?? false,
-                hasWatchedFilm: latestResult.hasWatchedFilm ?? false,
-              }}
-            />
-          )}
-
-          {/* Strengths and Blind Spots */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="border-green-200 bg-green-50">
-              <CardHeader>
-                <CardTitle className="text-green-700 text-lg">Your Strengths</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {currentArchetype.strengths.map((strength, index) => (
-                  <div key={index} className="text-gray-700 flex items-start">
-                    <span className="text-green-500 mr-2">•</span>
-                    {strength}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card className="border-yellow-200 bg-yellow-50">
-              <CardHeader>
-                <CardTitle className="text-yellow-700 text-lg">Potential Blind Spots</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {currentArchetype.blindSpots.map((blindSpot, index) => (
-                  <div key={index} className="text-gray-700 flex items-start">
-                    <span className="text-yellow-500 mr-2">•</span>
-                    {blindSpot}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Reflection Question */}
-          <Card className="border-blue-200 bg-blue-50">
-            <CardHeader>
-              <CardTitle className="text-blue-700 text-lg">Reflection Question</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 text-lg leading-relaxed">
-                {currentArchetype.reflectionQuestion}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Film Connection */}
-          <Card className="border-[#B95D38]/20 bg-[#B95D38]/10">
-            <CardHeader>
-              <CardTitle className="text-[#B95D38] text-lg">Your Film Connection</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 text-lg leading-relaxed">
-                {currentArchetype.filmCharacterTieIn}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Exploration Section */}
-          <Card className="border-[#669CCB]/20 bg-[#669CCB]/10">
-            <CardHeader>
-              <CardTitle className="text-[#669CCB] text-xl flex items-center">
-                <BookOpen className="w-5 h-5 mr-2" />
-                Explore Your {currentArchetype.archetype} Mindset
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <p className="text-gray-700 leading-relaxed">
-                {currentArchetype.exploration.description}
-              </p>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold text-[#669CCB] mb-3">Actionable Tips</h4>
-                  <ul className="space-y-2">
-                    {currentArchetype.exploration.tips.map((tip, index) => (
-                      <li key={index} className="text-sm text-gray-700 flex items-start">
-                        <span className="text-[#669CCB] mr-2">•</span>
-                        {tip}
-                      </li>
-                    ))}
-                  </ul>
+        <div className="space-y-6 py-6">
+          {latestResult ? (
+            <>
+              {/* Main Result Display */}
+              <div className="text-center space-y-4">
+                <div className="text-6xl font-bold text-[#B95D38]">
+                  The {latestResult.archetype}
                 </div>
-                <div>
-                  <h4 className="font-semibold text-[#669CCB] mb-3">Recommended Resources</h4>
-                  <ul className="space-y-2">
-                    {currentArchetype.exploration.resources.map((resource, index) => (
-                      <li key={index} className="text-sm text-gray-700 flex items-start">
-                        <span className="text-[#669CCB] mr-2">•</span>
-                        {resource}
-                      </li>
-                    ))}
-                  </ul>
+                <div className="text-xl text-gray-700">
+                  Your Score: {latestResult.score} points
                 </div>
               </div>
-              <div>
-                <h4 className="font-semibold text-[#669CCB] mb-3">Next Steps</h4>
-                <ul className="space-y-2">
-                  {currentArchetype.exploration.nextSteps.map((step, index) => (
-                    <li key={index} className="text-sm text-gray-700 flex items-start">
-                      <span className="text-[#669CCB] mr-2">•</span>
-                      {step}
-                    </li>
-                  ))}
-                </ul>
-                </div>
-            </CardContent>
-          </Card>
 
-          {/* Call to Action */}
-          <div className="flex justify-center">
-            <Button
-              onClick={onResultsViewed}
-              disabled={loading}
-              className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold py-4 px-12 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
-            >
-              <Play className="w-5 h-5 mr-2" />
-              Now Watch the Film
-            </Button>
-          </div>
+              {/* Score Breakdown */}
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="font-semibold mb-4 text-center">Score Breakdown</h3>
+                <div className="space-y-2">
+                  {Object.entries(latestResult.scores).map(([archetype, score]) => (
+                    <div key={archetype} className="flex justify-between items-center">
+                      <span className={archetype === latestResult.archetype ? 'font-bold text-[#B95D38]' : ''}>
+                        {archetype}:
+                      </span>
+                      <span className={archetype === latestResult.archetype ? 'font-bold text-[#B95D38]' : ''}>
+                        {score} points
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Archetype Description */}
+              <div className="text-center space-y-4">
+                {getArchetypeDescription(latestResult.archetype)}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4 justify-center">
+                <Button
+                  onClick={onResultsViewed}
+                  className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white px-8 py-3"
+                >
+                  Watch Film as The {latestResult.archetype}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  className="px-8 py-3"
+                >
+                  Close Results
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Debug/Fallback Display */}
+              <div className="text-center space-y-4">
+                <div className="text-xl text-gray-700">
+                  🔍 Debug: No results available
+                </div>
+                <div className="text-sm text-gray-500 bg-gray-50 p-4 rounded">
+                  <p>Debug info:</p>
+                  <p>• open: {String(open)}</p>
+                  <p>• loading: {String(loading)}</p>
+                  <p>• latestResult: {latestResult ? 'exists' : 'null'}</p>
+                </div>
+                <Button
+                  onClick={() => onOpenChange(false)}
+                  variant="outline"
+                  className="px-8 py-3"
+                >
+                  Close
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
+}
+
+// Helper function for archetype descriptions
+function getArchetypeDescription(archetype: string) {
+  const descriptions = {
+    Avoider: (
+      <div>
+        <p className="text-lg mb-2">You prioritize financial security above all else.</p>
+        <p className="text-gray-600">You prefer safe, guaranteed returns and avoid risky investments. Your careful approach protects your wealth but may limit growth opportunities.</p>
+      </div>
+    ),
+    Gambler: (
+      <div>
+        <p className="text-lg mb-2">You thrive on high-risk, high-reward opportunities.</p>
+        <p className="text-gray-600">You're willing to take big risks for potentially big gains. Your bold approach can lead to significant wealth but also substantial losses.</p>
+      </div>
+    ),
+    Realist: (
+      <div>
+        <p className="text-lg mb-2">You balance risk and reward with practical wisdom.</p>
+        <p className="text-gray-600">You make balanced financial decisions, taking calculated risks while maintaining stability. Your pragmatic approach builds steady wealth over time.</p>
+      </div>
+    ),
+    Architect: (
+      <div>
+        <p className="text-lg mb-2">You build wealth through careful planning and analysis.</p>
+        <p className="text-gray-600">You research thoroughly, optimize strategies, and plan for the long term. Your methodical approach maximizes returns through intelligent design.</p>
+      </div>
+    )
+  };
+
+  return descriptions[archetype as keyof typeof descriptions] || (
+    <p className="text-gray-600">Your unique financial personality has been identified!</p>
+  );
 }
