@@ -327,7 +327,7 @@ function FilmWebsiteContent() {
       />
       {/* Film Modal */}
       <Dialog open={modals.showFilm} onOpenChange={modals.setShowFilm}>
-        <DialogContent className="max-w-5xl w-[95vw] sm:w-full bg-black border-0 max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[98vw] max-w-5xl bg-black border-0 max-h-[95vh] overflow-y-auto mx-1 sm:mx-4">
           <DialogHeader>
             <DialogTitle className="text-xl sm:text-2xl font-bold text-center text-white">
               Back Against the Wall
@@ -352,7 +352,7 @@ function FilmWebsiteContent() {
             onEnded={handleFilmComplete}
             onError={quizHandlers.handleVideoError}
             archetype={latestResult?.archetype}
-            className="aspect-video"
+            className="aspect-video w-full"
           />
         </DialogContent>
       </Dialog>
