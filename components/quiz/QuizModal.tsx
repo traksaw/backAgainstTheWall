@@ -34,7 +34,6 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
     console.log("=== QUIZ MODAL: ANSWER CLICKED ===")
     console.log("Answer:", answer)
     console.log("Current question:", currentQuestion)
-    console.log("Total questions:", shuffledQuestions.length)
     console.log("🎯 Answer clicked:", answer)
     
     // Immediately blur the button to prevent focus persistence on mobile
@@ -44,6 +43,11 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
       // Also remove focus from any other buttons
       document.querySelectorAll('button').forEach(btn => btn.blur())
     }, 100)
+    
+    // Add visual feedback - highlight the selected answer briefly
+    target.style.backgroundColor = '#B95D38'
+    target.style.color = 'white'
+    target.style.borderColor = '#B95D38'
     
     // 🔧 FIX: Build final answers BEFORE calling handleQuizAnswer
     const finalAnswers = { ...answers, [currentQuestion]: answer }
@@ -63,33 +67,36 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
       isValid: !!(ans?.archetype && typeof ans?.points === 'number')
     })));
     
-    const isComplete = handleQuizAnswer(answer)
-    console.log("Is quiz complete:", isComplete)
-    
-    if (isComplete) {
-      try {
-        console.log("🎯 Quiz completed! Processing submission...")
-        
-        // 🔧 FIX: Use the finalAnswers we built above (not state)
-        console.log("Final answers for submission:", {
-          count: Object.keys(finalAnswers).length,
-          answers: finalAnswers
-        })
-        
-        // 🔧 FIX: Pass raw answers, let useQuizHandlers do the processing
-        console.log("🎯 Calling onQuizComplete with raw answers...")
-        await onQuizComplete(finalAnswers)
-        console.log("✅ onQuizComplete finished successfully")
-        
-      } catch (error) {
-        console.error('=== QUIZ MODAL: COMPLETION ERROR ===')
-        console.error('Error details:', error)
-        console.error('Error stack:', (error as Error)?.stack)
-        alert(`Quiz completion failed: ${(error as any)?.message || 'Unknown error'}`)
+    // Add a brief delay for better UX before progressing
+    setTimeout(() => {
+      const isComplete = handleQuizAnswer(answer)
+      console.log("Is quiz complete:", isComplete)
+      
+      if (isComplete) {
+        try {
+          console.log("🎯 Quiz completed! Processing submission...")
+          
+          // 🔧 FIX: Use the finalAnswers we built above (not state)
+          console.log("Final answers for submission:", {
+            count: Object.keys(finalAnswers).length,
+            answers: finalAnswers
+          })
+          
+          // 🔧 FIX: Pass raw answers, let useQuizHandlers do the processing
+          console.log("🎯 Calling onQuizComplete with raw answers...")
+          onQuizComplete(finalAnswers)
+          console.log("✅ onQuizComplete finished successfully")
+          
+        } catch (error) {
+          console.error('=== QUIZ MODAL: COMPLETION ERROR ===')
+          console.error('Error details:', error)
+          console.error('Error stack:', (error as Error)?.stack)
+          alert(`Quiz completion failed: ${(error as any)?.message || 'Unknown error'}`)
+        }
+      } else {
+        console.log("Quiz not complete yet, automatically advancing to next question...")
       }
-    } else {
-      console.log("Quiz not complete yet, continuing...")
-    }
+    }, 600) // 600ms delay for visual feedback
   }
 
   return (
