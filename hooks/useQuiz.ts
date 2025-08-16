@@ -79,6 +79,7 @@ export function useQuiz() {
       const result = await QuizService.submitQuiz({
         archetype: topArchetype,
         score: scores[topArchetype],
+        scores, // Include the full scores breakdown
         answers,
         sessionId,
       })

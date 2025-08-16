@@ -27,6 +27,7 @@ export class QuizService {
     sessionId?: string
     archetype: string
     score: number
+    scores?: Record<string, number>
   }): Promise<any> {
     try {
       const res = await fetch("/api/quiz/submit", {
