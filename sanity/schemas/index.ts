@@ -1,3 +1,3 @@
-import castMember from './castMember'
+import castMember from './castMember' 
 
 export const schemaTypes = [castMember]
