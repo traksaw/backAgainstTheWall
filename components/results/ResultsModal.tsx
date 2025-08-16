@@ -39,7 +39,7 @@ export function ResultsModal({
   if (loading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl bg-white text-gray-900">
+        <DialogContent className="w-[95vw] max-w-2xl bg-white text-gray-900">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38]"></div>
             <p className="ml-4 text-gray-600">Processing your results...</p>
@@ -54,7 +54,7 @@ export function ResultsModal({
   // Show results with new Finch-inspired design
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-amber-50 to-orange-50 text-gray-900 border-0 mx-2 sm:mx-4">
+      <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-amber-50 to-orange-50 text-gray-900 border-0">
         {latestResult ? (
           <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
             {/* Header with Character */}

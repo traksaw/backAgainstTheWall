@@ -327,7 +327,7 @@ function FilmWebsiteContent() {
       />
       {/* Film Modal */}
       <Dialog open={modals.showFilm} onOpenChange={modals.setShowFilm}>
-        <DialogContent className="w-[98vw] max-w-5xl bg-black border-0 max-h-[95vh] overflow-y-auto mx-1 sm:mx-4">
+        <DialogContent className="w-[95vw] max-w-5xl bg-black border-0 max-h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl sm:text-2xl font-bold text-center text-white">
               Back Against the Wall
