@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { ExternalLink, Sparkles } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { FadeIn, FadeInUp } from "@/components/ui/fade-in";
 
 interface CastMember {
@@ -38,7 +38,6 @@ const LoadingSkeleton = ({ index }: { index: number }) => (
 export default function CastCrewCarousel({ castMembers = [] }: CastCrewCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
-  const [loadedImages, setLoadedImages] = useState<number[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
 
@@ -96,11 +95,6 @@ export default function CastCrewCarousel({ castMembers = [] }: CastCrewCarouselP
     }
   };
 
-  // Handle image loading for progressive reveal
-  const handleImageLoad = (index: number) => {
-    setLoadedImages(prev => prev.includes(index) ? prev : [...prev, index]);
-  };
-
   useEffect(() => {
     const scrollContainer = scrollRef.current;
     if (scrollContainer) {
@@ -113,18 +107,29 @@ export default function CastCrewCarousel({ castMembers = [] }: CastCrewCarouselP
   if (!castMembers || castMembers.length === 0) {
     return (
       <section ref={sectionRef} className="relative py-12 bg-white md:hidden">
-        <div className="px-6">
-          <div className="text-xl font-bold text-gray-900 mb-4 text-center animate-pulse">
-            <div className="h-6 bg-gray-200 rounded w-48 mx-auto mb-4"></div>
-          </div>
-          <div className="h-4 bg-gray-200 rounded w-64 mx-auto mb-6 animate-pulse"></div>
+        <div className="px-6 text-center">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Meet the Cast & Crew</h2>
+          <p className="text-sm text-gray-600 mb-6" aria-live="polite">
+            Cast and crew details are coming soon. In the meantime, enjoy the film and check back later.
+          </p>
         </div>
 
         <div className="relative px-6">
           <div className="overflow-x-auto scrollbar-hide -mx-6 px-6">
-            <div className="flex gap-4">
-              {[0, 1, 2].map((index) => (
-                <LoadingSkeleton key={index} index={index} />
+            <div className="flex gap-4 snap-x snap-mandatory">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="flex-shrink-0 w-[75%] max-w-xs snap-start">
+                  <div className="bg-gray-50 rounded-xl shadow-sm p-4 text-center space-y-2 h-full border border-gray-100">
+                    <div className="space-y-1">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                    </div>
+                    <div className="pt-1">
+                      <div className="h-3 bg-gray-200 rounded w-5/6 mx-auto mb-1"></div>
+                      <div className="h-3 bg-gray-200 rounded w-4/6 mx-auto"></div>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -185,25 +190,6 @@ export default function CastCrewCarousel({ castMembers = [] }: CastCrewCarouselP
                   
                   {/* Content */}
                   <div className="relative z-10">
-                    {/* Enhanced image with loading animation */}
-                    {person.image && (
-                      <div className="relative">
-                        <img 
-                          src={person.image} 
-                          alt={person.name}
-                          className={cn(
-                            "w-16 h-16 rounded-full mx-auto mb-3 object-cover transition-all duration-500 ring-2 ring-transparent group-hover:ring-[#B95D38]/20 group-hover:scale-110",
-                            loadedImages.includes(idx) ? "opacity-100 scale-100" : "opacity-0 scale-90"
-                          )}
-                          onLoad={() => handleImageLoad(idx)}
-                        />
-                        {/* Loading shimmer */}
-                        {!loadedImages.includes(idx) && (
-                          <div className="absolute inset-0 w-16 h-16 rounded-full mx-auto mb-3 bg-gray-200 animate-pulse"></div>
-                        )}
-                      </div>
-                    )}
-
                     {/* Enhanced typography with animations */}
                     <div className="space-y-1">
                       <h3 className="text-base font-bold text-gray-900 leading-tight line-clamp-2 group-hover:text-[#B95D38] transition-colors duration-300 transform group-hover:scale-105">

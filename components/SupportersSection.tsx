@@ -119,20 +119,45 @@ export default function SupportersSection({ supporters }: SupportersSectionProps
 
           {/* Fallback if no supporters */}
           {supporters.length === 0 && (
-            <FadeInScale delay={600} duration={800}>
-              <div className="flex justify-center items-center py-4 md:py-8">
-                <div className="relative w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64">
-                  {/* <Image
-                    src="/assets/aapi-logo.png"
-                    alt="AAPI Foundation"
-                    fill
-                    className="object-contain hover:scale-110 transition-transform duration-500"
-                    sizes="(max-width: 768px) 128px, (max-width: 1024px) 192px, 256px"
-                    priority
-                  /> */}
+            <>
+              <FadeInScale delay={600} duration={800}>
+                <div className="flex flex-col items-center justify-center py-6 md:py-10">
+                  <p className="text-sm md:text-base text-gray-600 mb-4" aria-live="polite">
+                    Partner announcements coming soon. Interested in supporting?
+                  </p>
+                  <div className="flex justify-center items-center">
+                    <div className="relative w-32 h-20 md:w-48 md:h-28 lg:w-64 lg:h-36">
+                      {/* <Image
+                        src="/placeholder-logo.svg"
+                        alt="Placeholder partner logo"
+                        fill
+                        className="object-contain opacity-80"
+                        sizes="(max-width: 768px) 128px, (max-width: 1024px) 192px, 256px"
+                        priority
+                      /> */}
+                    </div>
+                  </div>
+                  <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 max-w-4xl w-full">
+                    {/* {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="flex flex-col items-center space-y-2">
+                        <div className="relative w-20 h-12 md:w-24 md:h-14">
+                          <Image
+                            src="/placeholder-logo.svg"
+                            alt={`Placeholder community partner logo ${i + 1}`}
+                            fill
+                            className="object-contain opacity-70"
+                            sizes="(max-width: 768px) 96px, 112px"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500" aria-hidden>
+                          Your Logo Here
+                        </p>
+                      </div>
+                    ))} */}
+                  </div>
                 </div>
-              </div>
-            </FadeInScale>
+              </FadeInScale>
+            </>
           )}
 
           {/* Additional acknowledgment */}
