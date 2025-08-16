@@ -249,25 +249,40 @@ export function getWinningArchetype(
 
   if (tied.length === 1) return tied[0]
 
-  // 3) tie-breaker #1: who appears more in answers
-  const counts: Record<Archetype, number> = { Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 }
+  // 3) tie-breaker #1: prefer archetypes appearing more in RECENT answers
+  const recentCounts: Record<Archetype, number> = { Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 }
   if (answers) {
-    for (const a of Object.values(answers)) {
-      const arch = a?.archetype?.trim() as Archetype
-      if (arch && counts[arch] !== undefined) counts[arch] += 1
+    const recent = Object.values(answers).slice(-5) // last 5 answers
+    for (const a of recent) {
+      const arch = (a?.archetype?.trim() || '') as Archetype
+      if (arch && recentCounts[arch] !== undefined) recentCounts[arch] += 1
     }
   }
-  const maxCount = Math.max(...tied.map(a => counts[a]))
-  const countWinners = tied.filter(a => counts[a] === maxCount)
-  if (countWinners.length === 1) return countWinners[0]
+  const maxRecent = Math.max(...tied.map(a => recentCounts[a]))
+  const recentWinners = tied.filter(a => recentCounts[a] === maxRecent)
+  if (recentWinners.length === 1) return recentWinners[0]
 
-  // 4) final tie-break: fixed order so it's predictable
-  const ORDER: Archetype[] = ['Avoider', 'Gambler', 'Realist', 'Architect']
-  for (const a of ORDER) {
-    if (countWinners.includes(a)) return a
+  // 4) tie-breaker #2: weighted randomness to avoid deterministic bias
+  // Slight weights encourage variety without overpowering raw scores
+  const TIE_WEIGHTS: Record<Archetype, number> = {
+    Avoider: 1.0,
+    Gambler: 1.1,
+    Realist: 1.15,
+    Architect: 1.1,
   }
-  // should never get here, but keep a safe default
-  return ORDER[0]
+  const candidates = (recentWinners.length > 0 ? recentWinners : tied).map(a => {
+    const base = scores[a]
+    const jitter = 0.95 + Math.random() * 0.1 // 5% noise
+    return {
+      a,
+      w: base * (TIE_WEIGHTS[a] ?? 1) * jitter,
+    }
+  })
+  candidates.sort((x, y) => y.w - x.w)
+  if (candidates.length > 0) return candidates[0].a
+
+  // 5) ultimate fallback: random among tied (should rarely happen)
+  return tied[Math.floor(Math.random() * tied.length)]
 }
 
 /**
