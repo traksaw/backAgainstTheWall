@@ -8,6 +8,7 @@ import { useQuizState } from "@/hooks/useQuizState"
 import { useQuizLogic } from "@/hooks/useQuizLogic"
 import { useQuiz } from "@/hooks/useQuiz"
 import type { QuizAnswer } from "@/types/quiz"
+import { useEffect } from "react"
 
 interface QuizModalProps {
   open: boolean
@@ -29,6 +30,15 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
     startQuiz,
     handleQuizAnswer,
   } = quizState
+
+  // Ensure no button remains focused when moving to the next question (mobile Safari focus persistence)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const active = document.activeElement as HTMLElement | null
+    if (active && (active.tagName === 'BUTTON' || active.tabIndex >= 0)) {
+      active.blur()
+    }
+  }, [currentQuestion])
 
   const handleAnswerClick = async (answer: QuizAnswer, event: React.MouseEvent<HTMLButtonElement>) => {
     console.log("=== QUIZ MODAL: ANSWER CLICKED ===")
@@ -117,7 +127,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
                     variant="outline"
                     onClick={(event) => handleAnswerClick(option, event)}
                     disabled={quizLoading}
-                    className="w-full text-left justify-start p-4 sm:p-6 h-auto border-gray-300 md:hover:border-[#B95D38] md:hover:bg-[#B95D38]/10 transition-none rounded-lg text-wrap min-h-[56px] sm:min-h-[auto] focus:outline-none focus:ring-0 touch-manipulation"
+                    className="w-full text-left justify-start p-4 sm:p-6 h-auto border-gray-300 md:hover:border-[#B95D38] md:hover:bg-[#B95D38]/10 active:bg-transparent active:border-gray-300 transition-none rounded-lg text-wrap min-h-[56px] sm:min-h-[auto] focus:outline-none focus:ring-0 focus-visible:outline-none select-none touch-manipulation"
                   >
                     <span className="text-sm sm:text-base text-gray-700 leading-relaxed">{option.text}</span>
                   </Button>
