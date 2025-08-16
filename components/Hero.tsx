@@ -5,11 +5,13 @@
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { FadeIn, FadeInUp, FadeInScale } from "@/components/ui/fade-in"
+import SupportersSection from "./SupportersSection"
 
 type HeroProps = {
   user: any
   profile: any
   latestResult: any
+  supporters?: any[]
   onSignUp: () => void
   onSignIn: () => void
   onStartQuiz: () => void
@@ -22,6 +24,7 @@ export default function Hero({
   user,
   profile,
   latestResult,
+  supporters = [],
   onSignUp,
   onSignIn,
   onStartQuiz,
@@ -48,7 +51,7 @@ export default function Hero({
         <div className="block md:hidden">
           <FadeIn duration={1200} delay={200}>
             {/* Option 1: Use aspect ratio instead of fixed height */}
-            <div className="relative w-full aspect-[3/4] max-h-[60vh]">
+            <div className="relative w-full aspect-[3/4] max-h-[70vh]">
               <Image
                 src="/assets/mobile-movie-poster.png"
                 alt="Back Against the Wall Poster"
@@ -337,49 +340,8 @@ export default function Hero({
         </div>
       </section>
 
-      {/* Support Section - With Real AAPI Logo and Animations */}
-      <section className="py-8 md:py-20 bg-gray-50 border-t">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center space-y-6 md:space-y-12">
-            {/* Heading Text */}
-            <FadeInUp delay={300} duration={800}>
-              <div className="space-y-2 md:space-y-4">
-                <p className="text-sm md:text-2xl font-semibold text-gray-700 tracking-wide uppercase leading-relaxed">
-                  Proudly supported by our partners
-                </p>
-                <p className="text-base md:text-3xl font-bold text-gray-800 tracking-wide uppercase leading-relaxed">
-                  and a grant from the AAPI Foundation
-                </p>
-              </div>
-            </FadeInUp>
-            
-            {/* Large Centered AAPI Logo */}
-            <FadeInScale delay={600} duration={800}>
-              <div className="flex justify-center items-center py-4 md:py-8">
-                <div className="relative w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64">
-                  <Image
-                    src="/assets/aapi-logo.png"
-                    alt="AAPI Foundation"
-                    fill
-                    className="object-contain hover:scale-110 transition-transform duration-500"
-                    sizes="(max-width: 768px) 128px, (max-width: 1024px) 192px, 256px"
-                    priority
-                  />
-                </div>
-              </div>
-            </FadeInScale>
-
-            {/* Additional partner acknowledgment */}
-            <FadeInUp delay={900} duration={800}>
-              <div className="pt-4 md:pt-8 max-w-2xl mx-auto">
-                <p className="text-sm md:text-base text-gray-600 leading-relaxed">
-                  Special thanks to all community partners and individual supporters who made this project possible.
-                </p>
-              </div>
-            </FadeInUp>
-          </div>
-        </div>
-      </section>
+      {/* Dynamic Supporters Section */}
+      <SupportersSection supporters={supporters} />
     </div>
   )
 }

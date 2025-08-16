@@ -22,6 +22,8 @@ import { useModalState } from "@/hooks/useModalState"
 import { useCastData } from "@/hooks/useCastData"
 import { useQuizHandlers } from "@/hooks/useQuizHandlers"
 import { useQuizState } from "@/hooks/useQuizState"
+import { getSupporters } from "@/lib/sanity"
+import { Supporter } from "@/types/supporter"
 import { QuizModal } from "@/components/quiz/QuizModal"
 import { ResultsModal } from "@/components/results/ResultsModal"
 import { UserMenu } from "@/components/layout/UserMenu"
@@ -34,6 +36,8 @@ function FilmWebsiteContent() {
   const { user, profile, signOut, loading: authLoading, isHydrated } = useAuth()
   const { latestResult, refreshResults, loading: quizLoading } = useQuiz()
   const [localLatestResult, setLocalLatestResult] = useState<QuizResult | null>(null)
+  const [supporters, setSupporters] = useState<Supporter[]>([])
+  const [supportersLoading, setSupportersLoading] = useState(true)
 
   // Replace 15+ useState calls with clean hooks
   const modals = useModalState()
@@ -41,6 +45,24 @@ function FilmWebsiteContent() {
   const quizHandlers = useQuizHandlers()
   const quizState = useQuizState()
   const quizLogic = useQuizLogic()
+
+  // Fetch supporters data on component mount
+  useEffect(() => {
+    const fetchSupporters = async () => {
+      try {
+        setSupportersLoading(true)
+        const supportersData = await getSupporters()
+        setSupporters(supportersData)
+      } catch (error) {
+        console.error('Error fetching supporters:', error)
+        setSupporters([])
+      } finally {
+        setSupportersLoading(false)
+      }
+    }
+
+    fetchSupporters()
+  }, [])
 
   // Handle quiz completion
   const handleQuizComplete = async (finalAnswers: Record<number, QuizAnswer>) => {
@@ -204,6 +226,7 @@ function FilmWebsiteContent() {
         user={user}
         profile={profile}
         latestResult={latestResult}
+        supporters={supporters}
         onSignUp={modals.openSignup}
         onSignIn={modals.openSignin}
         onStartQuiz={handleStartQuiz} // For first time
