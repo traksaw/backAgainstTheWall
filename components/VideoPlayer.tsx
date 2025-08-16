@@ -270,6 +270,24 @@ export function VideoPlayer({
     }
   }, [])
 
+  // iOS Safari native fullscreen events (webkitEnter/ExitFullscreen do not trigger standard events)
+  useEffect(() => {
+    const video = videoRef.current as any
+    if (!video) return
+
+    const handleBegin = () => setIsFullscreen(true)
+    const handleEnd = () => setIsFullscreen(false)
+
+    // These events are iOS-specific
+    video.addEventListener('webkitbeginfullscreen', handleBegin)
+    video.addEventListener('webkitendfullscreen', handleEnd)
+
+    return () => {
+      video.removeEventListener('webkitbeginfullscreen', handleBegin)
+      video.removeEventListener('webkitendfullscreen', handleEnd)
+    }
+  }, [])
+
   // Format time helper
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60)

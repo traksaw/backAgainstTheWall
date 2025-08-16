@@ -15,6 +15,7 @@ interface ResultsModalProps {
   latestResult: QuizResult | null
   onResultsViewed: () => void
   loading?: boolean
+  onRetakeQuiz?: () => void
 }
 
 export function ResultsModal({ 
@@ -22,7 +23,8 @@ export function ResultsModal({
   onOpenChange, 
   latestResult, 
   onResultsViewed, 
-  loading = false 
+  loading = false,
+  onRetakeQuiz,
 }: ResultsModalProps) {
   
   // Enhanced debugging
@@ -179,6 +181,15 @@ export function ResultsModal({
                 >
                   Watch Film as The {latestResult.archetype}
                 </Button>
+                {onRetakeQuiz && (
+                  <Button
+                    variant="outline"
+                    onClick={onRetakeQuiz}
+                    className="px-6 sm:px-8 py-3 rounded-2xl font-semibold border-2 hover:bg-gray-50 text-sm sm:text-base"
+                  >
+                    Retake Quiz
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   onClick={() => onOpenChange(false)}

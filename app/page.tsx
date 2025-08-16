@@ -36,6 +36,7 @@ function FilmWebsiteContent() {
   const [localLatestResult, setLocalLatestResult] = useState<QuizResult | null>(null)
   const [supporters, setSupporters] = useState<Supporter[]>([])
   const [supportersLoading, setSupportersLoading] = useState(true)
+  const [quizSession, setQuizSession] = useState(0)
 
   // Replace 15+ useState calls with clean hooks
   const modals = useModalState()
@@ -150,14 +151,12 @@ function FilmWebsiteContent() {
   // Handle starting new quiz
   const handleStartQuiz = () => {
     console.log('🎯 Starting new quiz - resetting state');
-
-    // First, completely reset the quiz state
-    quizState.hardReset() // Use hardReset for complete restart
-
-    // Small delay to ensure state is reset before opening modal
+    // Bump session to force QuizModal remount and fresh internal state
+    setQuizSession((s) => s + 1)
+    // Open quiz after a tick
     setTimeout(() => {
       modals.openQuiz()
-    }, 100)
+    }, 50)
   }
 
   const handleRetakeQuiz = () => {
@@ -166,14 +165,14 @@ function FilmWebsiteContent() {
     // Close any open modals first
     modals.closeAllModals()
 
-    // Completely reset quiz state
-    quizState.hardReset()
+    // Bump session to force QuizModal remount
+    setQuizSession((s) => s + 1)
 
     // Small delay then open quiz
     setTimeout(() => {
       console.log('🎯 Opening quiz after reset');
       modals.openQuiz()
-    }, 200)
+    }, 150)
   }
 
   if (authLoading) {
@@ -302,12 +301,14 @@ function FilmWebsiteContent() {
 
       {/* Clean Modal Components */}
       <QuizModal
+        key={quizSession}
         open={modals.showQuiz}
         onOpenChange={(open) => {
           if (!open) {
             // When closing quiz, reset it
             console.log('🎯 Quiz modal closing - resetting state');
-            quizState.hardReset()
+            // Ensure next open is fresh as well
+            setQuizSession((s) => s + 1)
           }
           modals.setShowQuiz(open)
         }}
@@ -324,6 +325,7 @@ function FilmWebsiteContent() {
         latestResult={normalizeLatestResult(latestResult)}
         onResultsViewed={handleResultsViewed}
         loading={quizLoading}
+        onRetakeQuiz={handleRetakeQuiz}
       />
       {/* Film Modal */}
       <Dialog open={modals.showFilm} onOpenChange={modals.setShowFilm}>
