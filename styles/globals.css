@@ -10,6 +10,14 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  /* Utility to improve touch interactions */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .no-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 @layer base {
@@ -92,7 +100,4 @@ body {
     @apply bg-background text-foreground;
   }
 }
-<<<<<<< HEAD
 
-=======
->>>>>>> parent of a744023 (new layout for mobile)
