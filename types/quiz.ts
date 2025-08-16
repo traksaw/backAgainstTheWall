@@ -44,15 +44,20 @@ export interface QuizState {
 export type QuizScores = Record<Archetype, number>
 
 export interface ArchetypeExploration {
-  archetype: Archetype
   description: string
-  tips?: string[]
+  tips: string[]
+  resources: string[]
+  nextSteps: string[]
 }
 
 export interface ArchetypeResult {
   archetype: Archetype
-  score: number
-  breakdown: QuizScores
+  summary: string
+  strengths: string[]
+  blindSpots: string[]
+  reflectionQuestion: string
+  filmCharacterTieIn: string
+  exploration: ArchetypeExploration
 }
 
 /**
