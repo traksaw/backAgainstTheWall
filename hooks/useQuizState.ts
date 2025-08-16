@@ -35,6 +35,34 @@ export function useQuizState() {
     setShuffledQuestions(freshQuestions);
   };
 
+  // Navigate back one question and rollback state for the last answer
+  const goBackOne = () => {
+    if (currentQuestion <= 0) return;
+    const lastIndex = currentQuestion - 1;
+
+    // Rollback click pattern
+    const newPattern = [...clickPattern];
+    newPattern.pop();
+    setClickPattern(newPattern);
+
+    // Rollback archetype distribution if previous answer exists
+    const prev = quizAnswers[lastIndex];
+    if (prev && prev.archetype && (archetypeDistribution as any)[prev.archetype] !== undefined) {
+      setArchetypeDistribution({
+        ...archetypeDistribution,
+        [prev.archetype as keyof typeof archetypeDistribution]: Math.max(0, (archetypeDistribution as any)[prev.archetype] - 1)
+      });
+    }
+
+    // Remove last answer
+    const newAnswers = { ...quizAnswers } as Record<number, QuizAnswer>;
+    delete newAnswers[lastIndex];
+    setQuizAnswers(newAnswers);
+
+    // Move cursor back
+    setCurrentQuestion(lastIndex);
+  };
+
   // Reset quiz function - COMPLETELY reset everything
   const resetQuiz = () => {
     console.log('🎯 useQuizState: Resetting quiz completely');
@@ -172,6 +200,7 @@ export function useQuizState() {
     resetQuiz,
     hardReset,
     handleQuizAnswer,
+    goBackOne,
     setShowWelcome,
     setCurrentQuestion,
   };

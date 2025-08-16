@@ -8,7 +8,8 @@ import { useQuizState } from "@/hooks/useQuizState"
 import { useQuizLogic } from "@/hooks/useQuizLogic"
 import { useQuiz } from "@/hooks/useQuiz"
 import type { QuizAnswer } from "@/types/quiz"
-import { useEffect } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { toast } from "@/hooks/use-toast"
 
 interface QuizModalProps {
   open: boolean
@@ -29,6 +30,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
     answers,
     startQuiz,
     handleQuizAnswer,
+    goBackOne,
   } = quizState
 
   // Ensure no button remains focused when moving to the next question (mobile Safari focus persistence)
@@ -38,6 +40,19 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
     if (active && (active.tagName === 'BUTTON' || active.tabIndex >= 0)) {
       active.blur()
     }
+  }, [currentQuestion])
+
+  // Option B: progress and live announcements
+  const [liveMessage, setLiveMessage] = useState("")
+  const totalQuestions = shuffledQuestions.length
+  const progressPct = useMemo(() => {
+    if (totalQuestions === 0) return 0
+    // Progress shows current question index out of total
+    return Math.round(((currentQuestion) / totalQuestions) * 100)
+  }, [currentQuestion, totalQuestions])
+  useEffect(() => {
+    // Clear any previous announcement on question change
+    setLiveMessage("")
   }, [currentQuestion])
 
   const handleAnswerClick = async (answer: QuizAnswer, event: React.MouseEvent<HTMLButtonElement>) => {
@@ -53,6 +68,19 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
 
     // Build final answers BEFORE calling handleQuizAnswer
     const finalAnswers = { ...answers, [currentQuestion]: answer }
+
+    // Announce selection and next step (for screen readers and subtle UX clarity)
+    const isLast = currentQuestion >= totalQuestions - 1
+    setLiveMessage(isLast
+      ? "Answer selected. Finishing quiz."
+      : `Answer selected. Moving to question ${currentQuestion + 2} of ${totalQuestions}.`)
+
+    // Micro-toast confirmation (auto-dismiss)
+    const t = toast({
+      title: "Saved",
+      description: isLast ? "Finishing quiz…" : `Next: Q${currentQuestion + 2}/${totalQuestions}`,
+    })
+    setTimeout(() => t.dismiss(), 900)
 
     // Advance immediately (no extra animation/delay)
     const isComplete = handleQuizAnswer(answer)
@@ -105,6 +133,25 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
           )}
         </DialogHeader>
 
+        {/* Progress Bar */}
+        {!showWelcome && totalQuestions > 0 && (
+          <div className="px-2 pt-2">
+            <div className="h-1.5 w-full bg-gray-200 rounded">
+              <div
+                className="h-1.5 bg-[#B95D38] rounded transition-[width] duration-300 ease-out"
+                style={{ width: `${progressPct}%` }}
+                aria-hidden="true"
+              />
+            </div>
+            <div className="sr-only" aria-live="polite">
+              {`Progress: Question ${currentQuestion + 1} of ${totalQuestions}`}
+            </div>
+          </div>
+        )}
+
+        {/* Screen reader announcement region */}
+        <div className="sr-only" aria-live="polite">{liveMessage}</div>
+
         {/* Quiz Questions */}
         {!showWelcome && shuffledQuestions.length > 0 && currentQuestion < shuffledQuestions.length && (
           <div className="space-y-6 sm:space-y-8 py-4 sm:py-6 px-2">
@@ -134,6 +181,22 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
                 );
               })}
             </div>
+
+            {/* Back action (hidden on first question) */}
+            {currentQuestion > 0 && (
+              <div className="flex justify-center pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    goBackOne()
+                    setLiveMessage(`Going back to question ${currentQuestion} of ${totalQuestions}.`)
+                  }}
+                  className="text-xs sm:text-sm text-gray-500 underline underline-offset-2 hover:text-gray-700 focus:outline-none focus:ring-0 min-h-[44px] px-2"
+                >
+                  Back
+                </button>
+              </div>
+            )}
           </div>
         )}
       </DialogContent>
