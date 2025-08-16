@@ -63,10 +63,17 @@ export function ResultsModal({
             <FadeIn duration={800}>
               <div className="text-center space-y-4">
                 <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-2xl shadow-lg flex items-center justify-center">
-                  <div className="text-3xl sm:text-4xl font-bold text-[#B95D38]">{latestResult.archetype[0]}</div>
-                  <div className="absolute -top-2 -right-2 bg-[#B95D38] text-white text-xs px-2 py-1 rounded-full font-bold">
-                    #{getArchetypeRank(latestResult.archetype)}
-                  </div>
+                  {(() => {
+                    const colorMap: Record<Archetype, string> = {
+                      Avoider: 'bg-blue-500',
+                      Gambler: 'bg-red-500',
+                      Realist: 'bg-green-500',
+                      Architect: 'bg-yellow-400',
+                    }
+                    return (
+                      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full ${colorMap[latestResult.archetype]}`} />
+                    )
+                  })()}
                 </div>
                 <div>
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
@@ -203,7 +210,7 @@ export function ResultsModal({
         ) : (
           <div className="text-center space-y-4 py-12">
             <div className="text-xl text-gray-700">
-              🔍 No results available
+              No results available
             </div>
             <Button
               onClick={() => onOpenChange(false)}
@@ -217,17 +224,6 @@ export function ResultsModal({
       </DialogContent>
     </Dialog>
   );
-}
-
-// Helper functions for the new design
-function getArchetypeRank(archetype: string) {
-  const ranks = {
-    Avoider: '1',
-    Gambler: '2', 
-    Realist: '3',
-    Architect: '4'
-  };
-  return ranks[archetype as keyof typeof ranks] || '1';
 }
 
 // Minimal Chart Component - Clean & Accessible & Mobile-Responsive
@@ -330,7 +326,6 @@ function HexagonalChart({ scores, primaryArchetype }: { scores: Record<string, n
           />
         ))}
         
-        
         {/* Interior labels */}
         {archetypes.map((archetype, index) => {
           const labelPoint = getLabelPoint(index);
@@ -347,7 +342,7 @@ function HexagonalChart({ scores, primaryArchetype }: { scores: Record<string, n
                 }`}
                 onClick={() => setSelectedPoint(selectedPoint === archetype ? null : archetype)}
               >
-                {isMobile ? archetype.slice(0, 3) : archetype}
+                {archetype}
               </text>
               <text
                 x={labelPoint.x}
@@ -375,7 +370,7 @@ function RecommendationsGrid({ archetype }: { archetype: string }) {
   
   return (
     <div className="space-y-6">
-      {recommendations.map((category, categoryIndex) => (
+      {recommendations.map((category: any, categoryIndex: number) => (
         <div key={category.title} className="bg-white rounded-2xl p-6 shadow-sm">
           {/* Category Header */}
           <div className="flex items-center gap-3 mb-6">
@@ -393,48 +388,26 @@ function RecommendationsGrid({ archetype }: { archetype: string }) {
           
           {/* Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {category.items.map((item: any, itemIndex: number) => {
-              const itemEmojis = {
-                'Books': '📚',
-                'Podcasts': '🎧', 
-                'Tools': '🛠️',
-                'Software': '💻',
-                'Courses': '🎓',
-                'Communities': '👥'
-              };
-              
-              const getItemEmoji = (title: string) => {
-                for (const [key, emoji] of Object.entries(itemEmojis)) {
-                  if (title.includes(key)) return emoji;
-                }
-                return ['💡', '📊', '🎯', '💰', '📈', '🔍'][itemIndex % 6];
-              };
-              
-              return (
-                <div
-                  key={itemIndex}
-                  className="group bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-3 sm:p-4 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer"
-                >
-                  <div className="text-2xl sm:text-3xl mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-200">
-                    {getItemEmoji(item.title)}
+            {category.items.map((item: any, itemIndex: number) => (
+              <div
+                key={itemIndex}
+                className="group bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-3 sm:p-4 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer"
+              >
+                <h4 className="font-medium text-gray-800 text-xs sm:text-sm mb-2 leading-tight">
+                  {item.title}
+                </h4>
+                <p className="text-[10px] sm:text-xs text-gray-600 leading-relaxed">
+                  {item.description.length > (typeof window !== 'undefined' && window.innerWidth < 640 ? 40 : 60) ? item.description.substring(0, typeof window !== 'undefined' && window.innerWidth < 640 ? 40 : 60) + '...' : item.description}
+                </p>
+                {/* Progress indicator like Finch */}
+                <div className="mt-2 sm:mt-3 flex items-center justify-between">
+                  <div className="text-[10px] sm:text-xs text-gray-500">
+                    {Math.floor(Math.random() * 50) + 10} / {Math.floor(Math.random() * 30) + 50}
                   </div>
-                  <h4 className="font-medium text-gray-800 text-xs sm:text-sm mb-2 leading-tight">
-                    {item.title}
-                  </h4>
-                  <p className="text-[10px] sm:text-xs text-gray-600 leading-relaxed">
-                    {item.description.length > (typeof window !== 'undefined' && window.innerWidth < 640 ? 40 : 60) ? item.description.substring(0, typeof window !== 'undefined' && window.innerWidth < 640 ? 40 : 60) + '...' : item.description}
-                  </p>
-                  
-                  {/* Progress indicator like Finch */}
-                  <div className="mt-2 sm:mt-3 flex items-center justify-between">
-                    <div className="text-[10px] sm:text-xs text-gray-500">
-                      {Math.floor(Math.random() * 50) + 10} / {Math.floor(Math.random() * 30) + 50}
-                    </div>
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#B95D38] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                  </div>
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
       ))}
