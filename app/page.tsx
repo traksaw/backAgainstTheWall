@@ -236,8 +236,8 @@ function FilmWebsiteContent() {
       />
 
       {/* Cast & Crew Section - Using our refactored data */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-6">
+      <section className="py-12 sm:py-16 md:py-24 bg-white">
+        <div className="container mx-auto px-4 sm:px-6">
           <div className="block md:hidden">
             <CastCrewCarousel castMembers={castData.castMembers} />
           </div>
@@ -265,10 +265,10 @@ function FilmWebsiteContent() {
       </section>
 
       {/* Contact & Social */}
-      <section className="py-24 bg-gray-50">
-        <div className="container mx-auto px-6">
+      <section className="py-12 sm:py-16 md:py-24 bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6">
           <div className="max-w-6xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-16">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16">
               <ContactForm />
               <SocialAndEvent />
             </div>
@@ -329,12 +329,12 @@ function FilmWebsiteContent() {
       />
       {/* Film Modal */}
       <Dialog open={modals.showFilm} onOpenChange={modals.setShowFilm}>
-        <DialogContent className="max-w-5xl bg-black border-0">
+        <DialogContent className="max-w-5xl w-[95vw] sm:w-full bg-black border-0 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-center text-white">
+            <DialogTitle className="text-xl sm:text-2xl font-bold text-center text-white">
               Back Against the Wall
             </DialogTitle>
-            <DialogDescription className="text-center text-gray-300">
+            <DialogDescription className="text-center text-gray-300 text-sm sm:text-base px-2">
               {user && latestResult?.archetype ? (
                 <>
                   Watching as <span className="text-[#B95D38]">The {latestResult.archetype}</span> — Notice how the
