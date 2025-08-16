@@ -144,14 +144,14 @@ export default function ContactForm(): JSX.Element {
                                 {/* Form with staggered animations */}
                                 <div className="space-y-6">
                                     <FadeIn delay={400} duration={600} direction="up">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                                        <div className="grid md:grid-cols-2 gap-6">
                                             <div>
                                                 <Input
                                                     placeholder="Name"
                                                     name="name"
                                                     value={formData.name}
                                                     onChange={handleInputChange}
-                                                    className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3 text-base min-h-[48px] transition-all duration-300 ${errors.name ? 'border-red-500' : ''}`}
+                                                    className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3 transition-all duration-300 ${errors.name ? 'border-red-500' : ''}`}
                                                 />
                                                 {errors.name && (
                                                     <p className="text-red-500 text-sm mt-1">{errors.name}</p>
@@ -164,7 +164,7 @@ export default function ContactForm(): JSX.Element {
                                                     value={formData.email}
                                                     onChange={handleInputChange}
                                                     placeholder="Email"
-                                                    className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3 text-base min-h-[48px] transition-all duration-300 ${errors.email ? 'border-red-500' : ''}`}
+                                                    className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3 transition-all duration-300 ${errors.email ? 'border-red-500' : ''}`}
                                                 />
                                                 {errors.email && (
                                                     <p className="text-red-500 text-sm mt-1">{errors.email}</p>
@@ -179,7 +179,7 @@ export default function ContactForm(): JSX.Element {
                                             name="organization"
                                             value={formData.organization}
                                             onChange={handleInputChange}
-                                            className="border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3 text-base min-h-[48px] transition-all duration-300"
+                                            className="border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3 transition-all duration-300"
                                         />
                                     </FadeIn>
 
@@ -189,8 +189,8 @@ export default function ContactForm(): JSX.Element {
                                             name="message"
                                             value={formData.message}
                                             onChange={handleInputChange}
-                                            rows={4}
-                                            className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg resize-none text-base min-h-[120px] transition-all duration-300 ${errors.message ? 'border-red-500' : ''}`}
+                                            rows={5}
+                                            className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg resize-none transition-all duration-300 ${errors.message ? 'border-red-500' : ''}`}
                                         />
                                         {errors.message && (
                                             <p className="text-red-500 text-sm mt-1">{errors.message}</p>
@@ -201,7 +201,7 @@ export default function ContactForm(): JSX.Element {
                                         <Button
                                             onClick={handleSubmit}
                                             disabled={isSubmitting}
-                                            className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold w-full py-3 text-base min-h-[48px] rounded-lg transform hover:scale-105 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold w-full py-3 rounded-lg transform hover:scale-105 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {isSubmitting ? 'Sending...' : 'Send Message'}
                                         </Button>
