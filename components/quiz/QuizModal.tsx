@@ -30,12 +30,20 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
     handleQuizAnswer,
   } = quizState
 
-  const handleAnswerClick = async (answer: QuizAnswer) => {
+  const handleAnswerClick = async (answer: QuizAnswer, event: React.MouseEvent<HTMLButtonElement>) => {
     console.log("=== QUIZ MODAL: ANSWER CLICKED ===")
     console.log("Answer:", answer)
     console.log("Current question:", currentQuestion)
     console.log("Total questions:", shuffledQuestions.length)
-    console.log("Current answers count:", Object.keys(answers).length)
+    console.log("🎯 Answer clicked:", answer)
+    
+    // Immediately blur the button to prevent focus persistence on mobile
+    const target = event.currentTarget
+    setTimeout(() => {
+      target.blur()
+      // Also remove focus from any other buttons
+      document.querySelectorAll('button').forEach(btn => btn.blur())
+    }, 100)
     
     // 🔧 FIX: Build final answers BEFORE calling handleQuizAnswer
     const finalAnswers = { ...answers, [currentQuestion]: answer }
@@ -139,9 +147,9 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
                   <Button
                     key={uniqueKey}
                     variant="outline"
-                    onClick={() => handleAnswerClick(option)}
+                    onClick={(event) => handleAnswerClick(option, event)}
                     disabled={quizLoading}
-                    className="w-full text-left justify-start p-4 sm:p-6 h-auto border-gray-300 hover:border-[#B95D38] hover:bg-[#B95D38]/10 transition-all duration-300 rounded-lg text-wrap min-h-[56px] sm:min-h-[auto]"
+                    className="w-full text-left justify-start p-4 sm:p-6 h-auto border-gray-300 hover:border-[#B95D38] hover:bg-[#B95D38]/10 transition-all duration-300 rounded-lg text-wrap min-h-[56px] sm:min-h-[auto] focus:outline-none focus:ring-0"
                   >
                     <span className="text-sm sm:text-base text-gray-700 leading-relaxed">{option.text}</span>
                   </Button>
