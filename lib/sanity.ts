@@ -20,15 +20,62 @@ const builder = imageUrlBuilder(client)
 export const urlFor = (source: any) => builder.image(source)
 
 export async function getCastAndCrew() {
-  return await client.fetch(`
-    *[_type == "castMember"] | order(order asc) {
-      name,
-      role,
-      description,
-      "image": image.asset->url,
-      "imageAlt": image.alt,
-      readMoreUrl,
-      order
-    }
-  `)
+  // Return empty array if no client available
+  if (!client) {
+    console.warn('Sanity client not configured - returning empty cast list')
+    return []
+  }
+
+  try {
+    const castMembers = await client.fetch(`
+      *[_type == "castMember"] | order(order asc) {
+        name,
+        role,
+        description,
+        "image": image.asset->url,
+        readMoreUrl,
+        order
+      }
+    `, {}, {
+      next: { 
+        revalidate: 60, // Cache for 60 seconds
+        tags: ['cast-and-crew'] // Tag for webhook revalidation
+      }
+    })
+    return Array.isArray(castMembers) ? castMembers : []
+  } catch (error) {
+    console.error('Error fetching cast and crew:', error)
+    return []
+  }
+}
+
+export async function getSupporters() {
+  // Return empty array if no client available
+  if (!client) {
+    console.warn('Sanity client not configured - returning empty supporters list')
+    return []
+  }
+
+  try {
+    const supporters = await client.fetch(`
+      *[_type == "supporter"] | order(order asc) {
+        name,
+        type,
+        "logo": logo.asset->url,
+        website,
+        description,
+        featured,
+        order
+      }
+    `, {}, {
+      next: { 
+        revalidate: 60, // Cache for 60 seconds
+        tags: ['supporters'] // Tag for webhook revalidation
+      }
+    })
+    return Array.isArray(supporters) ? supporters : []
+  } catch (error) {
+    console.error('Error fetching supporters:', error)
+    return []
+  }
 }
