@@ -46,8 +46,10 @@ function FilmWebsiteContent() {
   const quizState = useQuizState()
   const quizLogic = useQuizLogic()
 
-  // Fetch supporters data on component mount
+  // Fetch supporters data on component mount - only on client side
   useEffect(() => {
+    if (!isHydrated) return // Wait for hydration
+    
     const fetchSupporters = async () => {
       try {
         setSupportersLoading(true)

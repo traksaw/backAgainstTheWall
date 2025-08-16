@@ -17,7 +17,12 @@ const nextConfig = {
   },
   experimental: {
     esmExternals: 'loose',
+    optimizePackageImports: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
   },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  outputFileTracing: false,
 }
 
 export default nextConfig
