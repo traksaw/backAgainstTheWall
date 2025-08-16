@@ -35,7 +35,12 @@ export async function getCastAndCrew() {
         readMoreUrl,
         order
       }
-    `)
+    `, {}, {
+      next: { 
+        revalidate: 60, // Cache for 60 seconds
+        tags: ['cast-and-crew'] // Tag for webhook revalidation
+      }
+    })
     return Array.isArray(castMembers) ? castMembers : []
   } catch (error) {
     console.error('Error fetching cast and crew:', error)
