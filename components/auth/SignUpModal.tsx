@@ -261,9 +261,9 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md bg-white text-gray-900 border-0 shadow-2xl">
+      <DialogContent className="max-w-md w-[95vw] sm:w-full bg-white text-gray-900 border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center text-gray-900">Create Your Account</DialogTitle>
+          <DialogTitle className="text-xl sm:text-2xl font-bold text-center text-gray-900">Create Your Account</DialogTitle>
           <div className="flex items-center justify-center space-x-2 mt-4">
             {[1, 2, 3].map((step) => (
               <div key={step} className="flex items-center">
@@ -289,7 +289,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           {/* Step 1: Basic Information */}
           {currentStep === 1 && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName" className="text-sm font-medium text-gray-700 flex items-center">
                     <User className="w-4 h-4 mr-1" />
@@ -301,7 +301,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     placeholder="John"
                     value={formData.firstName}
                     onChange={(e) => setFormData((prev) => ({ ...prev, firstName: e.target.value }))}
-                    className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] ${
+                    className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] py-3 text-base ${
                       errors.firstName ? "border-red-500" : ""
                     }`}
                   />
@@ -323,7 +323,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     placeholder="Doe"
                     value={formData.lastName}
                     onChange={(e) => setFormData((prev) => ({ ...prev, lastName: e.target.value }))}
-                    className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] ${
+                    className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] py-3 text-base ${
                       errors.lastName ? "border-red-500" : ""
                     }`}
                   />
@@ -347,7 +347,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   placeholder="john.doe@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                  className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] ${
+                  className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] py-3 text-base ${
                     errors.email ? "border-red-500" : ""
                   }`}
                 />
@@ -376,7 +376,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     placeholder="Create a strong password"
                     value={formData.password}
                     onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
-                    className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] pr-10 ${
+                    className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] pr-10 py-3 text-base ${
                       errors.password ? "border-red-500" : ""
                     }`}
                   />
@@ -428,7 +428,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     placeholder="Confirm your password"
                     value={formData.passwordConfirmation}
                     onChange={(e) => setFormData((prev) => ({ ...prev, passwordConfirmation: e.target.value }))}
-                    className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] pr-10 ${
+                    className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] pr-10 py-3 text-base ${
                       errors.passwordConfirmation ? "border-red-500" : ""
                     }`}
                   />
@@ -460,7 +460,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   value={formData.zip_code}
                   onChange={(e) => setFormData((prev) => ({ ...prev, zip_code: e.target.value }))}
                   maxLength={10}
-                  className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] ${
+                  className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] py-3 text-base ${
                     errors.zip_code ? "border-red-500" : ""
                   }`}
                 />
@@ -481,7 +481,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   id="occupationStatus"
                   value={formData.occupationStatus}
                   onChange={(e) => setFormData((prev) => ({ ...prev, occupationStatus: e.target.value }))}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#B95D38] focus:ring-[#B95D38] bg-white ${
+                  className={`w-full px-3 py-3 text-base border border-gray-300 rounded-lg focus:border-[#B95D38] focus:ring-[#B95D38] bg-white ${
                     errors.occupationStatus ? "border-red-500" : ""
                   }`}
                 >
@@ -505,9 +505,9 @@ const handleSubmit = async (e: React.FormEvent) => {
           {/* Step 3: Terms & Conditions */}
           {currentStep === 3 && (
             <div className="space-y-6">
-              <div className="bg-gray-50 rounded-lg p-4 max-h-48 overflow-y-auto">
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4 max-h-40 sm:max-h-48 overflow-y-auto">
                 <h3 className="font-semibold text-gray-900 mb-3">Terms and Conditions</h3>
-                <div className="text-sm text-gray-700 space-y-2">
+                <div className="text-xs sm:text-sm text-gray-700 space-y-2">
                   <p>
                     <strong>1. Acceptance of Terms</strong>
                   </p>
@@ -609,7 +609,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               <Button
                 type="button"
                 onClick={handleNext}
-                className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-6"
+                className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-6 py-3 text-base min-h-[48px]"
               >
                 Next
               </Button>
@@ -617,7 +617,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               <Button
                 type="submit"
                 disabled={loading}
-                className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-6"
+                className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-6 py-3 text-base min-h-[48px]"
               >
                 {loading ? "Creating Account..." : "Create Account"}
               </Button>

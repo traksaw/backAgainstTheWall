@@ -86,9 +86,9 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-white text-gray-900 border-0 shadow-2xl">
+      <DialogContent className="max-w-2xl w-[95vw] sm:w-full bg-white text-gray-900 border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-3xl font-bold text-center text-gray-900">
+          <DialogTitle className="text-2xl sm:text-3xl font-bold text-center text-gray-900">
             Financial Mindset Quiz
           </DialogTitle>
           
@@ -96,10 +96,10 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
           {showWelcome && profile && (
             <div className="space-y-6 py-6">
               <div className="text-center space-y-4">
-                <p className="text-xl text-gray-700 leading-relaxed">
+                <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">
                   Welcome! Let's discover your financial personality.
                 </p>
-                <p className="text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600">
                   Your responses will reveal your financial archetype and help you connect more deeply with the film's
                   characters.
                 </p>
@@ -110,7 +110,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
                     console.log("🎯 Starting quiz...")
                     startQuiz()
                   }}
-                  className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-8 py-3 rounded-lg"
+                  className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-6 sm:px-8 py-3 rounded-lg w-full sm:w-auto"
                 >
                   Start Quiz
                 </Button>
@@ -127,7 +127,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
               Question {currentQuestion + 1} of {shuffledQuestions.length}
             </div>
             
-            <h3 className="text-xl font-semibold text-center text-gray-800 leading-relaxed">
+            <h3 className="text-lg sm:text-xl font-semibold text-center text-gray-800 leading-relaxed px-2">
               {shuffledQuestions[currentQuestion]?.question || shuffledQuestions[currentQuestion]?.text}
             </h3>
             <div className="space-y-3">
@@ -137,9 +137,9 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
                   variant="outline"
                   onClick={() => handleAnswerClick(option)}
                   disabled={quizLoading}
-                  className="w-full text-left justify-start p-6 h-auto border-gray-300 hover:border-[#B95D38] hover:bg-[#B95D38]/10 transition-all duration-300 rounded-lg text-wrap"
+                  className="w-full text-left justify-start p-4 sm:p-6 h-auto border-gray-300 hover:border-[#B95D38] hover:bg-[#B95D38]/10 transition-all duration-300 rounded-lg text-wrap min-h-[48px]"
                 >
-                  <span className="text-gray-700">{option.text}</span>
+                  <span className="text-sm sm:text-base text-gray-700">{option.text}</span>
                 </Button>
               ))}
             </div>
