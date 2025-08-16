@@ -1,34 +1,46 @@
 import { createClient } from '@sanity/client'
-import imageUrlBuilder from '@sanity/image-url'
 
-export interface CastMember {
-  name: string;
-  role: string;
-  description: string;
-  image: string;
-  readMoreUrl?: string;
-  order: number;
+// Validate environment variables
+const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production'
+
+if (!projectId) {
+  console.error('Missing NEXT_PUBLIC_SANITY_PROJECT_ID environment variable')
+  // In development, you might want to throw an error
+  // In production, we'll handle it gracefully
 }
-export const client = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET!,
-  useCdn: true,
-  apiVersion: '2023-05-03',
-})
 
-const builder = imageUrlBuilder(client)
-export const urlFor = (source: any) => builder.image(source)
+// Create client only if we have required config
+const client = projectId ? createClient({
+  projectId,
+  dataset,
+  apiVersion: '2023-05-03',
+  useCdn: process.env.NODE_ENV === 'production',
+}) : null
 
 export async function getCastAndCrew() {
-  return await client.fetch(`
-    *[_type == "castMember"] | order(order asc) {
-      name,
-      role,
-      description,
-      "image": image.asset->url,
-      "imageAlt": image.alt,
-      readMoreUrl,
-      order
-    }
-  `)
+  // Return empty array if no client available
+  if (!client) {
+    console.warn('Sanity client not configured - returning empty cast list')
+    return []
+  }
+
+  try {
+    const castMembers = await client.fetch(`
+      *[_type == "castMember"] | order(order asc) {
+        name,
+        role,
+        description,
+        "image": image.asset->url,
+        readMoreUrl,
+        order
+      }
+    `)
+    return Array.isArray(castMembers) ? castMembers : []
+  } catch (error) {
+    console.error('Error fetching cast and crew:', error)
+    return []
+  }
 }
+
+export default client

@@ -50,7 +50,7 @@ import CastCrewCarousel from "@/components/CastCrewCarousel"
 import CastCrewGrid from "@/components/CastCrewGrid"
 import SocialAndEvent from "@/components/SocialAndEvents"
 import Footer from "@/components/Footer"
-import { getCastAndCrew } from '../lib/sanity'
+import { getCastAndCrew } from '@/lib/sanity'
 
 interface CastMember {
   name: string;
@@ -66,7 +66,8 @@ interface QuizQuestion {
   options: QuizAnswer[]
 }
 export interface QuizResult {
-  id: string
+  _id?: string // Use _id consistently
+  id?: string  // Keep both for compatibility
   user_id: string
   archetype: "Avoider" | "Gambler" | "Realist" | "Architect"
   score: number
@@ -78,8 +79,10 @@ export interface QuizResult {
   }
   completed_at?: string
   session_id?: string
-  has_viewed_results: boolean
-  has_watched_film: boolean
+  hasViewedResults: boolean // Use camelCase consistently
+  has_viewed_results?: boolean // Keep snake_case for API compatibility
+  hasWatchedFilm: boolean
+  has_watched_film?: boolean
   created_at?: string
   updated_at?: string
 }
@@ -431,28 +434,34 @@ function FilmWebsiteContent() {
   }
 
   // Shuffle questions on component mount
-  useEffect(() => {
-    async function fetchCastData() {
-      try {
-        setLoading(true)
-        const data = await getCastAndCrew()
+ useEffect(() => {
+  async function fetchCastData() {
+    try {
+      setLoading(true)
+      
+      // Add null check and fallback
+      const data = await getCastAndCrew().catch(err => {
+        console.error('Failed to fetch cast data:', err)
+        return [] // Return empty array as fallback
+      })
 
-        // Ensure data is an array
-        if (Array.isArray(data)) {
-          setCastMembers(data)
-        } else {
-          console.error('getCastAndCrew did not return an array:', data)
-          setCastMembers([])
-        }
-      } catch (error) {
-        console.error('Error fetching cast data:', error)
+      // Ensure data is an array with more robust checking
+      if (Array.isArray(data)) {
+        setCastMembers(data)
+      } else {
+        console.warn('getCastAndCrew did not return an array:', data)
         setCastMembers([])
-      } finally {
-        setLoading(false)
       }
+    } catch (error) {
+      console.error('Error fetching cast data:', error)
+      setCastMembers([])
+    } finally {
+      setLoading(false)
     }
-    fetchCastData()
-  }, [])
+  }
+  
+  fetchCastData()
+}, [])
 
   useEffect(() => {
     setShuffledQuestions(createAdvancedRandomizedQuestions())
