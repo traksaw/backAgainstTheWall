@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CastMember } from '@/types/cast';
 import { getCastAndCrew } from '@/lib/sanity';
+import { castAndCrew } from '@/data/cast-and-crew';
 
 export function useCastData() {
   const [castMembers, setCastMembers] = useState<CastMember[]>([]);
@@ -15,17 +16,23 @@ export function useCastData() {
       setError(null);
       const data = await getCastAndCrew();
 
-      // Ensure data is an array
+      // Ensure data is an array; if empty, use static fallback
       if (Array.isArray(data)) {
-        setCastMembers(data);
+        if (data.length > 0) {
+          setCastMembers(data as CastMember[]);
+        } else {
+          console.warn('No cast data from Sanity. Using static fallback castAndCrew.');
+          setCastMembers(castAndCrew as unknown as CastMember[]);
+        }
       } else {
         console.error('getCastAndCrew did not return an array:', data);
-        setCastMembers([]);
-        setError('Invalid data format received');
+        setCastMembers(castAndCrew as unknown as CastMember[]);
+        setError('Invalid data format received (using fallback)');
       }
     } catch (error) {
       console.error('Error fetching cast data:', error);
-      setCastMembers([]);
+      // On error, also use static fallback
+      setCastMembers(castAndCrew as unknown as CastMember[]);
       setError(error instanceof Error ? error.message : 'Unknown error occurred');
     } finally {
       setLoading(false);

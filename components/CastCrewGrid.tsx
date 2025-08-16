@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ExternalLink, Sparkles, Users, Star } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { FadeIn, FadeInUp } from "@/components/ui/fade-in";
 import { cn } from "@/lib/utils";
 
@@ -38,8 +38,7 @@ const LoadingSkeleton = ({ type, index }: { type: 'cast' | 'crew', index: number
 
 export default function CastCrewGrid({ castMembers }: CastCrewGridProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const [loadedImages, setLoadedImages] = useState<number[]>([]);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  
   const sectionRef = useRef<HTMLDivElement>(null);
 
   // Filter cast and crew
@@ -73,37 +72,52 @@ export default function CastCrewGrid({ castMembers }: CastCrewGridProps) {
     return () => observer.disconnect();
   }, []);
 
-  // Handle image loading
-  const handleImageLoad = (index: number) => {
-    setLoadedImages(prev => prev.includes(index) ? prev : [...prev, index]);
-  };
+  // No images rendered in this mode
 
   // Loading state
   if (!castMembers || castMembers.length === 0) {
     return (
       <section ref={sectionRef} className="hidden md:block py-24 bg-white">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-20">
-            <div className="h-12 bg-gray-200 rounded w-96 mx-auto mb-6 animate-pulse"></div>
-            <div className="h-6 bg-gray-200 rounded w-128 mx-auto animate-pulse"></div>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Meet the Cast & Crew</h2>
+            <p className="text-lg text-gray-600" aria-live="polite">
+              Cast and crew profiles are coming soon. Thanks for your patience!
+            </p>
           </div>
 
-          {/* Cast Loading */}
+          {/* Cast Placeholder */}
           <div className="mb-16">
-            <div className="h-8 bg-gray-200 rounded w-32 mx-auto mb-12 animate-pulse"></div>
+            <div className="text-center mb-10">
+              <h3 className="text-2xl font-semibold text-gray-900">Cast</h3>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {[0, 1, 2].map((index) => (
-                <LoadingSkeleton key={index} type="cast" index={index} />
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="text-center space-y-3">
+                  <div className="space-y-2">
+                    <div className="h-6 bg-gray-200 rounded w-48 mx-auto"></div>
+                    <div className="h-4 bg-gray-200 rounded w-36 mx-auto"></div>
+                    <div className="h-3 bg-gray-200 rounded w-64 mx-auto"></div>
+                    <div className="h-3 bg-gray-200 rounded w-40 mx-auto"></div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* Crew Loading */}
+          {/* Crew Placeholder */}
           <div>
-            <div className="h-8 bg-gray-200 rounded w-48 mx-auto mb-12 animate-pulse"></div>
+            <div className="text-center mb-10">
+              <h3 className="text-2xl font-semibold text-gray-900">Production Team</h3>
+            </div>
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
-              {[0, 1, 2, 3].map((index) => (
-                <LoadingSkeleton key={index} type="crew" index={index} />
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="text-center space-y-2">
+                  <div className="space-y-2">
+                    <div className="h-5 bg-gray-200 rounded w-40 mx-auto"></div>
+                    <div className="h-3 bg-gray-200 rounded w-28 mx-auto"></div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -160,8 +174,6 @@ export default function CastCrewGrid({ castMembers }: CastCrewGridProps) {
                       isVisible ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
                     )}
                     style={{ transitionDelay: `${600 + index * 150}ms` }}
-                    onMouseEnter={() => setHoveredIndex(index)}
-                    onMouseLeave={() => setHoveredIndex(null)}
                   >
                     <div className="group text-center space-y-3 transform transition-all duration-500 hover:scale-105 relative p-6 rounded-2xl hover:bg-gradient-to-br hover:from-white hover:to-[#B95D38]/5 hover:shadow-2xl hover:shadow-[#B95D38]/10">
                       
@@ -170,30 +182,7 @@ export default function CastCrewGrid({ castMembers }: CastCrewGridProps) {
                       
                       {/* Content */}
                       <div className="relative z-10">
-                        {/* Enhanced image */}
-                        {person.image && (
-                          <div className="relative mb-4">
-                            <img 
-                              src={person.image} 
-                              alt={person.name}
-                              className={cn(
-                                "w-24 h-24 rounded-full mx-auto object-cover transition-all duration-500 ring-4 ring-transparent group-hover:ring-[#B95D38]/30 group-hover:scale-110 group-hover:shadow-xl",
-                                loadedImages.includes(index) ? "opacity-100 scale-100" : "opacity-0 scale-90"
-                              )}
-                              onLoad={() => handleImageLoad(index)}
-                            />
-                            {!loadedImages.includes(index) && (
-                              <div className="absolute inset-0 w-24 h-24 rounded-full mx-auto bg-gray-200 animate-pulse"></div>
-                            )}
-                            
-                            {/* Floating sparkle effect on hover */}
-                            {hoveredIndex === index && (
-                              <div className="absolute -top-2 -right-2 w-4 h-4 text-[#B95D38] animate-bounce">
-                                <Sparkles className="w-full h-full" />
-                              </div>
-                            )}
-                          </div>
-                        )}
+                        {/* Images removed */}
 
                         {/* Enhanced typography */}
                         <div className="space-y-2">
@@ -235,12 +224,10 @@ export default function CastCrewGrid({ castMembers }: CastCrewGridProps) {
           <div>
             <FadeInUp delay={400} duration={800}>
               <div className="text-center mb-12 relative">
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <Users className="w-6 h-6 text-[#669CCB] animate-pulse" />
+                <div className="mb-4">
                   <h3 className="text-3xl font-bold text-gray-900 transform transition-all duration-300 hover:text-[#669CCB]">
                     Production Team
                   </h3>
-                  <Users className="w-6 h-6 text-[#669CCB] animate-pulse" />
                 </div>
                 <div className="w-32 h-1 bg-gradient-to-r from-transparent via-[#669CCB] to-transparent mx-auto"></div>
               </div>
@@ -257,36 +244,12 @@ export default function CastCrewGrid({ castMembers }: CastCrewGridProps) {
                       isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
                     )}
                     style={{ transitionDelay: `${800 + index * 100}ms` }}
-                    onMouseEnter={() => setHoveredIndex(cast.length + index)}
-                    onMouseLeave={() => setHoveredIndex(null)}
                   >
                     <div className="group text-center space-y-2 transform transition-all duration-500 hover:scale-105 relative p-4 rounded-xl hover:bg-gradient-to-br hover:from-white hover:to-[#669CCB]/5 hover:shadow-xl hover:shadow-[#669CCB]/10">
                       
                       {/* Content */}
                       <div className="relative z-10">
-                        {/* Enhanced image */}
-                        {person.image && (
-                          <div className="relative mb-3">
-                            <img 
-                              src={person.image} 
-                              alt={person.name}
-                              className={cn(
-                                "w-16 h-16 rounded-full mx-auto object-cover transition-all duration-500 ring-2 ring-transparent group-hover:ring-[#669CCB]/30 group-hover:scale-110",
-                                loadedImages.includes(cast.length + index) ? "opacity-100 scale-100" : "opacity-0 scale-90"
-                              )}
-                              onLoad={() => handleImageLoad(cast.length + index)}
-                            />
-                            {!loadedImages.includes(cast.length + index) && (
-                              <div className="absolute inset-0 w-16 h-16 rounded-full mx-auto bg-gray-200 animate-pulse"></div>
-                            )}
-                            
-                            {/* Floating sparkle effect */}
-                            {hoveredIndex === cast.length + index && (
-                              <div className="absolute -top-1 -right-1 w-3 h-3 text-[#669CCB] animate-bounce">
-                              </div>
-                            )}
-                          </div>
-                        )}
+                        {/* Images removed */}
 
                         {/* Enhanced typography */}
                         <div className="space-y-1">
