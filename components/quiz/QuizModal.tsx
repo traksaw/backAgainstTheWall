@@ -34,69 +34,30 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
     console.log("=== QUIZ MODAL: ANSWER CLICKED ===")
     console.log("Answer:", answer)
     console.log("Current question:", currentQuestion)
-    console.log("🎯 Answer clicked:", answer)
-    
+
     // Immediately blur the button to prevent focus persistence on mobile
     const target = event.currentTarget
-    setTimeout(() => {
-      target.blur()
-      // Also remove focus from any other buttons
-      document.querySelectorAll('button').forEach(btn => btn.blur())
-    }, 100)
-    
-    // Add visual feedback - highlight the selected answer briefly
-    target.style.backgroundColor = '#B95D38'
-    target.style.color = 'white'
-    target.style.borderColor = '#B95D38'
-    
-    // 🔧 FIX: Build final answers BEFORE calling handleQuizAnswer
+    target.blur()
+    // Also remove focus from any other buttons
+    document.querySelectorAll('button').forEach(btn => btn.blur())
+
+    // Build final answers BEFORE calling handleQuizAnswer
     const finalAnswers = { ...answers, [currentQuestion]: answer }
-    
-    console.log("🔍 Final answers being submitted:", {
-      count: Object.keys(finalAnswers).length,
-      answers: finalAnswers,
-      lastAnswer: answer
-    });
-    
-    // Validate each answer has required fields
-    console.log("🔍 Answer validation:", Object.entries(finalAnswers).map(([key, ans]) => ({
-      question: key,
-      text: ans?.text,
-      archetype: ans?.archetype,
-      points: ans?.points,
-      isValid: !!(ans?.archetype && typeof ans?.points === 'number')
-    })));
-    
-    // Add a brief delay for better UX before progressing
-    setTimeout(() => {
-      const isComplete = handleQuizAnswer(answer)
-      console.log("Is quiz complete:", isComplete)
-      
-      if (isComplete) {
-        try {
-          console.log("🎯 Quiz completed! Processing submission...")
-          
-          // 🔧 FIX: Use the finalAnswers we built above (not state)
-          console.log("Final answers for submission:", {
-            count: Object.keys(finalAnswers).length,
-            answers: finalAnswers
-          })
-          
-          // 🔧 FIX: Pass raw answers, let useQuizHandlers do the processing
-          console.log("🎯 Calling onQuizComplete with raw answers...")
-          onQuizComplete(finalAnswers)
-          console.log("✅ onQuizComplete finished successfully")
-          
-        } catch (error) {
-          console.error('=== QUIZ MODAL: COMPLETION ERROR ===')
-          console.error('Error details:', error)
-          console.error('Error stack:', (error as Error)?.stack)
-          alert(`Quiz completion failed: ${(error as any)?.message || 'Unknown error'}`)
-        }
-      } else {
-        console.log("Quiz not complete yet, automatically advancing to next question...")
+
+    // Advance immediately (no extra animation/delay)
+    const isComplete = handleQuizAnswer(answer)
+    console.log("Is quiz complete:", isComplete)
+
+    if (isComplete) {
+      try {
+        await onQuizComplete(finalAnswers)
+      } catch (error) {
+        console.error('=== QUIZ MODAL: COMPLETION ERROR ===')
+        console.error('Error details:', error)
+        console.error('Error stack:', (error as Error)?.stack)
+        alert(`Quiz completion failed: ${(error as any)?.message || 'Unknown error'}`)
       }
-    }, 600) // 600ms delay for visual feedback
+    }
   }
 
   return (
@@ -156,7 +117,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
                     variant="outline"
                     onClick={(event) => handleAnswerClick(option, event)}
                     disabled={quizLoading}
-                    className="w-full text-left justify-start p-4 sm:p-6 h-auto border-gray-300 hover:border-[#B95D38] hover:bg-[#B95D38]/10 transition-all duration-300 rounded-lg text-wrap min-h-[56px] sm:min-h-[auto] focus:outline-none focus:ring-0"
+                    className="w-full text-left justify-start p-4 sm:p-6 h-auto border-gray-300 md:hover:border-[#B95D38] md:hover:bg-[#B95D38]/10 transition-none rounded-lg text-wrap min-h-[56px] sm:min-h-[auto] focus:outline-none focus:ring-0 touch-manipulation"
                   >
                     <span className="text-sm sm:text-base text-gray-700 leading-relaxed">{option.text}</span>
                   </Button>
