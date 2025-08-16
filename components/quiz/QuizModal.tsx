@@ -86,7 +86,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-2xl bg-white text-gray-900 border-0 shadow-2xl mx-2">
+      <DialogContent className="w-[95vw] max-w-2xl bg-white text-gray-900 border-0 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-2xl sm:text-3xl font-bold text-center text-gray-900 px-2">
             Financial Mindset Quiz
