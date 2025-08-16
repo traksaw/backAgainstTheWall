@@ -86,20 +86,20 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-white text-gray-900 border-0 shadow-2xl">
+      <DialogContent className="w-[95vw] max-w-2xl bg-white text-gray-900 border-0 shadow-2xl mx-2">
         <DialogHeader>
-          <DialogTitle className="text-3xl font-bold text-center text-gray-900">
+          <DialogTitle className="text-2xl sm:text-3xl font-bold text-center text-gray-900 px-2">
             Financial Mindset Quiz
           </DialogTitle>
           
           {/* Welcome Screen */}
           {showWelcome && profile && (
-            <div className="space-y-6 py-6">
-              <div className="text-center space-y-4">
-                <p className="text-xl text-gray-700 leading-relaxed">
+            <div className="space-y-4 sm:space-y-6 py-4 sm:py-6 px-2">
+              <div className="text-center space-y-3 sm:space-y-4">
+                <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">
                   Welcome! Let's discover your financial personality.
                 </p>
-                <p className="text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600">
                   Your responses will reveal your financial archetype and help you connect more deeply with the film's
                   characters.
                 </p>
@@ -110,7 +110,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
                     console.log("🎯 Starting quiz...")
                     startQuiz()
                   }}
-                  className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-8 py-3 rounded-lg"
+                  className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-6 sm:px-8 py-3 rounded-lg text-sm sm:text-base min-h-[44px]"
                 >
                   Start Quiz
                 </Button>
@@ -121,27 +121,32 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
 
         {/* Quiz Questions */}
         {!showWelcome && shuffledQuestions.length > 0 && currentQuestion < shuffledQuestions.length && (
-          <div className="space-y-8 py-6">
+          <div className="space-y-6 sm:space-y-8 py-4 sm:py-6 px-2">
             {/* Progress indicator */}
-            <div className="text-center text-sm text-gray-500">
+            <div className="text-center text-xs sm:text-sm text-gray-500">
               Question {currentQuestion + 1} of {shuffledQuestions.length}
             </div>
             
-            <h3 className="text-xl font-semibold text-center text-gray-800 leading-relaxed">
+            <h3 className="text-lg sm:text-xl font-semibold text-center text-gray-800 leading-relaxed px-2">
               {shuffledQuestions[currentQuestion]?.question || shuffledQuestions[currentQuestion]?.text}
             </h3>
             <div className="space-y-3">
-              {shuffledQuestions[currentQuestion]?.options.map((option: QuizAnswer, index: number) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  onClick={() => handleAnswerClick(option)}
-                  disabled={quizLoading}
-                  className="w-full text-left justify-start p-6 h-auto border-gray-300 hover:border-[#B95D38] hover:bg-[#B95D38]/10 transition-all duration-300 rounded-lg text-wrap"
-                >
-                  <span className="text-gray-700">{option.text}</span>
-                </Button>
-              ))}
+              {shuffledQuestions[currentQuestion]?.options.map((option: QuizAnswer, index: number) => {
+                // Create a unique key that includes the current question to force re-render
+                const uniqueKey = `${currentQuestion}-${option.id || index}-${option.text.slice(0, 10)}`;
+                
+                return (
+                  <Button
+                    key={uniqueKey}
+                    variant="outline"
+                    onClick={() => handleAnswerClick(option)}
+                    disabled={quizLoading}
+                    className="w-full text-left justify-start p-4 sm:p-6 h-auto border-gray-300 hover:border-[#B95D38] hover:bg-[#B95D38]/10 transition-all duration-300 rounded-lg text-wrap min-h-[56px] sm:min-h-[auto]"
+                  >
+                    <span className="text-sm sm:text-base text-gray-700 leading-relaxed">{option.text}</span>
+                  </Button>
+                );
+              })}
             </div>
           </div>
         )}

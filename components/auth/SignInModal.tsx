@@ -93,7 +93,7 @@ export function SignInModal({ open, onOpenChange, onSwitchToSignUp }: SignInModa
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md bg-white text-gray-900 border-0 shadow-2xl">
+      <DialogContent className="w-[95vw] max-w-md bg-white text-gray-900 border-0 shadow-2xl mx-2">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center text-gray-900">Welcome Back</DialogTitle>
           <p className="text-center text-gray-600 mt-2">Sign in to continue your journey</p>

@@ -180,27 +180,67 @@ export function VideoPlayer({
 
     try {
       if (!isFullscreen) {
+        // Try different fullscreen methods for better browser compatibility
         if (containerRef.current.requestFullscreen) {
           await containerRef.current.requestFullscreen()
+        } else if ((containerRef.current as any).webkitRequestFullscreen) {
+          await (containerRef.current as any).webkitRequestFullscreen()
+        } else if ((containerRef.current as any).mozRequestFullScreen) {
+          await (containerRef.current as any).mozRequestFullScreen()
+        } else if ((containerRef.current as any).msRequestFullscreen) {
+          await (containerRef.current as any).msRequestFullscreen()
         }
       } else {
+        // Try different exit fullscreen methods
         if (document.exitFullscreen) {
           await document.exitFullscreen()
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen()
+        } else if ((document as any).mozCancelFullScreen) {
+          await (document as any).mozCancelFullScreen()
+        } else if ((document as any).msExitFullscreen) {
+          await (document as any).msExitFullscreen()
         }
       }
     } catch (error) {
       console.error("Fullscreen error:", error)
+      // Fallback: try to use the video element directly
+      if (videoRef.current) {
+        try {
+          if (!isFullscreen && (videoRef.current as any).requestFullscreen) {
+            await (videoRef.current as any).requestFullscreen()
+          }
+        } catch (fallbackError) {
+          console.error("Video fullscreen fallback failed:", fallbackError)
+        }
+      }
     }
   }
 
   // Fullscreen change listener
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement)
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      )
+      setIsFullscreen(isCurrentlyFullscreen)
     }
 
+    // Add listeners for all browser variants
     document.addEventListener("fullscreenchange", handleFullscreenChange)
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange)
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange)
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange)
+    document.addEventListener("MSFullscreenChange", handleFullscreenChange)
+    
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange)
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange)
+      document.removeEventListener("mozfullscreenchange", handleFullscreenChange)
+      document.removeEventListener("MSFullscreenChange", handleFullscreenChange)
+    }
   }, [])
 
   // Format time helper
@@ -351,14 +391,14 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Simplified Controls */}
+      {/* Mobile-Responsive Controls */}
       <div
-        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 transition-opacity duration-300 ${
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 sm:p-4 transition-opacity duration-300 ${
           showControls ? "opacity-100" : "opacity-0"
         }`}
       >
-        {/* Simple Progress Bar */}
-        <div className="mb-3">
+        {/* Mobile-Optimized Progress Bar */}
+        <div className="mb-2 sm:mb-3">
           <Slider
             value={[duration ? (currentTime / duration) * 100 : 0]}
             onValueChange={handleSeek}
@@ -368,20 +408,31 @@ export function VideoPlayer({
           />
         </div>
 
-        {/* Minimal Control Buttons */}
+        {/* Mobile-Responsive Control Buttons */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm" onClick={togglePlay} className="text-white hover:bg-white/20 p-2">
-              {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={togglePlay} 
+              className="text-white hover:bg-white/20 p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px]"
+            >
+              {isPlaying ? <Pause className="w-5 h-5 sm:w-6 sm:h-6" /> : <Play className="w-5 h-5 sm:w-6 sm:h-6" />}
             </Button>
 
-            <div className="text-white text-sm">
-              {formatTime(currentTime)} / {formatTime(duration)}
+            <div className="text-white text-xs sm:text-sm">
+              <span className="hidden sm:inline">{formatTime(currentTime)} / {formatTime(duration)}</span>
+              <span className="sm:hidden">{formatTime(currentTime)}</span>
             </div>
           </div>
 
-          <Button variant="ghost" size="sm" onClick={toggleFullscreen} className="text-white hover:bg-white/20 p-2">
-            {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={toggleFullscreen} 
+            className="text-white hover:bg-white/20 p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px]"
+          >
+            {isFullscreen ? <Minimize className="w-4 h-4 sm:w-5 sm:h-5" /> : <Maximize className="w-4 h-4 sm:w-5 sm:h-5" />}
           </Button>
         </div>
       </div>
