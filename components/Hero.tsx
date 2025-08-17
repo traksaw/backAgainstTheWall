@@ -51,7 +51,7 @@ export default function Hero({
         <div className="block md:hidden">
           <FadeIn duration={1200} delay={200}>
             {/* Option 1: Use aspect ratio instead of fixed height */}
-            <div className="relative w-full aspect-[3/4] max-h-[70vh]">
+            <div className="relative w-full aspect-[3/4] max-h-[78vh]">
               <Image
                 src="/assets/mobile-movie-poster.png"
                 alt="Back Against the Wall Poster"
