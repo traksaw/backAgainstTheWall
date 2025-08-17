@@ -9,7 +9,7 @@ import { useQuizLogic } from "@/hooks/useQuizLogic"
 import { useQuiz } from "@/hooks/useQuiz"
 import type { QuizAnswer } from "@/types/quiz"
 import { useEffect, useMemo, useState } from "react"
-import { toast } from "@/hooks/use-toast"
+// Removed micro-toast for a more minimal flow
 
 interface QuizModalProps {
   open: boolean
@@ -75,12 +75,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
       ? "Answer selected. Finishing quiz."
       : `Answer selected. Moving to question ${currentQuestion + 2} of ${totalQuestions}.`)
 
-    // Micro-toast confirmation (auto-dismiss)
-    const t = toast({
-      title: "Saved",
-      description: isLast ? "Finishing quiz…" : `Next: Q${currentQuestion + 2}/${totalQuestions}`,
-    })
-    setTimeout(() => t.dismiss(), 900)
+    // No visual toast to keep interaction seamless/minimal
 
     // Advance immediately (no extra animation/delay)
     const isComplete = handleQuizAnswer(answer)
@@ -174,7 +169,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
                     variant="outline"
                     onClick={(event) => handleAnswerClick(option, event)}
                     disabled={quizLoading}
-                    className="w-full text-left justify-start p-4 sm:p-6 h-auto border-gray-300 md:hover:border-[#B95D38] md:hover:bg-[#B95D38]/10 active:bg-transparent active:border-gray-300 transition-none rounded-lg text-wrap min-h-[56px] sm:min-h-[auto] focus:outline-none focus:ring-0 focus-visible:outline-none select-none touch-manipulation"
+                    className="w-full text-left justify-start p-4 sm:p-6 h-auto border-gray-300 hover:border-gray-300 hover:bg-transparent active:bg-transparent active:border-gray-300 transition-none rounded-lg text-wrap min-h-[56px] sm:min-h-[auto] focus:outline-none focus:ring-0 focus-visible:outline-none select-none touch-manipulation"
                   >
                     <span className="text-sm sm:text-base text-gray-700 leading-relaxed">{option.text}</span>
                   </Button>
