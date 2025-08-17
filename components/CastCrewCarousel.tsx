@@ -40,6 +40,7 @@ export default function CastCrewCarousel({ castMembers = [] }: CastCrewCarouselP
   const [isVisible, setIsVisible] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const tickingRef = useRef(false);
 
   // Filter cast and crew
   const cast = castMembers.filter(person =>
@@ -74,34 +75,60 @@ export default function CastCrewCarousel({ castMembers = [] }: CastCrewCarouselP
     return () => observer.disconnect();
   }, []);
 
-  // Handle scroll to update active dot
+  // Calculate active index by nearest card center to viewport center
+  const updateActiveIndex = () => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+    const itemsContainer = scroller.firstElementChild as HTMLElement | null; // flex wrapper
+    if (!itemsContainer) return;
+    const children = Array.from(itemsContainer.children) as HTMLElement[];
+    if (children.length === 0) return;
+
+    const viewportCenter = scroller.scrollLeft + scroller.clientWidth / 2;
+    let nearestIdx = 0;
+    let nearestDist = Infinity;
+    children.forEach((el, idx) => {
+      const center = el.offsetLeft + el.offsetWidth / 2;
+      const dist = Math.abs(center - viewportCenter);
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        nearestIdx = idx;
+      }
+    });
+    setActiveIndex(nearestIdx);
+  };
+
+  // rAF-throttled onScroll handler (more reliable on iOS)
   const handleScroll = () => {
-    if (scrollRef.current) {
-      const scrollLeft = scrollRef.current.scrollLeft;
-      const cardWidth = scrollRef.current.clientWidth * 0.75;
-      const newIndex = Math.round(scrollLeft / cardWidth);
-      setActiveIndex(Math.min(newIndex, allPeople.length - 1));
-    }
+    if (tickingRef.current) return;
+    tickingRef.current = true;
+    requestAnimationFrame(() => {
+      updateActiveIndex();
+      tickingRef.current = false;
+    });
   };
 
-  // Scroll to specific card with smooth animation
+  // Scroll to specific card using its offset and update index immediately
   const scrollToCard = (index: number) => {
-    if (scrollRef.current) {
-      const cardWidth = scrollRef.current.clientWidth * 0.75;
-      scrollRef.current.scrollTo({
-        left: cardWidth * index,
-        behavior: 'smooth'
-      });
-    }
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+    const itemsContainer = scroller.firstElementChild as HTMLElement | null;
+    if (!itemsContainer) return;
+    const target = itemsContainer.children.item(index) as HTMLElement | null;
+    if (!target) return;
+    setActiveIndex(index);
+    scroller.scrollTo({ left: target.offsetLeft, behavior: 'smooth' });
   };
 
+  // Initialize on mount and when list length changes
   useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll);
-      return () => scrollContainer.removeEventListener('scroll', handleScroll);
-    }
-  }, []);
+    updateActiveIndex();
+    const onResize = () => updateActiveIndex();
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+    };
+  }, [allPeople.length]);
 
   // Show loading skeletons if no data yet
   if (!castMembers || castMembers.length === 0) {
@@ -169,6 +196,7 @@ export default function CastCrewCarousel({ castMembers = [] }: CastCrewCarouselP
         <div 
           ref={scrollRef}
           className="overflow-x-auto scrollbar-hide -mx-6 px-6 scroll-smooth"
+          onScroll={handleScroll}
         >
           <div className="flex gap-4 snap-x snap-mandatory">
             {allPeople.map((person, idx) => (
