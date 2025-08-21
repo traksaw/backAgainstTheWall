@@ -72,7 +72,7 @@ export const archetypeResults: Record<Archetype, ArchetypeResult> = {
     blindSpots: ["May lack conviction", "Could miss exceptional opportunities", "Sometimes too middle-ground"],
     reflectionQuestion: "How do you decide when to be more aggressive or more conservative?",
     filmCharacterTieIn:
-      "Like Elena, you seek balance between security and growth. Discover what happens when balance isn't enough.",
+      "Like Samara, you seek balance between security and growth. Discover what happens when balance isn't enough.",
     exploration: {
       description:
         "As a Realist, you have the advantage of seeing both sides of financial decisions. Your balanced approach serves you well, but occasionally taking a stronger stance can accelerate your progress toward financial goals.",
