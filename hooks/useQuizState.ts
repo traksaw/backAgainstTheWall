@@ -131,15 +131,28 @@ export function useQuizState() {
         
         // Keep current and answered questions, reshuffle remaining ones
         const answeredQuestions = shuffledQuestions.slice(0, currentQuestion + 1);
-        const remainingQuestions = quizQuestions.filter((_, index) => 
-          index > currentQuestion && index < quizQuestions.length
-        );
+        // Use the remaining portion of the CURRENT shuffled list to avoid duplicates/skips
+        const remainingQuestions = shuffledQuestions.slice(currentQuestion + 1);
         
         // Apply enhanced shuffling with current pattern data
-        const antiPatternQuestions = createAdvancedRandomizedQuestions(
+        let antiPatternQuestions = createAdvancedRandomizedQuestions(
           remainingQuestions, 
           newClickPattern
         );
+        
+        // SAFEGUARD: avoid immediate repeat of the last answered question
+        const lastAnswered = answeredQuestions[answeredQuestions.length - 1];
+        if (
+          lastAnswered &&
+          antiPatternQuestions.length > 0 &&
+          (antiPatternQuestions[0]?.id === lastAnswered?.id ||
+            antiPatternQuestions[0]?.text === lastAnswered?.text)
+        ) {
+          antiPatternQuestions = [
+            ...antiPatternQuestions.slice(1),
+            antiPatternQuestions[0],
+          ];
+        }
         
         // Merge answered + anti-pattern questions
         const updatedQuestions = [...answeredQuestions, ...antiPatternQuestions];
