@@ -25,6 +25,17 @@ function mapArchetypeDocToResult(doc: any): ArchetypeResult | null {
 
 function mapQuestionDocToQuestion(doc: any): QuizQuestion | null {
   if (!doc?.questionId || !doc?.text || !Array.isArray(doc?.options)) return null
+  // Build a lookup of static points by questionId and archetype
+  const staticByArchetype: Record<string, number> = (() => {
+    const q = staticQuizQuestions.find((sq) => sq.id === doc.questionId)
+    const map: Record<string, number> = {}
+    if (q) {
+      for (const opt of q.options) {
+        map[opt.archetype] = opt.points
+      }
+    }
+    return map
+  })()
   return {
     id: doc.questionId,
     text: doc.text,
@@ -32,7 +43,8 @@ function mapQuestionDocToQuestion(doc: any): QuizQuestion | null {
       id: idx + 1,
       text: opt.text,
       archetype: opt.archetype,
-      points: typeof opt.points === 'number' ? opt.points : 3,
+      // Derive points from our internal static config for consistency
+      points: typeof staticByArchetype[opt.archetype] === 'number' ? staticByArchetype[opt.archetype] : 3,
       question: doc.text,
     })),
   }

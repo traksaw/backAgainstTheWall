@@ -4,6 +4,13 @@ const quizQuestion = {
   type: 'document',
   fields: [
     {
+      name: 'published',
+      title: 'Published',
+      type: 'boolean',
+      description: 'Only published questions will appear in the app',
+      initialValue: true
+    },
+    {
       name: 'questionId',
       title: 'Question ID',
       type: 'number',
@@ -16,6 +23,12 @@ const quizQuestion = {
       type: 'text',
       rows: 2,
       validation: (Rule: any) => Rule.required()
+    },
+    {
+      name: 'helpText',
+      title: 'Helper Text (optional)',
+      type: 'string',
+      description: 'Optional guidance shown under the question'
     },
     {
       name: 'options',
@@ -40,7 +53,15 @@ const quizQuestion = {
               },
               validation: (Rule: any) => Rule.required()
             },
-            { name: 'points', title: 'Points', type: 'number', validation: (Rule: any) => Rule.required().min(1).max(5) },
+            { 
+              name: 'points', 
+              title: 'Points', 
+              type: 'number', 
+              description: 'Locked: Points are set by the product logic',
+              hidden: () => true,
+              readOnly: true,
+              initialValue: 3
+            },
           ]
         }
       ],
