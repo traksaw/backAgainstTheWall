@@ -5,33 +5,33 @@ import { validateQuizBalance } from '@/lib/quiz/utils';
 export const quizQuestions: QuizQuestion[] = [
   {
     id: 1,
-    text: "How do you feel about taking financial risks?",
+    text: "When you get paid, what do you do first?",
     options: [
       {
         id: 1,
-        text: "I prefer to avoid them entirely",
-        question: "How do you feel about taking financial risks?",
+        text: "Panic about bills, then avoid checking your account",
+        question: "When you get paid, what do you do first?",
         archetype: "Avoider",
         points: 4
       },
       {
         id: 2,
-        text: "The bigger the risk, the bigger the reward",
-        question: "How do you feel about taking financial risks?",
+        text: "Make a wishlist of things to buy",
+        question: "When you get paid, what do you do first?",
         archetype: "Gambler",
         points: 4
       },
       {
         id: 3,
-        text: "Calculated risks are necessary for growth",
-        question: "How do you feel about taking financial risks?",
+        text: "Set aside money for rent and essentials, then see what’s left",
+        question: "When you get paid, what do you do first?",
         archetype: "Realist",
         points: 4
       },
       {
         id: 4,
-        text: "I analyze every detail before making a decision",
-        question: "How do you feel about taking financial risks?",
+        text: "Allocate money into savings/investments automatically",
+        question: "When you get paid, what do you do first?",
         archetype: "Architect",
         points: 4
       }
@@ -39,33 +39,33 @@ export const quizQuestions: QuizQuestion[] = [
   },
   {
     id: 2,
-    text: "When you have extra money, what's your first instinct?",
+    text: "How do you decide if you can “afford” something?",
     options: [
       {
         id: 1,
-        text: "Put it in a high-yield savings account immediately",
-        question: "When you have extra money, what's your first instinct?",
+        text: "If I don’t look, I can’t feel guilty",
+        question: "How do you decide if you can “afford” something?",
         archetype: "Avoider",
         points: 4
       },
       {
         id: 2,
-        text: "Look for the next hot investment opportunity",
-        question: "When you have extra money, what's your first instinct?",
+        text: "If I want it, I’ll figure it out later",
+        question: "How do you decide if you can “afford” something?",
         archetype: "Gambler",
         points: 4
       },
       {
         id: 3,
-        text: "Split it between savings and conservative investments",
-        question: "When you have extra money, what's your first instinct?",
+        text: "If I can pay for it and still meet my other needs",
+        question: "How do you decide if you can “afford” something?",
         archetype: "Realist",
         points: 4
       },
       {
         id: 4,
-        text: "Research and create an optimal allocation strategy",
-        question: "When you have extra money, what's your first instinct?",
+        text: "If it fits into my budgeted category this month",
+        question: "How do you decide if you can “afford” something?",
         archetype: "Architect",
         points: 4
       }
@@ -73,101 +73,101 @@ export const quizQuestions: QuizQuestion[] = [
   },
   {
     id: 3,
-    text: "How do you feel about market volatility?",
+    text: "What’s your biggest financial fear?",
     options: [
       {
         id: 1,
-        text: "It terrifies me - I prefer guaranteed returns",
-        question: "How do you feel about market volatility?",
+        text: "Opening my bank app",
+        question: "What’s your biggest financial fear?",
         archetype: "Avoider",
-        points: 5
+        points: 4
       },
       {
         id: 2,
-        text: "It's exciting - volatility creates opportunities",
-        question: "How do you feel about market volatility?",
+        text: "Having to say “no” to fun",
+        question: "What’s your biggest financial fear?",
         archetype: "Gambler",
-        points: 5
+        points: 4
       },
       {
         id: 3,
-        text: "It's concerning but manageable with diversification",
-        question: "How do you feel about market volatility?",
+        text: "Getting stuck in debt I can’t get out of",
+        question: "What’s your biggest financial fear?",
         archetype: "Realist",
         points: 4
       },
       {
         id: 4,
-        text: "It's expected - I plan for ups and downs",
-        question: "How do you feel about market volatility?",
+        text: "Missing an opportunity because I wasn’t prepared",
+        question: "What’s your biggest financial fear?",
         archetype: "Architect",
-        points: 5
+        points: 4
       }
     ]
   },
   {
     id: 4,
-    text: "Your investment loses 20% in a month. What do you do?",
+    text: "What’s your relationship with credit cards?",
     options: [
       {
         id: 1,
-        text: "Panic sell everything and put money in CDs",
-        question: "Your investment loses 20% in a month. What do you do?",
+        text: "I maxed one out and stopped looking at it",
+        question: "What’s your relationship with credit cards?",
         archetype: "Avoider",
         points: 4
       },
       {
         id: 2,
-        text: "Double down - it's a buying opportunity!",
-        question: "Your investment loses 20% in a month. What do you do?",
+        text: "It’s how I fund my lifestyle for now",
+        question: "What’s your relationship with credit cards?",
         archetype: "Gambler",
         points: 4
       },
       {
         id: 3,
-        text: "Review my portfolio and make modest adjustments",
-        question: "Your investment loses 20% in a month. What do you do?",
+        text: "I use it for emergencies and small purchases only",
+        question: "What’s your relationship with credit cards?",
         archetype: "Realist",
         points: 4
       },
       {
         id: 4,
-        text: "Stick to my long-term strategy, this was expected",
-        question: "Your investment loses 20% in a month. What do you do?",
+        text: "I use it for points and pay in full every month",
+        question: "What’s your relationship with credit cards?",
         archetype: "Architect",
-        points: 5
+        points: 4
       }
     ]
   },
   {
     id: 5,
-    text: "How much of your portfolio would you put in stocks?",
+    text: "You have to pay $150 for something unexpected this week. What happens?",
     options: [
       {
         id: 1,
-        text: "0-20% - Stocks are too risky for me",
-        question: "How much of your portfolio would you put in stocks?",
+        text: "I freak out, maybe delay rent or skip groceries",
+        question: "You have to pay $150 for something unexpected this week. What happens?",
         archetype: "Avoider",
         points: 4
       },
       {
         id: 2,
-        text: "100%+ - I use margin to amplify gains",
-        question: "How much of your portfolio would you put in stocks?",
+        text: "I swipe and worry later",
+        question: "You have to pay $150 for something unexpected this week. What happens?",
         archetype: "Gambler",
-        points: 5
+        points: 4
       },
       {
         id: 3,
-        text: "60-80% - Based on my age and risk tolerance",
-        question: "How much of your portfolio would you put in stocks?",
+        text: "I shift around my priorities, cancel plans if needed",
+        question: "You have to pay $150 for something unexpected this week. What happens?",
         archetype: "Realist",
         points: 4
       },
       {
         id: 4,
-        text: "80-100% - Historical returns speak for themselves",
-        question: "How much of your portfolio would you put in stocks?",
+        text: "I already had an “unexpected” budget category for this",
+        question: "You have to pay $150 for something unexpected this week. What happens?",
         archetype: "Architect",
         points: 4
       }
@@ -175,33 +175,33 @@ export const quizQuestions: QuizQuestion[] = [
   },
   {
     id: 6,
-    text: "What's your biggest financial fear?",
+    text: "How do you feel when friends talk about money?",
     options: [
       {
         id: 1,
-        text: "Losing money I've already saved",
-        question: "What's your biggest financial fear?",
+        text: "Embarrassed — I feel behind",
+        question: "How do you feel when friends talk about money?",
         archetype: "Avoider",
-        points: 5
+        points: 4
       },
       {
         id: 2,
-        text: "Missing out on the next big opportunity",
-        question: "What's your biggest financial fear?",
+        text: "Defensive — I say “YOLO” and change the subject",
+        question: "How do you feel when friends talk about money?",
         archetype: "Gambler",
         points: 4
       },
       {
         id: 3,
-        text: "Not having enough for retirement",
-        question: "What's your biggest financial fear?",
+        text: "Curious — I like hearing how others manage",
+        question: "How do you feel when friends talk about money?",
         archetype: "Realist",
         points: 4
       },
       {
         id: 4,
-        text: "Not optimizing my investment strategy",
-        question: "What's your biggest financial fear?",
+        text: "Confident — I often give tips",
+        question: "How do you feel when friends talk about money?",
         archetype: "Architect",
         points: 4
       }
@@ -209,101 +209,101 @@ export const quizQuestions: QuizQuestion[] = [
   },
   {
     id: 7,
-    text: "How do you research investments?",
+    text: "What’s your strategy around student loans or debt?",
     options: [
       {
         id: 1,
-        text: "I stick to bank recommendations and CDs",
-        question: "How do you research investments?",
+        text: "Hope it sorts itself out",
+        question: "What’s your strategy around student loans or debt?",
         archetype: "Avoider",
-        points: 3
+        points: 4
       },
       {
         id: 2,
-        text: "I follow hot tips and social media buzz",
-        question: "How do you research investments?",
+        text: "I don’t worry unless I get a collections call",
+        question: "What’s your strategy around student loans or debt?",
         archetype: "Gambler",
-        points: 3
+        points: 4
       },
       {
         id: 3,
-        text: "I research but also trust professional advisors",
-        question: "How do you research investments?",
+        text: "I make payments and track how long I have",
+        question: "What’s your strategy around student loans or debt?",
         archetype: "Realist",
         points: 4
       },
       {
         id: 4,
-        text: "I read financial statements and analyze fundamentals",
-        question: "How do you research investments?",
+        text: "I have a payoff timeline and know the interest rates",
+        question: "What’s your strategy around student loans or debt?",
         archetype: "Architect",
-        points: 5
+        points: 4
       }
     ]
   },
   {
     id: 8,
-    text: "What describes your ideal investment timeline?",
+    text: "Your checking account hits $50. What do you do?",
     options: [
       {
         id: 1,
-        text: "I want access to my money anytime without penalty",
-        question: "What describes your ideal investment timeline?",
+        text: "Ignore it and wait until payday",
+        question: "Your checking account hits $50. What do you do?",
         archetype: "Avoider",
         points: 4
       },
       {
         id: 2,
-        text: "I'm looking for quick wins in weeks or months",
-        question: "What describes your ideal investment timeline?",
+        text: "Still go out that night — I’ll figure it out",
+        question: "Your checking account hits $50. What do you do?",
         archetype: "Gambler",
         points: 4
       },
       {
         id: 3,
-        text: "I balance short-term needs with long-term goals",
-        question: "What describes your ideal investment timeline?",
+        text: "Delay plans and tighten spending",
+        question: "Your checking account hits $50. What do you do?",
         archetype: "Realist",
         points: 4
       },
       {
         id: 4,
-        text: "I'm building wealth over 10-30 years methodically",
-        question: "What describes your ideal investment timeline?",
+        text: "Move money from savings if needed, with a note to rebalance",
+        question: "Your checking account hits $50. What do you do?",
         archetype: "Architect",
-        points: 5
+        points: 4
       }
     ]
   },
   {
     id: 9,
-    text: "How do you handle financial stress?",
+    text: "What’s your approach to rent and bills with roommates/partners?",
     options: [
       {
         id: 1,
-        text: "I avoid investments that could cause stress",
-        question: "How do you handle financial stress?",
+        text: "I sometimes forget and scramble to pay",
+        question: "What’s your approach to rent and bills with roommates/partners?",
         archetype: "Avoider",
         points: 4
       },
       {
         id: 2,
-        text: "Stress means opportunity - I lean into it",
-        question: "How do you handle financial stress?",
+        text: "They usually remind me",
+        question: "What’s your approach to rent and bills with roommates/partners?",
         archetype: "Gambler",
-        points: 3
+        points: 4
       },
       {
         id: 3,
-        text: "I accept some stress as part of building wealth",
-        question: "How do you handle financial stress?",
+        text: "I track due dates and communicate openly",
+        question: "What’s your approach to rent and bills with roommates/partners?",
         archetype: "Realist",
         points: 4
       },
       {
         id: 4,
-        text: "I prepare for stress with detailed contingency plans",
-        question: "How do you handle financial stress?",
+        text: "I build systems (split apps, auto-reminders) so it’s seamless",
+        question: "What’s your approach to rent and bills with roommates/partners?",
         archetype: "Architect",
         points: 4
       }
@@ -311,33 +311,33 @@ export const quizQuestions: QuizQuestion[] = [
   },
   {
     id: 10,
-    text: "What's your view on debt for investments?",
+    text: "When you imagine your future, financially, you:",
     options: [
       {
         id: 1,
-        text: "Never! Debt is dangerous and should be avoided",
-        question: "What's your view on debt for investments?",
+        text: "Can’t think that far ahead",
+        question: "When you imagine your future, financially, you:",
         archetype: "Avoider",
-        points: 5
+        points: 4
       },
       {
         id: 2,
-        text: "Leverage is a tool to amplify returns",
-        question: "What's your view on debt for investments?",
+        text: "Think it’ll work out — somehow",
+        question: "When you imagine your future, financially, you:",
         archetype: "Gambler",
         points: 4
       },
       {
         id: 3,
-        text: "Some debt is okay, like a reasonable mortgage",
-        question: "What's your view on debt for investments?",
+        text: "Want stability and freedom",
+        question: "When you imagine your future, financially, you:",
         archetype: "Realist",
         points: 4
       },
       {
         id: 4,
-        text: "Strategic debt can optimize tax-adjusted returns",
-        question: "What's your view on debt for investments?",
+        text: "Envision building wealth and options",
+        question: "When you imagine your future, financially, you:",
         archetype: "Architect",
         points: 4
       }
@@ -345,33 +345,33 @@ export const quizQuestions: QuizQuestion[] = [
   },
   {
     id: 11,
-    text: "When friends ask for investment advice, you:",
+    text: "If you had to survive for one month on $100, what’s your plan?",
     options: [
       {
         id: 1,
-        text: "Tell them to stick with savings accounts and CDs",
-        question: "When friends ask for investment advice, you:",
+        text: "Freeze up and hope someone helps",
+        question: "If you had to survive for one month on $100, what’s your plan?",
         archetype: "Avoider",
         points: 4
       },
       {
         id: 2,
-        text: "Share the latest hot stock tip you heard about",
-        question: "When friends ask for investment advice, you:",
+        text: "Spend it fast and worry later",
+        question: "If you had to survive for one month on $100, what’s your plan?",
         archetype: "Gambler",
         points: 4
       },
       {
         id: 3,
-        text: "Suggest they talk to a financial advisor for personalized advice",
-        question: "When friends ask for investment advice, you:",
+        text: "Plan meals, cut expenses, and budget tightly",
+        question: "If you had to survive for one month on $100, what’s your plan?",
         archetype: "Realist",
         points: 4
       },
       {
         id: 4,
-        text: "Recommend they start with index funds and educate themselves",
-        question: "When friends ask for investment advice, you:",
+        text: "Source side gigs, negotiate, and make it stretch",
+        question: "If you had to survive for one month on $100, what’s your plan?",
         archetype: "Architect",
         points: 4
       }
@@ -379,67 +379,67 @@ export const quizQuestions: QuizQuestion[] = [
   },
   {
     id: 12,
-    text: "Your approach to emergency funds is:",
+    text: "How do you feel when you compare your finances to others?",
     options: [
       {
         id: 1,
-        text: "Keep 12+ months of expenses in high-yield savings",
-        question: "Your approach to emergency funds is:",
+        text: "Ashamed and hopeless",
+        question: "How do you feel when you compare your finances to others?",
         archetype: "Avoider",
         points: 4
       },
       {
         id: 2,
-        text: "Emergency funds are opportunity cost - invest everything",
-        question: "Your approach to emergency funds is:",
+        text: "Motivated to fake it ‘til I make it",
+        question: "How do you feel when you compare your finances to others?",
         archetype: "Gambler",
         points: 4
       },
       {
         id: 3,
-        text: "3-6 months expenses, depending on job security",
-        question: "Your approach to emergency funds is:",
+        text: "Inspired to get better",
+        question: "How do you feel when you compare your finances to others?",
         archetype: "Realist",
         points: 4
       },
       {
         id: 4,
-        text: "Precisely 6 months expenses, optimally allocated",
-        question: "Your approach to emergency funds is:",
+        text: "Proud of my progress and staying in my lane",
+        question: "How do you feel when you compare your finances to others?",
         archetype: "Architect",
-        points: 5
+        points: 4
       }
     ]
   },
   {
     id: 13,
-    text: "How do you feel about cryptocurrency?",
+    text: "You get a job offer. What matters most?",
     options: [
       {
         id: 1,
-        text: "Too volatile and unregulated - I'll pass",
-        question: "How do you feel about cryptocurrency?",
+        text: "Just having income",
+        question: "You get a job offer. What matters most?",
         archetype: "Avoider",
-        points: 5
+        points: 4
       },
       {
         id: 2,
-        text: "The future of money - I'm all in!",
-        question: "How do you feel about cryptocurrency?",
+        text: "The salary headline",
+        question: "You get a job offer. What matters most?",
         archetype: "Gambler",
-        points: 5
+        points: 4
       },
       {
         id: 3,
-        text: "I'll wait for more regulation and stability",
-        question: "How do you feel about cryptocurrency?",
+        text: "The full benefits and job security",
+        question: "You get a job offer. What matters most?",
         archetype: "Realist",
         points: 4
       },
       {
         id: 4,
-        text: "Interesting technology, deserves small allocation",
-        question: "How do you feel about cryptocurrency?",
+        text: "Growth potential, healthcare, and retirement match",
+        question: "You get a job offer. What matters most?",
         archetype: "Architect",
         points: 4
       }
@@ -447,69 +447,69 @@ export const quizQuestions: QuizQuestion[] = [
   },
   {
     id: 14,
-    text: "Your reaction to a 'guaranteed' 15% return investment:",
+    text: "Do you know how much money you spent last month?",
     options: [
       {
         id: 1,
-        text: "If it sounds too good to be true, it probably is",
-        question: "Your reaction to a 'guaranteed' 15% return investment:",
+        text: "No, I don’t want to know",
+        question: "Do you know how much money you spent last month?",
         archetype: "Avoider",
         points: 4
       },
       {
         id: 2,
-        text: "Sign me up! High returns are worth the risk",
-        question: "Your reaction to a 'guaranteed' 15% return investment:",
+        text: "Rough estimate, but I don’t track",
+        question: "Do you know how much money you spent last month?",
         archetype: "Gambler",
         points: 4
       },
       {
         id: 3,
-        text: "I'd be skeptical but investigate with small amounts",
-        question: "Your reaction to a 'guaranteed' 15% return investment:",
+        text: "Yes, I check in monthly",
+        question: "Do you know how much money you spent last month?",
         archetype: "Realist",
         points: 4
       },
       {
         id: 4,
-        text: "I'd research extensively and understand all risks first",
-        question: "Your reaction to a 'guaranteed' 15% return investment:",
+        text: "Yes, and I have categories for each type of expense",
+        question: "Do you know how much money you spent last month?",
         archetype: "Architect",
-        points: 5
+        points: 4
       }
     ]
   },
   {
     id: 15,
-    text: "What motivates your financial decisions most?",
+    text: "Which of these quotes speaks to you the most?",
     options: [
       {
         id: 1,
-        text: "Security and peace of mind above all else",
-        question: "What motivates your financial decisions most?",
+        text: "“If I ignore it, maybe it’ll go away.”",
+        question: "Which of these quotes speaks to you the most?",
         archetype: "Avoider",
-        points: 5
+        points: 4
       },
       {
         id: 2,
-        text: "The thrill of potentially huge gains",
-        question: "What motivates your financial decisions most?",
+        text: "“Money comes, money goes. Life’s short.”",
+        question: "Which of these quotes speaks to you the most?",
         archetype: "Gambler",
-        points: 5
+        points: 4
       },
       {
         id: 3,
-        text: "Balancing growth with manageable risk",
-        question: "What motivates your financial decisions most?",
+        text: "“You have to spend wisely to live freely.”",
+        question: "Which of these quotes speaks to you the most?",
         archetype: "Realist",
-        points: 5
+        points: 4
       },
       {
         id: 4,
-        text: "Maximizing long-term wealth through optimization",
-        question: "What motivates your financial decisions most?",
+        text: "“Build now so you don’t scramble later.”",
+        question: "Which of these quotes speaks to you the most?",
         archetype: "Architect",
-        points: 5
+        points: 4
       }
     ]
   }
