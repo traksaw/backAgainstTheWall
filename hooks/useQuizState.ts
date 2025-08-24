@@ -94,7 +94,6 @@ export function useQuizState() {
     // Force immediate re-shuffle with enhanced algorithm
     setTimeout(() => {
       const newShuffledQuestions = createAdvancedRandomizedQuestions(quizQuestions, []);
-      console.log('🎯 useQuizState: Hard reset - enhanced questions generated:', newShuffledQuestions.length);
       setShuffledQuestions(newShuffledQuestions);
     }, 0);
   };

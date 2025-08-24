@@ -16,9 +16,11 @@ interface QuizModalProps {
   onOpenChange: (open: boolean) => void
   onQuizComplete: (quizData: any) => void
   profile: any
+  // When true, the quiz will hard reset upon opening (but not auto-start), so welcome screen stays
+  autoReset?: boolean
 }
 
-export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizModalProps) {
+export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoReset = false }: QuizModalProps) {
   const quizState = useQuizState()
   const quizLogic = useQuizLogic()
   const { loading: quizLoading } = useQuiz()
@@ -29,6 +31,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
     showWelcome,
     answers,
     startQuiz,
+    hardReset,
     handleQuizAnswer,
     goBackOne,
   } = quizState
@@ -41,6 +44,18 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
       active.blur()
     }
   }, [currentQuestion])
+
+  // Auto-reset logic: when modal transitions closed -> open and autoReset is true,
+  // perform a hard reset so state is clean and welcome screen is shown.
+  const lastOpenRef = useMemo(() => ({ current: false }), []) as { current: boolean }
+  useEffect(() => {
+    const wasOpen = lastOpenRef.current
+    if (!wasOpen && open && autoReset) {
+      // Closed -> Open with autoReset enabled
+      hardReset()
+    }
+    lastOpenRef.current = open
+  }, [open, autoReset, hardReset, lastOpenRef])
 
   // Option B: progress and live announcements
   const [liveMessage, setLiveMessage] = useState("")
@@ -83,7 +98,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile }: QuizM
 
     if (isComplete) {
       try {
-        await onQuizComplete(finalAnswers)
+        onQuizComplete(finalAnswers)
       } catch (error) {
         console.error('=== QUIZ MODAL: COMPLETION ERROR ===')
         console.error('Error details:', error)
