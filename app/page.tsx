@@ -37,6 +37,7 @@ function FilmWebsiteContent() {
   const [supporters, setSupporters] = useState<Supporter[]>([])
   const [supportersLoading, setSupportersLoading] = useState(true)
   const [quizSession, setQuizSession] = useState(0)
+  const [autoResetQuiz, setAutoResetQuiz] = useState(false)
 
   // Replace 15+ useState calls with clean hooks
   const modals = useModalState()
@@ -171,6 +172,8 @@ function FilmWebsiteContent() {
     // Small delay then open quiz
     setTimeout(() => {
       console.log('🎯 Opening quiz after reset');
+      // Enable auto-reset so the quiz state is fresh but welcome screen remains
+      setAutoResetQuiz(true)
       modals.openQuiz()
     }, 150)
   }
@@ -309,11 +312,14 @@ function FilmWebsiteContent() {
             console.log('🎯 Quiz modal closing - resetting state');
             // Ensure next open is fresh as well
             setQuizSession((s) => s + 1)
+            // Disable auto-reset after closing
+            setAutoResetQuiz(false)
           }
           modals.setShowQuiz(open)
         }}
         onQuizComplete={handleQuizComplete}
         profile={profile}
+        autoReset={autoResetQuiz}
       />
 
       <ResultsModal

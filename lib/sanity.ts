@@ -38,7 +38,7 @@ export async function getCastAndCrew() {
       }
     `, {}, {
       next: { 
-        revalidate: 60, // Cache for 60 seconds
+        revalidate: 10, // Cache for 60 seconds
         tags: ['cast-and-crew'] // Tag for webhook revalidation
       }
     })
@@ -69,7 +69,7 @@ export async function getSupporters() {
       }
     `, {}, {
       next: { 
-        revalidate: 60, // Cache for 60 seconds
+        revalidate: 10, // Cache for 60 seconds
         tags: ['supporters'] // Tag for webhook revalidation
       }
     })

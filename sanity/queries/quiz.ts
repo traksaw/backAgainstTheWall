@@ -1,7 +1,7 @@
 import { groq } from 'next-sanity'
 
 export const ARCHETYPES_QUERY = groq`
-  *[_type == "archetype"] | order(order asc) {
+  *[_type == "archetype" && (published == true || !defined(published))] | order(order asc) {
     _id,
     key,
     summary,
@@ -19,14 +19,14 @@ export const ARCHETYPES_QUERY = groq`
 `
 
 export const QUIZ_QUESTIONS_QUERY = groq`
-  *[_type == "quizQuestion"] | order(questionId asc) {
+  *[_type == "quizQuestion" && (published == true || !defined(published))] | order(questionId asc) {
     _id,
     questionId,
     text,
+    helpText,
     options[]{
       text,
-      archetype,
-      points
+      archetype
     }
   }
 `
