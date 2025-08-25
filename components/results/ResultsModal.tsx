@@ -8,6 +8,7 @@ import { QuizResult, Archetype } from "@/types/quiz"
 import { useState, useRef, useEffect } from "react"
 import { FadeIn, FadeInUp, FadeInScale } from "@/components/ui/fade-in"
 import { archetypeResults } from "@/lib/quiz/archetypes"
+import type { ArchetypeResult } from "@/types/quiz"
 
 interface ResultsModalProps {
   open: boolean
@@ -54,6 +55,26 @@ export function ResultsModal({
   }
 
   const [activeTab, setActiveTab] = useState<'personality' | 'recommendations'>('personality');
+  // Dynamic archetypes fetched from API; fallback to static if unavailable
+  const [archetypesMap, setArchetypesMap] = useState<Record<string, ArchetypeResult>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/quiz/content', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!cancelled && data?.archetypes) {
+          setArchetypesMap(data.archetypes as Record<string, ArchetypeResult>);
+        }
+      } catch (e) {
+        // Fallback uses static import; no state change needed
+        console.warn('⚠️ ResultsModal: using static archetypes due to fetch error', e);
+      }
+    })();
+    return () => { cancelled = true };
+  }, []);
 
   // Scroll container for reliable desktop/mobile scrolling
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -100,7 +121,7 @@ export function ResultsModal({
                   <h2 className="text-xl font-bold text-gray-800">
                     The {latestResult.archetype}
                   </h2>
-                  <p className="text-sm text-gray-600 px-2">{archetypeResults[latestResult.archetype].summary}</p>
+                  <p className="text-sm text-gray-600 px-2">{(archetypesMap[latestResult.archetype] || archetypeResults[latestResult.archetype]).summary}</p>
                 </div>
               </div>
             </FadeIn>
@@ -152,14 +173,14 @@ export function ResultsModal({
                     <div className="space-y-4">
                       <div className="text-center">
                         <h3 className="text-base font-semibold text-gray-800 mb-3">Your Profile</h3>
-                        <p className="text-sm text-gray-600 leading-relaxed">{archetypeResults[latestResult.archetype].exploration.description}</p>
+                        <p className="text-sm text-gray-600 leading-relaxed">{(archetypesMap[latestResult.archetype] || archetypeResults[latestResult.archetype]).exploration.description}</p>
                       </div>
                       
                       <div className="grid grid-cols-1 gap-4">
                         <div>
                           <h4 className="font-semibold text-green-700 mb-2 text-sm">Strengths</h4>
                           <ul className="space-y-1 text-xs text-gray-600">
-                            {archetypeResults[latestResult.archetype].strengths.map((strength, index) => (
+                            {(archetypesMap[latestResult.archetype] || archetypeResults[latestResult.archetype]).strengths.map((strength, index) => (
                               <li key={index} className="flex items-start">
                                 <span className="text-green-500 mr-2">▪</span>
                                 {strength}
@@ -171,7 +192,7 @@ export function ResultsModal({
                         <div>
                           <h4 className="font-semibold text-orange-700 mb-2 text-sm">Blind Spots</h4>
                           <ul className="space-y-1 text-xs text-gray-600">
-                            {archetypeResults[latestResult.archetype].blindSpots.map((blindSpot, index) => (
+                            {(archetypesMap[latestResult.archetype] || archetypeResults[latestResult.archetype]).blindSpots.map((blindSpot, index) => (
                               <li key={index} className="flex items-start">
                                 <span className="text-orange-500 mr-2">▪</span>
                                 {blindSpot}
@@ -183,12 +204,12 @@ export function ResultsModal({
                       
                       <div className="bg-gray-50 rounded-xl p-3">
                         <h4 className="font-semibold text-gray-800 mb-2 text-sm">Reflection Question</h4>
-                        <p className="text-xs text-gray-600 italic">{archetypeResults[latestResult.archetype].reflectionQuestion}</p>
+                        <p className="text-xs text-gray-600 italic">{(archetypesMap[latestResult.archetype] || archetypeResults[latestResult.archetype]).reflectionQuestion}</p>
                       </div>
                       
                       <div className="bg-[#B95D38]/5 rounded-xl p-3">
                         <h4 className="font-semibold text-[#B95D38] mb-2 text-sm">Film Connection</h4>
-                        <p className="text-xs text-gray-700">{archetypeResults[latestResult.archetype].filmCharacterTieIn}</p>
+                        <p className="text-xs text-gray-700">{(archetypesMap[latestResult.archetype] || archetypeResults[latestResult.archetype]).filmCharacterTieIn}</p>
                       </div>
                     </div>
                   </div>
@@ -196,7 +217,10 @@ export function ResultsModal({
               </FadeIn>
             ) : (
               <FadeInScale delay={300}>
-                <RecommendationsGrid archetype={latestResult.archetype} />
+                <RecommendationsGrid
+                  archetype={latestResult.archetype}
+                  archetypesMap={Object.keys(archetypesMap).length ? archetypesMap : archetypeResults}
+                />
               </FadeInScale>
             )}
 
@@ -387,8 +411,8 @@ function HexagonalChart({ scores, primaryArchetype }: { scores: Record<string, n
 }
 
 // Recommendations Grid Component - Finch-style cards
-function RecommendationsGrid({ archetype }: { archetype: string }) {
-  const recommendations = getRecommendations(archetype);
+function RecommendationsGrid({ archetype, archetypesMap }: { archetype: string, archetypesMap: Record<string, ArchetypeResult> }) {
+  const recommendations = getRecommendations(archetype, archetypesMap);
   
   return (
     <div className="space-y-6">
@@ -437,8 +461,8 @@ function RecommendationsGrid({ archetype }: { archetype: string }) {
   );
 }
 
-function getRecommendations(archetype: string) {
-  const archetypeData = archetypeResults[archetype as keyof typeof archetypeResults];
+function getRecommendations(archetype: string, archetypesMap: Record<string, ArchetypeResult>) {
+  const archetypeData = (archetypesMap[archetype] || archetypeResults[archetype as keyof typeof archetypeResults]) as ArchetypeResult | undefined;
   if (!archetypeData) return [];
   
   return [
