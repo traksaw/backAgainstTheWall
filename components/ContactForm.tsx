@@ -67,7 +67,7 @@ export default function ContactForm(): JSX.Element {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (!validateForm()) {
@@ -141,71 +141,102 @@ export default function ContactForm(): JSX.Element {
                                     <br />
                                 </div>
                                 {/* Form with staggered animations */}
-                                <div className="space-y-6">
+                                <form className="space-y-6" onSubmit={handleSubmit} noValidate aria-describedby="contact-form-desc">
+                                    <p id="contact-form-desc" className="sr-only">All fields marked required must be completed.</p>
                                     <FadeIn delay={400} duration={600} direction="up">
                                         <div className="grid md:grid-cols-2 gap-6">
                                             <div>
+                                                <label htmlFor="contact-name" className="block text-sm font-medium text-gray-700">
+                                                    Name <span aria-hidden="true" className="text-red-600">*</span>
+                                                </label>
                                                 <Input
-                                                    placeholder="Name"
+                                                    id="contact-name"
+                                                    placeholder="Your name"
                                                     name="name"
                                                     value={formData.name}
                                                     onChange={handleInputChange}
-                                                    className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3 transition-all duration-300 ${errors.name ? 'border-red-500' : ''}`}
+                                                    required
+                                                    aria-required="true"
+                                                    aria-invalid={Boolean(errors.name) || undefined}
+                                                    aria-describedby={errors.name ? 'name-error' : undefined}
+                                                    className={`mt-1 border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3 transition-all duration-300 ${errors.name ? 'border-red-500' : ''}`}
                                                 />
                                                 {errors.name && (
-                                                    <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                                                    <p id="name-error" role="alert" className="text-red-500 text-sm mt-1">{errors.name}</p>
                                                 )}
                                             </div>
                                             <div>
+                                                <label htmlFor="contact-email" className="block text-sm font-medium text-gray-700">
+                                                    Email <span aria-hidden="true" className="text-red-600">*</span>
+                                                </label>
                                                 <Input
+                                                    id="contact-email"
                                                     type="email"
                                                     name="email"
                                                     value={formData.email}
                                                     onChange={handleInputChange}
-                                                    placeholder="Email"
-                                                    className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3 transition-all duration-300 ${errors.email ? 'border-red-500' : ''}`}
+                                                    placeholder="you@example.com"
+                                                    required
+                                                    aria-required="true"
+                                                    aria-invalid={Boolean(errors.email) || undefined}
+                                                    aria-describedby={errors.email ? 'email-error' : undefined}
+                                                    className={`mt-1 border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3 transition-all duration-300 ${errors.email ? 'border-red-500' : ''}`}
                                                 />
                                                 {errors.email && (
-                                                    <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                                                    <p id="email-error" role="alert" className="text-red-500 text-sm mt-1">{errors.email}</p>
                                                 )}
                                             </div>
                                         </div>
                                     </FadeIn>
 
                                     <FadeIn delay={600} duration={600} direction="up">
+                                        <label htmlFor="contact-org" className="block text-sm font-medium text-gray-700">
+                                            Organization <span className="text-gray-500" aria-hidden="true">(optional)</span>
+                                        </label>
                                         <Input
-                                            placeholder="Organization (optional)"
+                                            id="contact-org"
+                                            placeholder="Your organization"
                                             name="organization"
                                             value={formData.organization}
                                             onChange={handleInputChange}
-                                            className="border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3 transition-all duration-300"
+                                            className="mt-1 border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg py-3 transition-all duration-300"
                                         />
                                     </FadeIn>
 
                                     <FadeIn delay={800} duration={600} direction="up">
+                                        <label htmlFor="contact-message" className="block text-sm font-medium text-gray-700">
+                                            Message <span aria-hidden="true" className="text-red-600">*</span>
+                                        </label>
                                         <Textarea
-                                            placeholder="Message"
+                                            id="contact-message"
+                                            placeholder="How can we help?"
                                             name="message"
                                             value={formData.message}
                                             onChange={handleInputChange}
                                             rows={5}
-                                            className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg resize-none transition-all duration-300 ${errors.message ? 'border-red-500' : ''}`}
+                                            required
+                                            aria-required="true"
+                                            aria-invalid={Boolean(errors.message) || undefined}
+                                            aria-describedby={errors.message ? 'message-error' : undefined}
+                                            className={`mt-1 border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] rounded-lg resize-none transition-all duration-300 ${errors.message ? 'border-red-500' : ''}`}
                                         />
                                         {errors.message && (
-                                            <p className="text-red-500 text-sm mt-1">{errors.message}</p>
+                                            <p id="message-error" role="alert" className="text-red-500 text-sm mt-1">{errors.message}</p>
                                         )}
                                     </FadeIn>
 
                                     <FadeIn delay={1000} duration={600} direction="up">
                                         <Button
-                                            onClick={handleSubmit}
+                                            type="submit"
                                             disabled={isSubmitting}
-                                            className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold w-full py-3 rounded-lg transform hover:scale-105 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold w-full py-3 rounded-lg transform hover:scale-105 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B95D38] focus-visible:ring-offset-2"
+                                            aria-busy={isSubmitting}
+                                            aria-live="polite"
                                         >
                                             {isSubmitting ? 'Sending...' : 'Send Message'}
                                         </Button>
                                     </FadeIn>
-                                </div>
+                                </form>
                             </FadeInLeft>
                         </div>
                     </div>
