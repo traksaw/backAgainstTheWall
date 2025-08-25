@@ -41,8 +41,8 @@ export function ResultsModal({
   if (loading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-[95vw] max-w-2xl bg-white text-gray-900">
-          <div className="flex items-center justify-center py-12">
+        <DialogContent className="w-[95vw] max-w-2xl bg-white text-gray-900 border-0 p-0 max-h-[calc(100dvh-4rem)] sm:max-h-[90vh] overflow-y-auto overscroll-contain">
+          <div className="flex items-center justify-center py-12 px-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38]"></div>
             <p className="ml-4 text-gray-600">Processing your results...</p>
           </div>
@@ -56,9 +56,9 @@ export function ResultsModal({
   // Show results with new Finch-inspired design
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-amber-50 to-orange-50 text-gray-900 border-0">
+      <DialogContent className="w-[95vw] max-w-4xl bg-gradient-to-br from-amber-50 to-orange-50 text-gray-900 border-0 p-0 max-h-[calc(100dvh-4rem)] sm:max-h-[90vh] overflow-y-auto overscroll-contain">
         {latestResult ? (
-          <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
+          <div className="space-y-4 sm:space-y-6 py-2 sm:py-4 px-2 sm:px-4">
             {/* Header with Character */}
             <FadeIn duration={800}>
               <div className="text-center space-y-4">
