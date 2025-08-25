@@ -18,6 +18,13 @@ body {
   .no-tap-highlight {
     -webkit-tap-highlight-color: transparent;
   }
+  /* Standardized app content padding */
+  .app-pad {
+    padding: 1rem; /* Tailwind p-4 equivalent */
+  }
+  .app-pad-lg {
+    padding: 1.25rem; /* Tailwind p-5 equivalent */
+  }
 }
 
 @layer base {
@@ -98,6 +105,20 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Default focus ring for interactive controls (respects focus-visible) */
+  :where(a, button, [role="button"], input, select, textarea, summary):focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(185 93 56 / 1), 0 0 0 4px rgb(255 255 255 / 1);
+  }
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 

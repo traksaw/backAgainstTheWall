@@ -113,10 +113,12 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
   if (loading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl bg-white">
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-            <span className="ml-3 text-gray-600">Loading your quiz history...</span>
+        <DialogContent className="w-[95vw] max-w-lg bg-white text-gray-900 border-0 p-0 rounded-2xl shadow-2xl">
+          <div className="max-h-[70vh] overflow-y-auto app-pad-lg" tabIndex={0} style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+              <span className="ml-3 text-gray-600">Loading your quiz history...</span>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -126,34 +128,34 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-screen max-w-none h-[100dvh] m-0 rounded-none bg-white text-gray-900 border-0 shadow-2xl overflow-y-auto p-0 sm:w-[92vw] sm:max-w-2xl md:max-w-5xl sm:h-auto sm:m-0 sm:rounded-2xl sm:p-6">
-          <DialogHeader className="sticky top-0 z-10 bg-white border-b p-4 sm:p-0">
+        <DialogContent className="w-[95vw] max-w-lg bg-white text-gray-900 border-0 p-0 rounded-2xl shadow-2xl">
+          <div className="max-h-[85vh] overflow-y-auto app-pad-lg p-4" tabIndex={0} style={{ WebkitOverflowScrolling: 'touch' }}>
+          <DialogHeader className="sticky top-0 z-10 bg-white border-b p-4">
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-                <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 text-[#B95D38]" />
+              <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center">
+                <BarChart3 className="w-6 h-6 mr-2 text-[#B95D38]" />
                 Your Quiz History
               </DialogTitle>
               <Button
                 variant="ghost"
                 size="icon"
-                className="sm:hidden"
                 aria-label="Close"
                 onClick={() => onOpenChange(false)}
               >
                 <X className="w-5 h-5" />
               </Button>
             </div>
-            <p className="text-gray-600 mt-2 text-sm sm:text-base text-center sm:text-left">
+            <p className="text-gray-600 mt-2 text-sm text-center">
               Review your financial personality assessments and track your journey
             </p>
           </DialogHeader>
 
           <div className="py-6">
             {quizResults.length === 0 ? (
-              <div className="text-center py-10 sm:py-12">
-                <Award className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-600 mb-2">No Quiz Results Yet</h3>
-                <p className="text-sm sm:text-base text-gray-500">Take your first financial personality quiz to see your results here.</p>
+              <div className="text-center py-10">
+                <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-gray-600 mb-2">No Quiz Results Yet</h3>
+                <p className="text-sm text-gray-500">Take your first financial personality quiz to see your results here.</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -166,26 +168,26 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                       key={result._id}
                       className="border-gray-200 hover:border-[#B95D38]/30 transition-all duration-300 hover:shadow-md"
                     >
-                      <CardContent className="p-4 sm:p-6">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                          <div className="flex items-start md:items-center gap-3 sm:gap-4 min-w-0">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#B95D38]/20 rounded-full flex items-center justify-center flex-shrink-0">
-                              <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 text-[#B95D38]" />
+                      <CardContent className="p-4">
+                        <div className="flex flex-col gap-4">
+                          <div className="flex items-start gap-3 min-w-0">
+                            <div className="w-10 h-10 bg-[#B95D38]/20 rounded-full flex items-center justify-center flex-shrink-0">
+                              <IconComponent className="w-5 h-5 text-[#B95D38]" />
                             </div>
 
                             <div className="space-y-2 min-w-0">
-                              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                                <Badge className={`${getArchetypeColor(result.archetype)} font-medium text-xs sm:text-sm`}>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <Badge className={`${getArchetypeColor(result.archetype)} font-medium text-xs`}>
                                   The {result.archetype}
                                 </Badge>
                                 {index === 0 && (
-                                  <Badge variant="outline" className="border-green-500 text-green-600 text-xs sm:text-sm">
+                                  <Badge variant="outline" className="border-green-500 text-green-600 text-xs">
                                     Latest
                                   </Badge>
                                 )}
                               </div>
 
-                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                              <div className="flex flex-col gap-2 text-xs text-gray-600">
                                 <div className="flex items-center min-w-0">
                                   <Calendar className="w-4 h-4 mr-1" />
                                   <span className="truncate">{formatDate(completionDate)}</span>
@@ -198,8 +200,8 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                             </div>
                           </div>
 
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs sm:text-sm text-gray-500">
+                          <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-2 text-xs text-gray-500">
                               {result.hasViewedResults && (
                                 <div className="flex items-center">
                                   <CheckCircle className="w-4 h-4 text-green-500 mr-1" />
@@ -218,7 +220,7 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                               variant="outline"
                               size="sm"
                               onClick={() => viewResultDetails(result)}
-                              className="border-[#B95D38] text-[#B95D38] hover:bg-[#B95D38]/10 w-full sm:w-auto"
+                              className="border-[#B95D38] text-[#B95D38] hover:bg-[#B95D38]/10 w-full"
                             >
                               View Details
                               <ChevronRight className="w-4 h-4 ml-1" />
@@ -232,19 +234,20 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
               </div>
             )}
           </div>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Detailed Result Modal */}
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
-        <DialogContent className="w-screen max-w-none h-[100dvh] m-0 rounded-none bg-white text-gray-900 border-0 shadow-2xl overflow-y-auto p-0 sm:w-[92vw] sm:max-w-2xl md:max-w-4xl sm:h-auto sm:m-0 sm:rounded-2xl sm:p-6">
-          <DialogHeader className="sticky top-0 z-10 bg-white border-b p-4 sm:p-0">
+        <DialogContent className="w-[95vw] max-w-lg bg-white text-gray-900 border-0 p-0 rounded-2xl shadow-2xl">
+          <div className="max-h-[85vh] overflow-y-auto app-pad-lg" tabIndex={0} style={{ WebkitOverflowScrolling: 'touch' }}>
+          <DialogHeader className="sticky top-0 z-10 bg-white border-b p-4">
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900">Quiz Results Details</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-gray-900">Quiz Results Details</DialogTitle>
               <Button
                 variant="ghost"
                 size="icon"
-                className="sm:hidden"
                 aria-label="Close"
                 onClick={() => setShowDetailModal(false)}
               >
@@ -257,15 +260,15 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
             <div className="py-6 space-y-8">
               {/* Result Summary */}
               <div className="text-center space-y-4">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#B95D38]/20 rounded-full flex items-center justify-center mx-auto">
+                <div className="w-14 h-14 bg-[#B95D38]/20 rounded-full flex items-center justify-center mx-auto">
                   {(() => {
                     const IconComponent = getArchetypeIcon(selectedResult.archetype)
-                    return <IconComponent className="w-7 h-7 sm:w-8 sm:h-8 text-[#B95D38]" />
+                    return <IconComponent className="w-7 h-7 text-[#B95D38]" />
                   })()}
                 </div>
                 <div>
-                  <h3 className="text-2xl sm:text-3xl font-bold text-[#B95D38] mb-2">The {selectedResult.archetype}</h3>
-                  <p className="text-sm sm:text-base text-gray-600">
+                  <h3 className="text-2xl font-bold text-[#B95D38] mb-2">The {selectedResult.archetype}</h3>
+                  <p className="text-sm text-gray-600">
                     Completed on {formatDate(getCompletionDate(selectedResult))}
                   </p>
                 </div>
@@ -275,14 +278,14 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
               {selectedResult.answers?.scores && (
                 <Card className="border-gray-200">
                   <CardHeader>
-                    <CardTitle className="text-base sm:text-lg text-gray-800">Score Breakdown</CardTitle>
+                    <CardTitle className="text-base text-gray-800">Score Breakdown</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       {Object.entries(selectedResult.answers.scores).map(([archetype, score]) => (
                         <div key={archetype} className="text-center p-4 bg-gray-50 rounded-lg">
-                          <div className="text-xl sm:text-2xl font-bold text-gray-800">{score as number}</div>
-                          <div className="text-xs sm:text-sm text-gray-600">{archetype}</div>
+                          <div className="text-xl font-bold text-gray-800">{score as number}</div>
+                          <div className="text-xs text-gray-600">{archetype}</div>
                         </div>
                       ))}
                     </div>
@@ -294,10 +297,10 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
               {selectedResult.answers?.responses && (
                 <Card className="border-gray-200">
                   <CardHeader>
-                    <CardTitle className="text-base sm:text-lg text-gray-800">Your Responses</CardTitle>
+                    <CardTitle className="text-base text-gray-800">Your Responses</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-5 sm:space-y-6">
+                    <div className="space-y-5">
                       {Object.entries(selectedResult.answers.responses).map(
                         ([questionIndex, answer]: [string, any]) => {
                           const questionNum = Number.parseInt(questionIndex) + 1
@@ -305,19 +308,19 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                             <div key={questionIndex} className="border-b border-gray-100 pb-4 last:border-b-0">
                               <div className="space-y-3">
                                 <div className="flex items-start justify-between">
-                                  <h4 className="font-medium text-gray-800 flex-1 text-sm sm:text-base break-words">
+                                  <h4 className="font-medium text-gray-800 flex-1 text-sm break-words">
                                     <span className="text-[#B95D38] mr-2">Q{questionNum}:</span>
                                     {answer.question || `Question ${questionNum}`}
                                   </h4>
                                 </div>
 
-                                <div className="ml-4 sm:ml-8">
+                                <div className="ml-4">
                                   <div className="flex items-center space-x-3">
-                                    <Badge className={`${getArchetypeColor(answer.archetype)} text-[10px] sm:text-xs`}>
+                                    <Badge className={`${getArchetypeColor(answer.archetype)} text-[10px]`}>
                                       {answer.archetype}
                                     </Badge>
-                                    <span className="text-sm sm:text-base text-gray-700">{answer.text}</span>
-                                    <span className="text-xs sm:text-sm text-gray-500">({answer.points} pts)</span>
+                                    <span className="text-sm text-gray-700">{answer.text}</span>
+                                    <span className="text-xs text-gray-500">({answer.points} pts)</span>
                                   </div>
                                 </div>
                               </div>
@@ -331,37 +334,38 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
               )}
 
               {/* Quiz Statistics - FIXED */}
-              <div className="grid md:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 gap-3">
                 <Card className="border-gray-200 bg-blue-50">
-                  <CardContent className="p-3 sm:p-4 text-center">
-                    <Clock className="w-7 h-7 sm:w-8 sm:h-8 text-blue-500 mx-auto mb-2" />
-                    <div className="text-base sm:text-lg font-semibold text-blue-700">
+                  <CardContent className="p-3 text-center">
+                    <Clock className="w-7 h-7 text-blue-500 mx-auto mb-2" />
+                    <div className="text-base font-semibold text-blue-700">
                       {getQuestionsAnswered(selectedResult)}
                     </div>
-                    <div className="text-xs sm:text-sm text-blue-600">Questions Answered</div>
+                    <div className="text-xs text-blue-600">Questions Answered</div>
                   </CardContent>
                 </Card>
 
                 <Card className="border-gray-200 bg-green-50">
-                  <CardContent className="p-3 sm:p-4 text-center">
-                    <Award className="w-7 h-7 sm:w-8 sm:h-8 text-green-500 mx-auto mb-2" />
-                    <div className="text-base sm:text-lg font-semibold text-green-700">{selectedResult.score || 0}</div>
-                    <div className="text-xs sm:text-sm text-green-600">Final Score</div>
+                  <CardContent className="p-3 text-center">
+                    <Award className="w-7 h-7 text-green-500 mx-auto mb-2" />
+                    <div className="text-base font-semibold text-green-700">{selectedResult.score || 0}</div>
+                    <div className="text-xs text-green-600">Final Score</div>
                   </CardContent>
                 </Card>
 
                 <Card className="border-gray-200 bg-purple-50">
-                  <CardContent className="p-3 sm:p-4 text-center">
-                    <Eye className="w-7 h-7 sm:w-8 sm:h-8 text-purple-500 mx-auto mb-2" />
-                    <div className="text-base sm:text-lg font-semibold text-purple-700">
+                  <CardContent className="p-3 text-center">
+                    <Eye className="w-7 h-7 text-purple-500 mx-auto mb-2" />
+                    <div className="text-base font-semibold text-purple-700">
                       {selectedResult.hasWatchedFilm ? "Yes" : "No"}
                     </div>
-                    <div className="text-xs sm:text-sm text-purple-600">Film Watched</div>
+                    <div className="text-xs text-purple-600">Film Watched</div>
                   </CardContent>
                 </Card>
               </div>
             </div>
           )}
+          </div>
         </DialogContent>
       </Dialog>
     </>
