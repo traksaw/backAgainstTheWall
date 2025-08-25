@@ -109,7 +109,7 @@ export default function ContactForm(): JSX.Element {
                                 <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
                                 <h3 className="text-lg font-semibold text-green-800 mb-2">Thank You!</h3>
                                 <p className="text-green-700">
-                                    Thank you for your submission! Our team will reach out to your email within 1-2 business days.
+                                    Thanks for reaching out! We appreciate feedback and insights. We'll reply to your email within 1-2 business days.
                                 </p>
                                 <Button
                                     onClick={() => setIsSuccess(false)}
@@ -136,8 +136,7 @@ export default function ContactForm(): JSX.Element {
                                 <div className="space-y-8">
                                     <h2 className="text-4xl font-bold text-gray-900 mb-4">Get in Touch</h2>
                                     <p className="text-xl text-gray-600 leading-relaxed mb-6">
-                                        Interested in screenings, partnerships, or panel discussions? We'd love to connect with sponsors,
-                                        grantors, and investors.
+                                    Your feedback helps us improve. Have thoughts or insights from our quiz? Share them below.
                                     </p>
                                     <br />
                                 </div>
