@@ -9,6 +9,8 @@ export function useQuizState() {
   const [quizAnswers, setQuizAnswers] = useState<Record<number, QuizAnswer>>({});
   const [shuffledQuestions, setShuffledQuestions] = useState<QuizQuestion[]>([]);
   const [showWelcome, setShowWelcome] = useState(true);
+  // Base questions source; defaults to static, but replaced by API data when available
+  const [baseQuestions, setBaseQuestions] = useState<QuizQuestion[]>(quizQuestions);
   const [clickPattern, setClickPattern] = useState<number[]>([]);
   const [archetypeDistribution, setArchetypeDistribution] = useState({
     Avoider: 0,
@@ -17,11 +19,31 @@ export function useQuizState() {
     Architect: 0
   });
 
-  // Initialize shuffled questions on mount
+  // Load fresh questions from API (no-store) so Sanity updates appear immediately
   useEffect(() => {
-    console.log('🎯 useQuizState: Initializing enhanced shuffled questions');
-    setShuffledQuestions(createAdvancedRandomizedQuestions(quizQuestions));
+    let cancelled = false;
+    (async () => {
+      try {
+        console.log('🎯 useQuizState: Fetching questions from /api/quiz/content');
+        const res = await fetch('/api/quiz/content', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!cancelled && Array.isArray(data?.questions) && data.questions.length) {
+          setBaseQuestions(data.questions as QuizQuestion[]);
+        }
+      } catch (e) {
+        console.warn('⚠️ Falling back to static quiz questions due to fetch error', e);
+        if (!cancelled) setBaseQuestions(quizQuestions);
+      }
+    })();
+    return () => { cancelled = true };
   }, []);
+
+  // Initialize shuffled questions whenever baseQuestions changes
+  useEffect(() => {
+    console.log('🎯 useQuizState: Initializing enhanced shuffled questions from baseQuestions');
+    setShuffledQuestions(createAdvancedRandomizedQuestions(baseQuestions));
+  }, [baseQuestions]);
 
   // Start quiz function
   const startQuiz = () => {
@@ -31,7 +53,7 @@ export function useQuizState() {
     setQuizAnswers({});
     
     // Generate fresh shuffle for new quiz session
-    const freshQuestions = createAdvancedRandomizedQuestions(quizQuestions, clickPattern);
+    const freshQuestions = createAdvancedRandomizedQuestions(baseQuestions, clickPattern);
     setShuffledQuestions(freshQuestions);
   };
 
@@ -75,7 +97,7 @@ export function useQuizState() {
     setArchetypeDistribution({ Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 });
     
     // Generate completely new shuffled questions with enhanced anti-pattern
-    const newShuffledQuestions = createAdvancedRandomizedQuestions(quizQuestions, []);
+    const newShuffledQuestions = createAdvancedRandomizedQuestions(baseQuestions, []);
     console.log('🎯 useQuizState: Generated new enhanced questions:', newShuffledQuestions.length);
     setShuffledQuestions(newShuffledQuestions);
   };
@@ -93,7 +115,7 @@ export function useQuizState() {
     
     // Force immediate re-shuffle with enhanced algorithm
     setTimeout(() => {
-      const newShuffledQuestions = createAdvancedRandomizedQuestions(quizQuestions, []);
+      const newShuffledQuestions = createAdvancedRandomizedQuestions(baseQuestions, []);
       setShuffledQuestions(newShuffledQuestions);
     }, 0);
   };
