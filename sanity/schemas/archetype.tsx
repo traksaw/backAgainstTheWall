@@ -4,6 +4,13 @@ const archetype = {
   type: 'document',
   fields: [
     {
+      name: 'published',
+      title: 'Published',
+      type: 'boolean',
+      description: 'Only published archetypes will appear in the app',
+      initialValue: true
+    },
+    {
       name: 'key',
       title: 'Archetype Key',
       type: 'string',

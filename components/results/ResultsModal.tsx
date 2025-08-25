@@ -5,7 +5,7 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { QuizResult, Archetype } from "@/types/quiz"
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { FadeIn, FadeInUp, FadeInScale } from "@/components/ui/fade-in"
 import { archetypeResults } from "@/lib/quiz/archetypes"
 
@@ -41,10 +41,12 @@ export function ResultsModal({
   if (loading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-[95vw] max-w-2xl bg-white text-gray-900">
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38]"></div>
-            <p className="ml-4 text-gray-600">Processing your results...</p>
+        <DialogContent className="w-[95vw] max-w-md bg-white text-gray-900 border-0 p-0 rounded-2xl shadow-2xl">
+          <div className="max-h-[70vh] overflow-y-auto">
+            <div className="flex items-center justify-center py-12 px-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38]"></div>
+              <p className="ml-4 text-gray-600">Processing your results...</p>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -53,16 +55,35 @@ export function ResultsModal({
 
   const [activeTab, setActiveTab] = useState<'personality' | 'recommendations'>('personality');
 
+  // Scroll container for reliable desktop/mobile scrolling
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  // Ensure we start at the top when opening
+  useEffect(() => {
+    if (open) {
+      const el = scrollRef.current;
+      if (el) {
+        el.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      }
+    }
+  }, [open]);
+
   // Show results with new Finch-inspired design
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-amber-50 to-orange-50 text-gray-900 border-0">
+      <DialogContent className="w-[95vw] max-w-lg bg-gradient-to-br from-amber-50 to-orange-50 text-gray-900 border-0 p-0 rounded-2xl shadow-2xl">
+        <div
+          ref={scrollRef}
+          className="max-h-[85vh] overflow-y-auto app-pad-lg p-4"
+          tabIndex={0}
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
         {latestResult ? (
-          <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
+          <div className="space-y-5 py-3">
             {/* Header with Character */}
             <FadeIn duration={800}>
               <div className="text-center space-y-4">
-                <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-2xl shadow-lg flex items-center justify-center">
+                <div className="relative mx-auto w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center">
                   {(() => {
                     const colorMap: Record<Archetype, string> = {
                       Avoider: 'bg-blue-500',
@@ -71,15 +92,15 @@ export function ResultsModal({
                       Architect: 'bg-yellow-400',
                     }
                     return (
-                      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full ${colorMap[latestResult.archetype]}`} />
+                      <div className={`w-12 h-12 rounded-full ${colorMap[latestResult.archetype]}`} />
                     )
                   })()}
                 </div>
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+                  <h2 className="text-xl font-bold text-gray-800">
                     The {latestResult.archetype}
                   </h2>
-                  <p className="text-sm sm:text-base text-gray-600 px-2 sm:px-0">{archetypeResults[latestResult.archetype].summary}</p>
+                  <p className="text-sm text-gray-600 px-2">{archetypeResults[latestResult.archetype].summary}</p>
                 </div>
               </div>
             </FadeIn>
@@ -89,7 +110,7 @@ export function ResultsModal({
               <div className="flex bg-white rounded-2xl p-1 shadow-sm">
                 <button
                   onClick={() => setActiveTab('personality')}
-                  className={`flex-1 py-2 sm:py-3 px-3 sm:px-6 rounded-xl font-medium text-xs sm:text-sm transition-all ${
+                  className={`flex-1 py-2 px-3 rounded-xl font-medium text-xs transition-all ${
                     activeTab === 'personality'
                       ? 'bg-[#B95D38] text-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-800'
@@ -99,7 +120,7 @@ export function ResultsModal({
                 </button>
                 <button
                   onClick={() => setActiveTab('recommendations')}
-                  className={`flex-1 py-2 sm:py-3 px-3 sm:px-6 rounded-xl font-medium text-xs sm:text-sm transition-all ${
+                  className={`flex-1 py-2 px-3 rounded-xl font-medium text-xs transition-all ${
                     activeTab === 'recommendations'
                       ? 'bg-[#B95D38] text-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-800'
@@ -113,31 +134,31 @@ export function ResultsModal({
             {/* Personality Tab Content */}
             {activeTab === 'personality' ? (
               <FadeIn duration={600}>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+                <div className="grid grid-cols-1 gap-4">
                   {/* Chart Section */}
-                  <div className="flex flex-col items-center space-y-3 sm:space-y-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 text-center px-2">Your Financial Personality Profile</h3>
+                  <div className="flex flex-col items-center space-y-3">
+                    <h3 className="text-base font-semibold text-gray-800 text-center">Your Financial Personality Profile</h3>
                     <HexagonalChart 
                       scores={(latestResult.answers as any)?.scores || {}} 
                       primaryArchetype={latestResult.archetype} 
                     />
-                    <p className="text-xs sm:text-sm text-gray-600 text-center max-w-md px-2">
+                    <p className="text-xs text-gray-600 text-center max-w-md">
                       This chart shows your scores across all four financial personality types based on your quiz responses. Your highest score is <span className="font-semibold text-[#B95D38]">{latestResult.archetype}</span> with {(latestResult.answers as any)?.scores?.[latestResult.archetype] || latestResult.score} points.
                     </p>
                   </div>
 
                   {/* Archetype Description */}
-                  <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm">
-                    <div className="space-y-4 sm:space-y-6">
+                  <div className="bg-white rounded-2xl p-4 shadow-sm">
+                    <div className="space-y-4">
                       <div className="text-center">
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3">Your Profile</h3>
-                        <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{archetypeResults[latestResult.archetype].exploration.description}</p>
+                        <h3 className="text-base font-semibold text-gray-800 mb-3">Your Profile</h3>
+                        <p className="text-sm text-gray-600 leading-relaxed">{archetypeResults[latestResult.archetype].exploration.description}</p>
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                      <div className="grid grid-cols-1 gap-4">
                         <div>
-                          <h4 className="font-semibold text-green-700 mb-2 text-sm sm:text-base">Strengths</h4>
-                          <ul className="space-y-1 text-xs sm:text-sm text-gray-600">
+                          <h4 className="font-semibold text-green-700 mb-2 text-sm">Strengths</h4>
+                          <ul className="space-y-1 text-xs text-gray-600">
                             {archetypeResults[latestResult.archetype].strengths.map((strength, index) => (
                               <li key={index} className="flex items-start">
                                 <span className="text-green-500 mr-2">▪</span>
@@ -148,8 +169,8 @@ export function ResultsModal({
                         </div>
                         
                         <div>
-                          <h4 className="font-semibold text-orange-700 mb-2 text-sm sm:text-base">Blind Spots</h4>
-                          <ul className="space-y-1 text-xs sm:text-sm text-gray-600">
+                          <h4 className="font-semibold text-orange-700 mb-2 text-sm">Blind Spots</h4>
+                          <ul className="space-y-1 text-xs text-gray-600">
                             {archetypeResults[latestResult.archetype].blindSpots.map((blindSpot, index) => (
                               <li key={index} className="flex items-start">
                                 <span className="text-orange-500 mr-2">▪</span>
@@ -160,14 +181,14 @@ export function ResultsModal({
                         </div>
                       </div>
                       
-                      <div className="bg-gray-50 rounded-xl p-3 sm:p-4">
-                        <h4 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">Reflection Question</h4>
-                        <p className="text-xs sm:text-sm text-gray-600 italic">{archetypeResults[latestResult.archetype].reflectionQuestion}</p>
+                      <div className="bg-gray-50 rounded-xl p-3">
+                        <h4 className="font-semibold text-gray-800 mb-2 text-sm">Reflection Question</h4>
+                        <p className="text-xs text-gray-600 italic">{archetypeResults[latestResult.archetype].reflectionQuestion}</p>
                       </div>
                       
-                      <div className="bg-[#B95D38]/5 rounded-xl p-3 sm:p-4">
-                        <h4 className="font-semibold text-[#B95D38] mb-2 text-sm sm:text-base">Film Connection</h4>
-                        <p className="text-xs sm:text-sm text-gray-700">{archetypeResults[latestResult.archetype].filmCharacterTieIn}</p>
+                      <div className="bg-[#B95D38]/5 rounded-xl p-3">
+                        <h4 className="font-semibold text-[#B95D38] mb-2 text-sm">Film Connection</h4>
+                        <p className="text-xs text-gray-700">{archetypeResults[latestResult.archetype].filmCharacterTieIn}</p>
                       </div>
                     </div>
                   </div>
@@ -181,10 +202,10 @@ export function ResultsModal({
 
             {/* Action Buttons */}
             <FadeInUp delay={400}>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-4">
+              <div className="flex flex-col gap-3 justify-center pt-4">
                 <Button
                   onClick={onResultsViewed}
-                  className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white px-6 sm:px-8 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all text-sm sm:text-base"
+                  className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all text-sm"
                 >
                   Watch Film as The {latestResult.archetype}
                 </Button>
@@ -192,7 +213,7 @@ export function ResultsModal({
                   <Button
                     variant="outline"
                     onClick={onRetakeQuiz}
-                    className="px-6 sm:px-8 py-3 rounded-2xl font-semibold border-2 hover:bg-gray-50 text-sm sm:text-base"
+                    className="px-6 py-3 rounded-2xl font-semibold border-2 hover:bg-gray-50 text-sm"
                   >
                     Retake Quiz
                   </Button>
@@ -200,7 +221,7 @@ export function ResultsModal({
                 <Button
                   variant="outline"
                   onClick={() => onOpenChange(false)}
-                  className="px-6 sm:px-8 py-3 rounded-2xl font-semibold border-2 hover:bg-gray-50 text-sm sm:text-base"
+                  className="px-6 py-3 rounded-2xl font-semibold border-2 hover:bg-gray-50 text-sm"
                 >
                   Close Results
                 </Button>
@@ -221,6 +242,7 @@ export function ResultsModal({
             </Button>
           </div>
         )}
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -232,8 +254,8 @@ function HexagonalChart({ scores, primaryArchetype }: { scores: Record<string, n
   const archetypes: Archetype[] = ['Avoider', 'Gambler', 'Realist', 'Architect'];
   const maxScore = Math.max(...Object.values(scores));
   
-  // Responsive design - smaller on mobile
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+  // Force mobile sizing across all devices
+  const isMobile = true;
   const size = isMobile ? 200 : 240;
   const centerX = size / 2;
   const centerY = size / 2;
@@ -386,25 +408,25 @@ function RecommendationsGrid({ archetype }: { archetype: string }) {
             </div>
           </div>
           
-          {/* Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          {/* Cards Grid - always single column */}
+          <div className="grid grid-cols-1 gap-3">
             {category.items.map((item: any, itemIndex: number) => (
               <div
                 key={itemIndex}
-                className="group bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-3 sm:p-4 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer"
+                className="group bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-3 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer"
               >
-                <h4 className="font-medium text-gray-800 text-xs sm:text-sm mb-2 leading-tight">
+                <h4 className="font-medium text-gray-800 text-xs mb-2 leading-tight">
                   {item.title}
                 </h4>
-                <p className="text-[10px] sm:text-xs text-gray-600 leading-relaxed">
-                  {item.description.length > (typeof window !== 'undefined' && window.innerWidth < 640 ? 40 : 60) ? item.description.substring(0, typeof window !== 'undefined' && window.innerWidth < 640 ? 40 : 60) + '...' : item.description}
+                <p className="text-[10px] text-gray-600 leading-relaxed">
+                  {item.description.length > 60 ? item.description.substring(0, 60) + '...' : item.description}
                 </p>
                 {/* Progress indicator like Finch */}
-                <div className="mt-2 sm:mt-3 flex items-center justify-between">
-                  <div className="text-[10px] sm:text-xs text-gray-500">
+                <div className="mt-2 flex items-center justify-between">
+                  <div className="text-[10px] text-gray-500">
                     {Math.floor(Math.random() * 50) + 10} / {Math.floor(Math.random() * 30) + 50}
                   </div>
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                  <div className="w-1.5 h-1.5 bg-gray-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                 </div>
               </div>
             ))}
