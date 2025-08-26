@@ -27,3 +27,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# ffmpeg two-pass logs
+ffmpeg2pass-*.log*
