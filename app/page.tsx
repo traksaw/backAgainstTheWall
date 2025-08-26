@@ -354,20 +354,17 @@ function FilmWebsiteContent() {
               )}
             </DialogDescription>
           </DialogHeader>
-          <div className="relative w-full aspect-video bg-black">
-            <video
-              className="w-full h-full"
-              controls
-              preload="metadata"
+          <div className="relative w-full">
+            <VideoPlayer
+              src="/videos/Ambitious_optimized.mp4"
               poster="/assets/desktop-movie-poster.png"
-              onError={(e) => {
-                console.error('Video error:', e);
-                quizHandlers.handleVideoError('Failed to load video');
-              }}
-            >
-              <source src="/videos/Ambitious_FINAL_1920x1080_compat.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+              title="Back Against the Wall"
+              onEnded={handleFilmComplete}
+              onError={quizHandlers.handleVideoError}
+              archetype={latestResult?.archetype}
+              className="aspect-video w-full"
+              autoPlay={false}
+            />
             {latestResult?.archetype && (
               <div className="absolute top-4 right-4 z-30">
                 <div className="bg-[#B95D38]/90 text-white px-3 py-1 rounded-full text-sm font-medium">
