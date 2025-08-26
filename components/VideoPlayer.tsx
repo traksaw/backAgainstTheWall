@@ -106,11 +106,9 @@ export function VideoPlayer({
     onEnded?.()
   }
 
-  const [currentSource, setCurrentSource] = useState(0)
-  const sources = [
-    { src: src, type: 'video/mp4' },
-    { src: webmSrc, type: 'video/webm' },
-  ].filter(Boolean)
+  // Using only MP4 source for now
+  const sources = [{ src: src, type: 'video/mp4' }]
+  const [currentSource] = useState(0)
 
   const handleError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
     const video = e.currentTarget
@@ -124,9 +122,7 @@ export function VideoPlayer({
       readyState: video.readyState,
       networkState: video.networkState,
       currentSrc: video.currentSrc,
-      src: video.src,
-      sources: sources,
-      currentSource: sources[currentSource]
+      src: video.src
     })
 
     if (error) {
@@ -142,12 +138,6 @@ export function VideoPlayer({
           break
         case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
           message = `Video format not supported by your browser (${video.currentSrc})`
-          // Try next source if available
-          if (currentSource < sources.length - 1) {
-            console.log(`Trying next source (${currentSource + 1} of ${sources.length})`)
-            setCurrentSource(prev => prev + 1)
-            return
-          }
           break
         default:
           message = `Unknown error (${error.code}): ${error.message}`
@@ -429,36 +419,34 @@ export function VideoPlayer({
       )}
 
       {/* Video Element */}
-      const videoElement = (
-        <video
-          ref={videoRef}
-          className={`w-full h-full bg-black ${isLoading ? 'invisible' : 'visible'}`}
-          poster={poster}
-          title={title}
-          playsInline
-          onLoadedMetadata={handleLoadedMetadata}
-          onTimeUpdate={handleTimeUpdate}
-          onPlay={handlePlay}
-          onPause={handlePause}
-          onEnded={handleEnded}
-          onError={handleError}
-          onWaiting={handleWaiting}
-          onCanPlay={handleCanPlay}
-          autoPlay={autoPlay}
-          muted={isMuted}
-          loop={false}
-          preload="auto"
-          crossOrigin="anonymous"
-        >
-          <source
-            key={sources[currentSource]?.src}
-            src={sources[currentSource]?.src}
-            type={sources[currentSource]?.type}
-          />
-          Your browser does not support the video tag.
-          <track kind="captions" />
-        </video>
-      )
+      <video
+        ref={videoRef}
+        className={`w-full h-full bg-black ${isLoading ? 'invisible' : 'visible'}`}
+        poster={poster}
+        title={title}
+        playsInline
+        onLoadedMetadata={handleLoadedMetadata}
+        onTimeUpdate={handleTimeUpdate}
+        onPlay={handlePlay}
+        onPause={handlePause}
+        onEnded={handleEnded}
+        onError={handleError}
+        onWaiting={handleWaiting}
+        onCanPlay={handleCanPlay}
+        autoPlay={autoPlay}
+        muted={isMuted}
+        loop={false}
+        preload="auto"
+        crossOrigin="anonymous"
+      >
+        <source
+          key={sources[currentSource]?.src}
+          src={sources[currentSource]?.src}
+          type={sources[currentSource]?.type}
+        />
+        Your browser does not support the video tag.
+        <track kind="captions" />
+      </video>
 
       {/* Click to Play Overlay */}
       {!isPlaying && !isLoading && (
