@@ -17,11 +17,8 @@ export function createAdvancedRandomizedQuestions(
   questions: QuizQuestion[],
   userClickPattern: number[] = []
 ): QuizQuestion[] {
-  console.log('🎯 Creating enhanced randomized questions, pattern length:', userClickPattern.length);
-  
   // Step 1: Analyze user's clicking behavior
   const patternAnalysis = analyzeClickingPattern(userClickPattern);
-  console.log('🎯 Pattern analysis:', patternAnalysis);
   
   // Step 2: Shuffle question order first
   let shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
@@ -35,7 +32,6 @@ export function createAdvancedRandomizedQuestions(
     
     // Strategy 2: Anti-pattern positioning
     if (patternAnalysis.isRepetitive) {
-      console.log('🎯 Applying anti-pattern positioning for question', questionIndex + 1);
       
       // Move the user's preferred archetype away from their favorite position
       const favoritePosition = patternAnalysis.favoritePosition;
@@ -61,11 +57,6 @@ export function createAdvancedRandomizedQuestions(
   // Step 4: Final question order optimization
   shuffledQuestions = optimizeQuestionOrder(shuffledQuestions);
   
-  console.log('🎯 Enhanced shuffling complete:', {
-    totalQuestions: shuffledQuestions.length,
-    antiPatternApplied: patternAnalysis.isRepetitive,
-    balancingApplied: true
-  });
   
   return shuffledQuestions;
 }
@@ -204,15 +195,12 @@ function optimizeQuestionOrder(questions: QuizQuestion[]): QuizQuestion[] {
 export function calculateQuizScores(answers: Record<number, QuizAnswer>): QuizScores {
   const scores: QuizScores = { Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 }
 
-  console.log('[calculateQuizScores] answers ->', answers)
 
   for (const [key, ans] of Object.entries(answers)) {
     const arch = ans?.archetype?.trim()
     const pts = Number(ans?.points ?? 0)
-    console.log(`  · Q${key}: archetype=${arch} points=${pts}`)
 
     if (!arch || !(arch in scores)) {
-      console.warn(`  ⚠️ invalid archetype for Q${key}:`, ans)
       continue
     }
     if (Number.isNaN(pts)) {
@@ -223,7 +211,6 @@ export function calculateQuizScores(answers: Record<number, QuizAnswer>): QuizSc
     scores[arch] += pts
   }
 
-  console.log('[calculateQuizScores] scores ->', scores)
   return scores
 }
 
@@ -343,7 +330,6 @@ export function analyzeQuizBias(results: Array<{archetype: string}>) {
     bias: count - (total / 4)
   }));
   
-  console.log('🎯 Quiz Result Distribution Analysis:', analysis);
   return analysis;
 }
 
@@ -361,9 +347,6 @@ export function validateQuizBalance(questions: QuizQuestion[]) {
     });
   });
   
-  console.log('🎯 Enhanced Quiz Balance Analysis:');
-  console.log('Total possible points per archetype:', archetypePoints);
-  console.log('Total questions per archetype:', archetypeQuestions);
   
   // Check if balanced
   const pointValues = Object.values(archetypePoints);
@@ -374,10 +357,7 @@ export function validateQuizBalance(questions: QuizQuestion[]) {
   
   if (!pointsBalanced || !questionsBalanced) {
     console.warn('🎯 QUIZ IMBALANCE DETECTED!');
-    console.warn('Points balanced:', pointsBalanced);
-    console.warn('Questions balanced:', questionsBalanced);
   } else {
-    console.log('✅ Quiz is well balanced!');
   }
   
   return { pointsBalanced, questionsBalanced, archetypePoints, archetypeQuestions };

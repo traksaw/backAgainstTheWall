@@ -38,8 +38,6 @@ export function calculateEnhancedQuizScores(answers: Record<number, any>): QuizS
         }
     })
 
-    console.log('🎯 Raw scores:', scores)
-    console.log('🎯 Total points:', totalPoints)
 
     // Calculate percentages
     const percentages = {
@@ -49,23 +47,18 @@ export function calculateEnhancedQuizScores(answers: Record<number, any>): QuizS
         Architect: totalPoints > 0 ? (scores.Architect / totalPoints) * 100 : 0
     }
 
-    console.log('🎯 Percentages:', percentages)
 
     // Find the highest score(s)
     const sortedEntries = Object.entries(scores).sort(([, a], [, b]) => b - a)
     const highestScore = sortedEntries[0][1]
     const tiedArchetypes = sortedEntries.filter(([, score]) => score === highestScore).map(([archetype]) => archetype)
 
-    console.log('🎯 Sorted scores:', sortedEntries)
-    console.log('🎯 Highest score:', highestScore)
-    console.log('🎯 Tied archetypes:', tiedArchetypes)
 
     type Archetype = 'Avoider' | 'Gambler' | 'Realist' | 'Architect'
     let winner: Archetype
     let isTie = tiedArchetypes.length > 1
 
     if (isTie) {
-        console.log('🎯 TIE DETECTED - using tie-breaking logic')
 
         // Advanced tie-breaking logic
         // 1. If there's a tie, prefer the archetype with more recent selections
@@ -81,7 +74,6 @@ export function calculateEnhancedQuizScores(answers: Record<number, any>): QuizS
             }
         })
 
-        console.log('🎯 Recent answer bias:', recentScores)
 
         // Find which tied archetype has more recent selections
         const recentWinner = Object.entries(recentScores)
@@ -90,7 +82,6 @@ export function calculateEnhancedQuizScores(answers: Record<number, any>): QuizS
 
         if (recentWinner && recentWinner[1] > 0) {
             winner = recentWinner[0] as Archetype
-            console.log('🎯 Tie broken by recent answers:', winner)
         } else {
             // If still tied, add controlled randomness based on archetype distribution
             const tieBreakingWeights = {
@@ -106,11 +97,9 @@ export function calculateEnhancedQuizScores(answers: Record<number, any>): QuizS
             }))
 
             winner = weightedScores.sort((a, b) => b.weightedScore - a.weightedScore)[0].archetype as Archetype
-            console.log('🎯 Tie broken by weighted randomness:', winner)
         }
     } else {
         winner = tiedArchetypes[0] as Archetype
-        console.log('🎯 Clear winner:', winner)
     }
 
     const winnerScore = scores[winner as keyof typeof scores]
@@ -118,7 +107,6 @@ export function calculateEnhancedQuizScores(answers: Record<number, any>): QuizS
     const avgOtherScore = otherScores.length > 0 ? otherScores.reduce((a, b) => a + b, 0) / otherScores.length : 0
     const confidence = totalPoints > 0 ? Math.min(100, ((winnerScore - avgOtherScore) / totalPoints) * 100 + 50) : 50
 
-    console.log('🎯 Final winner:', winner, 'with confidence:', confidence)
 
     return {
         scores,
