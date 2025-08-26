@@ -355,8 +355,7 @@ function FilmWebsiteContent() {
             </DialogDescription>
           </DialogHeader>
           <VideoPlayer
-            src="/videos/optimized/Ambitious_FINAL_720p.mp4"
-            webmSrc="/videos/optimized/Ambitious_FINAL_720p.webm"
+            src="/videos/Ambitious_FINAL_1920x1080_compat.mp4"
             poster="/assets/desktop-movie-poster.png"
             title="Back Against the Wall"
             onEnded={handleFilmComplete}

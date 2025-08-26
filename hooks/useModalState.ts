@@ -78,27 +78,21 @@ export function useModalState() {
 
     // Individual setters (for compatibility)
     setShowSignup: (open: boolean) => {
-      console.log("Manual setShowSignup:", open)
       setShowSignup(open)
     },
     setShowSignin: (open: boolean) => {
-      console.log("Manual setShowSignin:", open)
       setShowSignin(open)
     },
     setShowQuiz: (open: boolean) => {
-      console.log("Manual setShowQuiz:", open)
       setShowQuiz(open)
     },
     setShowResults: (open: boolean) => {
-      console.log("Manual setShowResults:", open)
       setShowResults(open)
     },
     setShowFilm: (open: boolean) => {
-      console.log("Manual setShowFilm:", open)
       setShowFilm(open)
     },
     setShowQuizHistory: (open: boolean) => {
-      console.log("Manual setShowQuizHistory:", open)
       setShowQuizHistory(open)
     },
 

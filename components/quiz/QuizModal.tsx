@@ -71,15 +71,14 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
   }, [currentQuestion])
 
   const handleAnswerClick = async (answer: QuizAnswer, event: React.MouseEvent<HTMLButtonElement>) => {
-    console.log("=== QUIZ MODAL: ANSWER CLICKED ===")
-    console.log("Answer:", answer)
-    console.log("Current question:", currentQuestion)
-
     // Immediately blur the button to prevent focus persistence on mobile
     const target = event.currentTarget
-    target.blur()
-    // Also remove focus from any other buttons
-    document.querySelectorAll('button').forEach(btn => btn.blur())
+    if (target) {
+      target.blur()
+    }
+
+    // Add a small delay to allow the button animation to complete
+    await new Promise(resolve => setTimeout(resolve, 100))
 
     // Build final answers BEFORE calling handleQuizAnswer
     const finalAnswers = { ...answers, [currentQuestion]: answer }
@@ -90,11 +89,8 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
       ? "Answer selected. Finishing quiz."
       : `Answer selected. Moving to question ${currentQuestion + 2} of ${totalQuestions}.`)
 
-    // No visual toast to keep interaction seamless/minimal
-
     // Advance immediately (no extra animation/delay)
     const isComplete = handleQuizAnswer(answer)
-    console.log("Is quiz complete:", isComplete)
 
     if (isComplete) {
       try {
@@ -134,10 +130,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
                 </div>
                 <div className="flex justify-center">
                   <Button
-                    onClick={() => {
-                      console.log("🎯 Starting quiz...")
-                      startQuiz()
-                    }}
+                    onClick={() => startQuiz()}
                     className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-6 py-3 rounded-lg text-sm min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B95D38] focus-visible:ring-offset-2"
                   >
                     Start Quiz
