@@ -16,6 +16,7 @@ interface VideoPlayerProps {
   className?: string
   autoPlay?: boolean
   archetype?: string
+  webmSrc?: string
 }
 
 export function VideoPlayer({
@@ -27,6 +28,7 @@ export function VideoPlayer({
   className = "",
   autoPlay = false,
   archetype,
+  webmSrc,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -401,7 +403,7 @@ export function VideoPlayer({
       <video
         ref={videoRef}
         src={src}
-        poster={poster}
+        poster={poster ?? "/assets/desktop-movie-poster.png"}
         className="w-full h-full object-contain"
         onLoadedMetadata={handleLoadedMetadata}
         onTimeUpdate={handleTimeUpdate}
@@ -415,6 +417,8 @@ export function VideoPlayer({
         playsInline
         preload="metadata"
       >
+        <source src={src} type="video/mp4" />
+        {webmSrc && <source src={webmSrc} type="video/webm" />}
         {/* Fallback for browsers that don't support MP4 */}
         <p className="text-white text-center p-8">
           Your browser doesn't support video playback.
