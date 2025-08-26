@@ -12,28 +12,14 @@ export function useQuizHandlers() {
    */
   const handleQuizComplete = async (answers: Record<number, QuizAnswer>) => {
     try {
-      console.log('🎯 Starting quiz submission with answers:', Object.keys(answers).length)
-      console.log('🎯 Answer details:', Object.values(answers).map(a => ({ archetype: a.archetype, points: a.points })))
-      
       // Process the quiz completion to get submission data
       const quizData: QuizSubmissionData = quizLogic.processQuizCompletion(answers)
-      console.log('🎯 Processed quiz data:', { archetype: quizData.archetype, score: quizData.score })
-      
-      // Additional logging to debug why same result
-      const allArchetypes = Object.values(answers).map(a => a.archetype)
-      const archetypeCounts = allArchetypes.reduce((acc, archetype) => {
-        acc[archetype] = (acc[archetype] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
-      console.log('🎯 Archetype selection distribution:', archetypeCounts)
       
       // Submit to backend - this should update the latestResult in useQuiz
-      const result = await submitQuiz(answers)
-      console.log('🎯 Quiz submitted successfully:', result)
+      await submitQuiz(answers)
       
       // Force refresh the results to ensure latest data is available
       await refreshResults()
-      console.log('🎯 Results refreshed')
       
       return quizData
     } catch (error) {
