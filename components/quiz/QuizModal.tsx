@@ -3,7 +3,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useQuizState } from "@/hooks/useQuizState"
 import { useQuizLogic } from "@/hooks/useQuizLogic"
 import { useQuiz } from "@/hooks/useQuiz"
@@ -116,6 +116,9 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
             <DialogTitle className="text-2xl font-bold text-center text-gray-900 p-2">
               Financial Mindset Quiz
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Answer multiple-choice questions to determine your financial archetype. Use the buttons to select an answer and proceed.
+            </DialogDescription>
             
             {/* Welcome Screen */}
             {showWelcome && profile && (
