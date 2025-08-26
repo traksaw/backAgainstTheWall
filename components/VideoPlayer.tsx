@@ -87,6 +87,8 @@ export function VideoPlayer({
     if (videoRef.current) {
       setDuration(videoRef.current.duration)
       setIsLoading(false)
+      setHasError(false)
+      setErrorMessage("")
     }
   }
 
@@ -103,6 +105,12 @@ export function VideoPlayer({
     setIsPlaying(false)
     onEnded?.()
   }
+
+  const [currentSource, setCurrentSource] = useState(0)
+  const sources = [
+    { src: src, type: 'video/mp4' },
+    { src: webmSrc, type: 'video/webm' },
+  ].filter(Boolean)
 
   const handleError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
     const video = e.currentTarget
@@ -122,6 +130,11 @@ export function VideoPlayer({
           break
         case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
           message = "Video format not supported by your browser"
+          // Try next source if available
+          if (currentSource < sources.length - 1) {
+            setCurrentSource(prev => prev + 1)
+            return
+          }
           break
       }
     }
@@ -402,9 +415,8 @@ export function VideoPlayer({
       {/* Video Element */}
       <video
         ref={videoRef}
-        src={src}
-        poster={poster ?? "/assets/desktop-movie-poster.png"}
-        className="w-full h-full object-contain"
+        className={`absolute inset-0 w-full h-full object-cover ${className}`}
+        poster={poster}
         onLoadedMetadata={handleLoadedMetadata}
         onTimeUpdate={handleTimeUpdate}
         onPlay={handlePlay}
@@ -414,18 +426,18 @@ export function VideoPlayer({
         onWaiting={handleWaiting}
         onCanPlay={handleCanPlay}
         autoPlay={autoPlay}
+        muted={isMuted}
         playsInline
-        preload="metadata"
+        key={`video-${currentSource}`}
       >
-        <source src={src} type="video/mp4" />
-        {webmSrc && <source src={webmSrc} type="video/webm" />}
-        {/* Fallback for browsers that don't support MP4 */}
-        <p className="text-white text-center p-8">
-          Your browser doesn't support video playback.
-          <a href={src} className="text-orange-500 underline ml-1">
-            Download the video instead
-          </a>
-        </p>
+        {sources.map((source, index) => (
+          <source 
+            key={index}
+            src={source.src} 
+            type={source.type} 
+          />
+        ))}
+        Your browser does not support the video tag.
       </video>
 
       {/* Click to Play Overlay */}
