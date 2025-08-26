@@ -355,7 +355,7 @@ function FilmWebsiteContent() {
             </DialogDescription>
           </DialogHeader>
           <VideoPlayer
-            src="/videos/ambitious-film-compressed.mp4"
+            src="/videos/Ambitious_FINAL_1920x1080.mp4"
             title="Back Against the Wall"
             onEnded={handleFilmComplete}
             onError={quizHandlers.handleVideoError}
