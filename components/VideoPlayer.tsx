@@ -117,28 +117,44 @@ export function VideoPlayer({
     const error = video.error
     let message = "An error occurred while loading the video"
 
+    // Log detailed error information
+    console.error('Video Error:', {
+      errorCode: error?.code,
+      errorMessage: error?.message,
+      readyState: video.readyState,
+      networkState: video.networkState,
+      currentSrc: video.currentSrc,
+      src: video.src,
+      sources: sources,
+      currentSource: sources[currentSource]
+    })
+
     if (error) {
       switch (error.code) {
         case MediaError.MEDIA_ERR_ABORTED:
           message = "Video playback was aborted"
           break
         case MediaError.MEDIA_ERR_NETWORK:
-          message = "Network error occurred while loading video"
+          message = `Network error occurred while loading video (${video.currentSrc})`
           break
         case MediaError.MEDIA_ERR_DECODE:
           message = "Video format not supported or corrupted"
           break
         case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-          message = "Video format not supported by your browser"
+          message = `Video format not supported by your browser (${video.currentSrc})`
           // Try next source if available
           if (currentSource < sources.length - 1) {
+            console.log(`Trying next source (${currentSource + 1} of ${sources.length})`)
             setCurrentSource(prev => prev + 1)
             return
           }
           break
+        default:
+          message = `Unknown error (${error.code}): ${error.message}`
       }
     }
 
+    console.error('Video Error Details:', message)
     setHasError(true)
     setErrorMessage(message)
     setIsLoading(false)
@@ -413,32 +429,36 @@ export function VideoPlayer({
       )}
 
       {/* Video Element */}
-      <video
-        ref={videoRef}
-        className={`absolute inset-0 w-full h-full object-cover ${className}`}
-        poster={poster}
-        onLoadedMetadata={handleLoadedMetadata}
-        onTimeUpdate={handleTimeUpdate}
-        onPlay={handlePlay}
-        onPause={handlePause}
-        onEnded={handleEnded}
-        onError={handleError}
-        onWaiting={handleWaiting}
-        onCanPlay={handleCanPlay}
-        autoPlay={autoPlay}
-        muted={isMuted}
-        playsInline
-        key={`video-${currentSource}`}
-      >
-        {sources.map((source, index) => (
-          <source 
-            key={index}
-            src={source.src} 
-            type={source.type} 
+      const videoElement = (
+        <video
+          ref={videoRef}
+          className={`w-full h-full bg-black ${isLoading ? 'invisible' : 'visible'}`}
+          poster={poster}
+          title={title}
+          playsInline
+          onLoadedMetadata={handleLoadedMetadata}
+          onTimeUpdate={handleTimeUpdate}
+          onPlay={handlePlay}
+          onPause={handlePause}
+          onEnded={handleEnded}
+          onError={handleError}
+          onWaiting={handleWaiting}
+          onCanPlay={handleCanPlay}
+          autoPlay={autoPlay}
+          muted={isMuted}
+          loop={false}
+          preload="auto"
+          crossOrigin="anonymous"
+        >
+          <source
+            key={sources[currentSource]?.src}
+            src={sources[currentSource]?.src}
+            type={sources[currentSource]?.type}
           />
-        ))}
-        Your browser does not support the video tag.
-      </video>
+          Your browser does not support the video tag.
+          <track kind="captions" />
+        </video>
+      )
 
       {/* Click to Play Overlay */}
       {!isPlaying && !isLoading && (
