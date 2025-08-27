@@ -30,6 +30,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { useQuiz } from "@/hooks/useQuiz"
 
 // This component now uses the auth context properly
+// Triggering redeploy after CORS update
 function FilmWebsiteContent() {
   const { user, profile, signOut, loading: authLoading, isHydrated } = useAuth()
   const { latestResult, refreshResults, loading: quizLoading } = useQuiz()
