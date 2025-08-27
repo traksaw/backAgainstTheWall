@@ -63,18 +63,6 @@ export function VideoPlayer({
     onError?.(error?.message || 'Failed to load video')
   }
 
-  // Helper to get the correct video path for both dev and prod
-  const getVideoSrc = (path: string) => {
-    if (path.startsWith('http')) return path;
-    // Remove leading slash if present
-    const cleanPath = path.replace(/^\//, '');
-    // In production, the file will be in the _next/static/videos directory
-    if (process.env.NODE_ENV === 'production') {
-      return `/_next/static/videos/${cleanPath}`;
-    }
-    // In development, use the path as is
-    return `/${cleanPath}`;
-  };
 
   return (
     <div className={`relative bg-black rounded-lg overflow-hidden ${className}`}>
@@ -103,7 +91,7 @@ export function VideoPlayer({
         onLoadedMetadata={handleLoadedMetadata}
         autoPlay={autoPlay}
         preload="metadata"
-        src={getVideoSrc(src)}
+        src={src}
       >
         Your browser does not support the video tag.
         <track kind="captions" />
