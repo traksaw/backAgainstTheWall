@@ -356,7 +356,7 @@ function FilmWebsiteContent() {
           </DialogHeader>
           <div className="relative w-full">
             <VideoPlayer
-              src="/videos/optimized/Ambitious_web.mp4"
+              src="/videos/Ambitious_compatible.mp4"
               poster="/assets/desktop-movie-poster.png"
               title="Back Against the Wall"
               onEnded={handleFilmComplete}
