@@ -80,7 +80,7 @@ export function VideoPlayer({
       <video
         ref={videoRef}
         className="w-full h-full"
-        poster={poster}
+        // poster={poster}
         title={title}
         playsInline
         controls
