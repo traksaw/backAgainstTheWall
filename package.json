@@ -43,6 +43,7 @@
     "@sanity/image-url": "^1.1.0",
     "@sanity/vision": "^4.3.0",
     "@supabase/supabase-js": "latest",
+    "@vercel/blob": "^1.1.1",
     "autoprefixer": "^10.4.21",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
