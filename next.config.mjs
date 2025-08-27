@@ -12,24 +12,6 @@ const nextConfig = {
   },
   // This ensures that public files are properly served in production
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : undefined,
-  // Copy video files to the static directory during build
-  webpack: (config, { isServer }) => {
-    // This will make sure video files are copied to the build output
-    config.module.rules.push({
-      test: /\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/,
-      use: [
-        {
-          loader: 'file-loader',
-          options: {
-            publicPath: '/_next/static/videos',
-            outputPath: 'static/videos',
-            name: '[name]-[hash].[ext]',
-          },
-        },
-      ],
-    })
-    return config
-  },
   // This ensures that public files are properly served in production
   async headers() {
     return [
