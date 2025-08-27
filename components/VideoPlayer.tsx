@@ -1,11 +1,8 @@
 "use client"
 
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
+import { useRef, useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
-import { useAuth } from "@/hooks/useAuth"
-import { Play, Pause, Maximize, Minimize, RotateCcw, AlertCircle, Loader2 } from "lucide-react"
+import { Play, Loader2 } from "lucide-react"
 
 interface VideoPlayerProps {
   src: string
@@ -28,94 +25,32 @@ export function VideoPlayer({
   className = "",
   autoPlay = false,
   archetype,
-  webmSrc,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  const { user } = useAuth();
   const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const [volume, setVolume] = useState(1)
-  const [isMuted, setIsMuted] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const [showControls, setShowControls] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
-  const [errorMessage, setErrorMessage] = useState("")
-  const [playbackRate, setPlaybackRate] = useState(1)
-  const [isBuffering, setIsBuffering] = useState(false)
 
-  // Auto-hide controls
-  useEffect(() => {
-    let timeout: NodeJS.Timeout
-
-    const resetTimeout = () => {
-      clearTimeout(timeout)
-      setShowControls(true)
-      if (isPlaying) {
-        timeout = setTimeout(() => setShowControls(false), 3000)
-      }
-    }
-
-    const handleMouseMove = () => resetTimeout()
-    const handleMouseLeave = () => {
-      if (isPlaying) {
-        timeout = setTimeout(() => setShowControls(false), 1000)
-      }
-    }
-
-    if (containerRef.current) {
-      containerRef.current.addEventListener("mousemove", handleMouseMove)
-      containerRef.current.addEventListener("mouseleave", handleMouseLeave)
-    }
-
-    resetTimeout()
-
-    return () => {
-      clearTimeout(timeout)
-      if (containerRef.current) {
-        containerRef.current.removeEventListener("mousemove", handleMouseMove)
-        containerRef.current.removeEventListener("mouseleave", handleMouseLeave)
-      }
-    }
-  }, [isPlaying])
-
-  // Video event handlers
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
-      setDuration(videoRef.current.duration)
+      console.log('Video metadata loaded:', {
+        duration: videoRef.current.duration,
+        videoWidth: videoRef.current.videoWidth,
+        videoHeight: videoRef.current.videoHeight,
+        readyState: videoRef.current.readyState,
+        networkState: videoRef.current.networkState
+      })
       setIsLoading(false)
-      setHasError(false)
-      setErrorMessage("")
-    }
-  }
-
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime)
     }
   }
 
   const handlePlay = () => setIsPlaying(true)
   const handlePause = () => setIsPlaying(false)
-
-  const handleEnded = () => {
-    setIsPlaying(false)
-    onEnded?.()
-  }
-
-  // Using only MP4 source for now
-  const sources = [{ src: src, type: 'video/mp4' }]
-  const [currentSource] = useState(0)
+  const handleEnded = () => onEnded?.()
 
   const handleError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
     const video = e.currentTarget
     const error = video.error
-    let message = "An error occurred while loading the video"
-
-    // Log detailed error information
     console.error('Video Error:', {
       errorCode: error?.code,
       errorMessage: error?.message,
@@ -124,335 +59,48 @@ export function VideoPlayer({
       currentSrc: video.currentSrc,
       src: video.src
     })
-
-    if (error) {
-      switch (error.code) {
-        case MediaError.MEDIA_ERR_ABORTED:
-          message = "Video playback was aborted"
-          break
-        case MediaError.MEDIA_ERR_NETWORK:
-          message = `Network error occurred while loading video (${video.currentSrc})`
-          break
-        case MediaError.MEDIA_ERR_DECODE:
-          message = "Video format not supported or corrupted"
-          break
-        case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-          message = `Video format not supported by your browser (${video.currentSrc})`
-          break
-        default:
-          message = `Unknown error (${error.code}): ${error.message}`
-      }
-    }
-
-    console.error('Video Error Details:', message)
     setHasError(true)
-    setErrorMessage(message)
-    setIsLoading(false)
-    onError?.(message)
-  }
-
-  const handleWaiting = () => setIsBuffering(true)
-  const handleCanPlay = () => setIsBuffering(false)
-
-  // Control functions
-  const togglePlay = async () => {
-    if (!videoRef.current) return
-
-    try {
-      if (isPlaying) {
-        videoRef.current.pause()
-      } else {
-        await videoRef.current.play()
-      }
-    } catch (error) {
-      console.error("Playback error:", error)
-      setHasError(true)
-      setErrorMessage("Unable to play video. Please try again.")
-    }
-  }
-
-  const handleSeek = (value: number[]) => {
-    if (videoRef.current) {
-      const newTime = (value[0] / 100) * duration
-      videoRef.current.currentTime = newTime
-      setCurrentTime(newTime)
-    }
-  }
-
-  const handleVolumeChange = (value: number[]) => {
-    const newVolume = value[0] / 100
-    setVolume(newVolume)
-    if (videoRef.current) {
-      videoRef.current.volume = newVolume
-    }
-    setIsMuted(newVolume === 0)
-  }
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      const newMuted = !isMuted
-      videoRef.current.muted = newMuted
-      setIsMuted(newMuted)
-    }
-  }
-
-  const toggleFullscreen = async () => {
-    const container = containerRef.current
-    const video = videoRef.current as any
-    if (!container) return
-
-    // Detect iOS (including iPadOS with desktop UA)
-    const isIOS = () => {
-      const ua = navigator.userAgent
-      const iOSUA = /iPad|iPhone|iPod/.test(ua)
-      const iPadOSDesktopUA = navigator.platform === 'MacIntel' && (navigator as any).maxTouchPoints > 1
-      return iOSUA || iPadOSDesktopUA
-    }
-
-    try {
-      if (!isFullscreen) {
-        // iOS Safari: use native video fullscreen API
-        if (isIOS() && video && typeof video.webkitEnterFullscreen === 'function') {
-          video.webkitEnterFullscreen()
-          // iOS may not emit fullscreenchange reliably for native player
-          setIsFullscreen(true)
-          return
-        }
-
-        // Other platforms: request fullscreen on container
-        if (container.requestFullscreen) {
-          await container.requestFullscreen()
-        } else if ((container as any).webkitRequestFullscreen) {
-          await (container as any).webkitRequestFullscreen()
-        } else if ((container as any).mozRequestFullScreen) {
-          await (container as any).mozRequestFullScreen()
-        } else if ((container as any).msRequestFullscreen) {
-          await (container as any).msRequestFullscreen()
-        } else if (video && typeof video.requestFullscreen === 'function') {
-          // Last resort: try the video element
-          await video.requestFullscreen()
-        }
-      } else {
-        // Exit fullscreen
-        if (isIOS() && video && typeof video.webkitExitFullscreen === 'function') {
-          video.webkitExitFullscreen()
-          setIsFullscreen(false)
-          return
-        }
-
-        if (document.exitFullscreen) {
-          await document.exitFullscreen()
-        } else if ((document as any).webkitExitFullscreen) {
-          await (document as any).webkitExitFullscreen()
-        } else if ((document as any).mozCancelFullScreen) {
-          await (document as any).mozCancelFullScreen()
-        } else if ((document as any).msExitFullscreen) {
-          await (document as any).msExitFullscreen()
-        }
-      }
-    } catch (error) {
-      console.error("Fullscreen error:", error)
-      // Fallback: try to use the video element directly
-      if (video) {
-        try {
-          if (!isFullscreen && typeof video.requestFullscreen === 'function') {
-            await video.requestFullscreen()
-          }
-        } catch (fallbackError) {
-          console.error("Video fullscreen fallback failed:", fallbackError)
-        }
-      }
-    }
-  }
-
-  // Fullscreen change listener
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      const isCurrentlyFullscreen = !!(
-        document.fullscreenElement ||
-        (document as any).webkitFullscreenElement ||
-        (document as any).mozFullScreenElement ||
-        (document as any).msFullscreenElement
-      )
-      setIsFullscreen(isCurrentlyFullscreen)
-    }
-
-    // Add listeners for all browser variants
-    document.addEventListener("fullscreenchange", handleFullscreenChange)
-    document.addEventListener("webkitfullscreenchange", handleFullscreenChange)
-    document.addEventListener("mozfullscreenchange", handleFullscreenChange)
-    document.addEventListener("MSFullscreenChange", handleFullscreenChange)
-    
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange)
-      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange)
-      document.removeEventListener("mozfullscreenchange", handleFullscreenChange)
-      document.removeEventListener("MSFullscreenChange", handleFullscreenChange)
-    }
-  }, [])
-
-  // iOS Safari native fullscreen events (webkitEnter/ExitFullscreen do not trigger standard events)
-  useEffect(() => {
-    const video = videoRef.current as any
-    if (!video) return
-
-    const handleBegin = () => setIsFullscreen(true)
-    const handleEnd = () => setIsFullscreen(false)
-
-    // These events are iOS-specific
-    video.addEventListener('webkitbeginfullscreen', handleBegin)
-    video.addEventListener('webkitendfullscreen', handleEnd)
-
-    return () => {
-      video.removeEventListener('webkitbeginfullscreen', handleBegin)
-      video.removeEventListener('webkitendfullscreen', handleEnd)
-    }
-  }, [])
-
-  // Format time helper
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60)
-    const seconds = Math.floor(time % 60)
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`
-  }
-
-  // Keyboard controls
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!containerRef.current?.contains(document.activeElement)) return
-
-      switch (e.code) {
-        case "Space":
-          e.preventDefault()
-          togglePlay()
-          break
-        case "ArrowLeft":
-          e.preventDefault()
-          if (videoRef.current) {
-            videoRef.current.currentTime = Math.max(0, currentTime - 10)
-          }
-          break
-        case "ArrowRight":
-          e.preventDefault()
-          if (videoRef.current) {
-            videoRef.current.currentTime = Math.min(duration, currentTime + 10)
-          }
-          break
-        case "ArrowUp":
-          e.preventDefault()
-          handleVolumeChange([Math.min(100, volume * 100 + 10)])
-          break
-        case "ArrowDown":
-          e.preventDefault()
-          handleVolumeChange([Math.max(0, volume * 100 - 10)])
-          break
-        case "KeyM":
-          e.preventDefault()
-          toggleMute()
-          break
-        case "KeyF":
-          e.preventDefault()
-          toggleFullscreen()
-          break
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [currentTime, duration, volume, isPlaying])
-
-  if (hasError) {
-    return (
-      <div className={`relative bg-gray-900 rounded-lg flex items-center justify-center min-h-[400px] ${className}`}>
-        <div className="text-center space-y-4 text-white p-8">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
-          <div>
-            <h3 className="text-xl font-semibold mb-2">Video Playback Error</h3>
-            <p className="text-gray-300 mb-4">{errorMessage}</p>
-            <div className="space-y-2">
-              <Button
-                onClick={() => {
-                  setHasError(false)
-                  setIsLoading(true)
-                  if (videoRef.current) {
-                    videoRef.current.load()
-                  }
-                }}
-                className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white"
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Retry
-              </Button>
-              <p className="text-xs text-gray-400">Try refreshing the page or check your internet connection</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+    onError?.(error?.message || 'Failed to load video')
   }
 
   return (
-    <div ref={containerRef} className={`relative bg-black rounded-lg overflow-hidden group ${className}`} tabIndex={0}>
+    <div className={`relative bg-black rounded-lg overflow-hidden ${className}`}>
       {/* Loading Overlay */}
       {isLoading && (
         <div className="absolute inset-0 bg-gray-900 flex items-center justify-center z-20">
           <div className="text-center space-y-4 text-white">
             <Loader2 className="w-12 h-12 animate-spin mx-auto" />
             <p className="text-lg">Loading video...</p>
-            {title && <p className="text-sm text-gray-400">{title}</p>}
           </div>
-        </div>
-      )}
-
-      {/* Buffering Overlay */}
-      {isBuffering && !isLoading && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
-          <Loader2 className="w-8 h-8 animate-spin text-white" />
-        </div>
-      )}
-
-      {/* Archetype Badge */}
-      {archetype && user && (
-        <div className="absolute top-4 right-4 z-30">
-          <div className="bg-[#B95D38]/90 text-white px-3 py-1 rounded-full text-sm font-medium">The {archetype}</div>
         </div>
       )}
 
       {/* Video Element */}
       <video
         ref={videoRef}
-        className={`w-full h-full bg-black ${isLoading ? 'invisible' : 'visible'}`}
+        className="w-full h-full"
         poster={poster}
         title={title}
         playsInline
-        onLoadedMetadata={handleLoadedMetadata}
-        onTimeUpdate={handleTimeUpdate}
+        controls
         onPlay={handlePlay}
         onPause={handlePause}
         onEnded={handleEnded}
         onError={handleError}
-        onWaiting={handleWaiting}
-        onCanPlay={handleCanPlay}
+        onLoadedMetadata={handleLoadedMetadata}
         autoPlay={autoPlay}
-        muted={isMuted}
-        loop={false}
-        preload="auto"
-        crossOrigin="anonymous"
+        preload="metadata"
+        src={src}
       >
-        <source
-          key={sources[currentSource]?.src}
-          src={sources[currentSource]?.src}
-          type={sources[currentSource]?.type}
-        />
         Your browser does not support the video tag.
         <track kind="captions" />
       </video>
 
-      {/* Click to Play Overlay */}
-      {!isPlaying && !isLoading && (
-        <div
-          className="absolute inset-0 bg-black/30 flex items-center justify-center cursor-pointer z-10"
-          onClick={togglePlay}
+      {/* Play Button Overlay */}
+      {!isPlaying && !isLoading && !hasError && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center cursor-pointer"
+          onClick={() => videoRef.current?.play().catch(console.error)}
         >
           <div className="bg-white/20 backdrop-blur-sm rounded-full p-6 hover:bg-white/30 transition-all duration-300">
             <Play className="w-12 h-12 text-white ml-1" />
@@ -460,51 +108,20 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Mobile-Responsive Controls */}
-      <div
-        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 sm:p-4 transition-opacity duration-300 ${
-          showControls ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        {/* Mobile-Optimized Progress Bar */}
-        <div className="mb-2 sm:mb-3">
-          <Slider
-            value={[duration ? (currentTime / duration) * 100 : 0]}
-            onValueChange={handleSeek}
-            max={100}
-            step={0.1}
-            className="w-full"
-          />
-        </div>
-
-        {/* Mobile-Responsive Control Buttons */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 sm:space-x-3">
+      {/* Error State */}
+      {hasError && (
+        <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4">
+          <div className="text-center text-white">
+            <p className="text-lg mb-4">Unable to load video</p>
             <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={togglePlay} 
-              className="text-white hover:bg-white/20 p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px]"
+              onClick={() => window.location.reload()}
+              className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white"
             >
-              {isPlaying ? <Pause className="w-5 h-5 sm:w-6 sm:h-6" /> : <Play className="w-5 h-5 sm:w-6 sm:h-6" />}
+              Reload Page
             </Button>
-
-            <div className="text-white text-xs sm:text-sm">
-              <span className="hidden sm:inline">{formatTime(currentTime)} / {formatTime(duration)}</span>
-              <span className="sm:hidden">{formatTime(currentTime)}</span>
-            </div>
           </div>
-
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={toggleFullscreen} 
-            className="text-white hover:bg-white/20 p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px]"
-          >
-            {isFullscreen ? <Minimize className="w-4 h-4 sm:w-5 sm:h-5" /> : <Maximize className="w-4 h-4 sm:w-5 sm:h-5" />}
-          </Button>
         </div>
-      </div>
+      )}
     </div>
   )
 }
