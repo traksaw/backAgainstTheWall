@@ -148,10 +148,8 @@ const handleSubmit = async (e: React.FormEvent) => {
   setLoading(true)
 
   try {
-    console.log("=== SIGNUP PROCESS START ===")
     
     await signUp(formData)
-    console.log("✅ Signup successful!")
 
     // Reset form first
     setFormData({
@@ -168,21 +166,14 @@ const handleSubmit = async (e: React.FormEvent) => {
     setErrors({})
     setError("")
 
-    console.log("🔄 Form reset complete")
 
     // Close modal
     onOpenChange(false)
-    console.log("❌ Signup modal closed")
 
     // Call success callback - THIS SHOULD OPEN THE QUIZ
-    console.log("🎯 Calling onSuccess callback...")
     onSuccess()
-    console.log("✅ onSuccess callback completed")
 
   } catch (error) {
-    console.error("=== SIGNUP FAILED ===")
-    console.error("Signup failed in component:", error)
-
     let errorMessage = "An unexpected error occurred during signup"
 
     if (error instanceof Error) {

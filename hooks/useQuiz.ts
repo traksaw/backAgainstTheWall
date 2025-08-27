@@ -84,14 +84,12 @@ export function useQuiz() {
   ) => {
     setLoading(true)
     try {
-      console.log("🔄 Updating quiz result:", resultId, updates)
       
       if (!resultId) {
         throw new Error("No resultId passed to updateQuizResult")
       }
 
       const updatedResult = await QuizService.updateQuizResult(resultId, updates)
-      console.log("✅ Quiz result updated:", updatedResult)
 
       setQuizResults((prev) =>
         prev.map((result) =>

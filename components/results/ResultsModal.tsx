@@ -27,18 +27,36 @@ export function ResultsModal({
   loading = false,
   onRetakeQuiz,
 }: ResultsModalProps) {
-  
-  // Enhanced debugging
-  console.log('🎯 ResultsModal render:', {
-    open,
-    hasLatestResult: !!latestResult,
-    latestResult,
-    loading,
-    latestResultId: latestResult?.id,
-    archetype: latestResult?.archetype
-  });
+  const [activeTab, setActiveTab] = useState<'personality' | 'recommendations'>('personality');
+  const [archetypesMap, setArchetypesMap] = useState<Record<string, ArchetypeResult>>({});
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  // Show loading state
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/quiz/content', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!cancelled && data?.archetypes) {
+          setArchetypesMap(data.archetypes as Record<string, ArchetypeResult>);
+        }
+      } catch (e) {
+        // Fallback uses static import; no state change needed
+      }
+    })();
+    return () => { cancelled = true };
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      const el = scrollRef.current;
+      if (el) {
+        el.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      }
+    }
+  }, [open]);
+
   if (loading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,42 +72,6 @@ export function ResultsModal({
     );
   }
 
-  const [activeTab, setActiveTab] = useState<'personality' | 'recommendations'>('personality');
-  // Dynamic archetypes fetched from API; fallback to static if unavailable
-  const [archetypesMap, setArchetypesMap] = useState<Record<string, ArchetypeResult>>({});
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch('/api/quiz/content', { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        if (!cancelled && data?.archetypes) {
-          setArchetypesMap(data.archetypes as Record<string, ArchetypeResult>);
-        }
-      } catch (e) {
-        // Fallback uses static import; no state change needed
-        console.warn('⚠️ ResultsModal: using static archetypes due to fetch error', e);
-      }
-    })();
-    return () => { cancelled = true };
-  }, []);
-
-  // Scroll container for reliable desktop/mobile scrolling
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-
-  // Ensure we start at the top when opening
-  useEffect(() => {
-    if (open) {
-      const el = scrollRef.current;
-      if (el) {
-        el.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-      }
-    }
-  }, [open]);
-
-  // Show results with new Finch-inspired design
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-lg bg-gradient-to-br from-amber-50 to-orange-50 text-gray-900 border-0 p-0 rounded-2xl shadow-2xl">
