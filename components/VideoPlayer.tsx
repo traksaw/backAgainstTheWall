@@ -18,6 +18,7 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({
   src,
+  webmSrc,
   poster,
   title,
   onEnded,
@@ -33,13 +34,6 @@ export function VideoPlayer({
 
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
-      console.log('Video metadata loaded:', {
-        duration: videoRef.current.duration,
-        videoWidth: videoRef.current.videoWidth,
-        videoHeight: videoRef.current.videoHeight,
-        readyState: videoRef.current.readyState,
-        networkState: videoRef.current.networkState
-      })
       setIsLoading(false)
     }
   }
@@ -80,7 +74,7 @@ export function VideoPlayer({
       <video
         ref={videoRef}
         className="w-full h-full"
-        // poster={poster}
+        poster={poster}
         title={title}
         playsInline
         controls
@@ -91,8 +85,9 @@ export function VideoPlayer({
         onLoadedMetadata={handleLoadedMetadata}
         autoPlay={autoPlay}
         preload="metadata"
-        src={src}
       >
+        {webmSrc && <source src={webmSrc} type="video/webm" />}
+        <source src={src} type="video/mp4" />
         Your browser does not support the video tag.
         <track kind="captions" />
       </video>

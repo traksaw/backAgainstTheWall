@@ -35,7 +35,6 @@ export default function Hero({
 
   // Helper function to handle retake - use onRetakeQuiz if provided, otherwise onStartQuiz
   const handleRetakeQuiz = () => {
-    console.log('🎯 Hero: Retake quiz clicked');
     if (onRetakeQuiz) {
       onRetakeQuiz()
     } else {

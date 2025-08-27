@@ -52,14 +52,9 @@ function getArchetypeColor(archetype: string): string {
 function QuizAnswersDisplay({ latestResult }: QuizAnswersDisplayProps) {
   const [showAnswers, setShowAnswers] = useState(false)
 
-  console.log("=== QUIZ ANSWERS DISPLAY ===")
-  console.log("Latest result:", latestResult)
-  console.log("Has answers:", !!latestResult?.answers)
-  console.log("Has responses:", !!latestResult?.answers?.responses)
 
   // Early return with better error handling
   if (!latestResult) {
-    console.log("No latest result provided")
     return (
       <Card className="border-gray-200 bg-gray-50">
         <CardContent className="p-6 text-center">
@@ -71,7 +66,6 @@ function QuizAnswersDisplay({ latestResult }: QuizAnswersDisplayProps) {
   }
 
   if (!latestResult.answers) {
-    console.log("No answers object in result")
     return (
       <Card className="border-gray-200 bg-gray-50">
         <CardContent className="p-6 text-center">
@@ -83,7 +77,6 @@ function QuizAnswersDisplay({ latestResult }: QuizAnswersDisplayProps) {
   }
 
   if (!latestResult.answers.responses || Object.keys(latestResult.answers.responses).length === 0) {
-    console.log("No responses in answers object")
     return (
       <Card className="border-gray-200 bg-gray-50">
         <CardContent className="p-6 text-center">
@@ -96,7 +89,6 @@ function QuizAnswersDisplay({ latestResult }: QuizAnswersDisplayProps) {
 
   const answersArray = Object.entries(latestResult.answers.responses).map(
     ([questionIndex, answer]) => {
-      console.log("Processing answer:", questionIndex, answer)
       return {
         questionIndex: Number(questionIndex),
         ...answer,
@@ -104,7 +96,6 @@ function QuizAnswersDisplay({ latestResult }: QuizAnswersDisplayProps) {
     }
   ).sort((a, b) => a.questionIndex - b.questionIndex)
 
-  console.log("Processed answers array:", answersArray.length)
 
   return (
     <div className="space-y-4">
@@ -117,7 +108,6 @@ function QuizAnswersDisplay({ latestResult }: QuizAnswersDisplayProps) {
           variant="outline"
           size="sm"
           onClick={() => {
-            console.log("Toggle answers visibility:", !showAnswers)
             setShowAnswers(!showAnswers)
           }}
           className="flex items-center gap-2"
@@ -132,7 +122,6 @@ function QuizAnswersDisplay({ latestResult }: QuizAnswersDisplayProps) {
           <CardContent className="p-6">
             <div className="space-y-6">
               {answersArray.map((answer, index) => {
-                console.log("Rendering answer:", index, answer)
                 
                 // Safely handle missing or invalid answer data
                 const questionText = answer.question || `Question ${index + 1}`

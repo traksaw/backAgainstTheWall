@@ -299,15 +299,6 @@ export const enhancedQuizQuestions = [
 export function improvedCalculateQuizScores(answers: Record<number, any>) {
     const result = calculateEnhancedQuizScores(answers)
 
-    // Log detailed results for debugging
-    console.log('🎯 QUIZ SCORING COMPLETE:', {
-        winner: result.winner,
-        scores: result.scores,
-        percentages: result.percentages,
-        isTie: result.isTie,
-        confidence: result.confidence
-    })
-
     return {
         [result.winner]: result.scores[result.winner],
         // Return all scores for debugging
@@ -322,7 +313,6 @@ export function analyzeQuizBias(quizResults: any[]) {
         return acc
     }, {})
 
-    console.log('🎯 Quiz Result Distribution:', archetypeCounts)
 
     const totalResults = quizResults.length
     const expectedPerArchetype = totalResults / 4
@@ -334,7 +324,6 @@ export function analyzeQuizBias(quizResults: any[]) {
         bias: count - expectedPerArchetype
     }))
 
-    console.log('🎯 Bias Analysis:', bias)
 
     return bias
 }

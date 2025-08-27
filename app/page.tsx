@@ -68,11 +68,9 @@ function FilmWebsiteContent() {
   // Handle quiz completion
   const handleQuizComplete = async (finalAnswers: Record<number, QuizAnswer>) => {
     try {
-      console.log('🎯 Processing quiz completion with', Object.keys(finalAnswers).length, 'answers');
 
       // Step 1: Process quiz data locally first
       const quizData = quizLogic.processQuizCompletion(finalAnswers);
-      console.log('🎯 Quiz data processed:', quizData);
 
       // Step 2: Close quiz modal immediately
       modals.setShowQuiz(false);
@@ -91,24 +89,21 @@ function FilmWebsiteContent() {
         sessionId: quizData.sessionId
       };
 
-      console.log('🎯 Formatted result for existing UI:', formattedResult);
 
       // Step 4: Set the local result immediately
       setLocalLatestResult(formattedResult);
 
       // Step 5: Show results with the formatted data
       setTimeout(() => {
-        console.log('🎯 Opening results modal with formatted data');
         modals.setShowResults(true);
       }, 300);
 
       // Step 6: Try backend submission in background
       try {
         await quizHandlers.handleQuizComplete(finalAnswers);
-        console.log('✅ Backend submission successful');
         await refreshResults();
       } catch (error) {
-        console.warn('⚠️ Backend submission failed (but showing results anyway):', error);
+        // Backend submission failed, but results are shown optimistically.
       }
 
     } catch (error) {
@@ -138,7 +133,7 @@ function FilmWebsiteContent() {
       modals.setShowResults(false);
       modals.setShowFilm(true);
     } catch (error) {
-      console.warn('Failed to update results viewed status:', error);
+      // Failed to update results, but proceed to show film anyway.
       modals.setShowResults(false);
       modals.setShowFilm(true);
     }
@@ -152,7 +147,6 @@ function FilmWebsiteContent() {
 
   // Handle starting new quiz
   const handleStartQuiz = () => {
-    console.log('🎯 Starting new quiz - resetting state');
     // Bump session to force QuizModal remount and fresh internal state
     setQuizSession((s) => s + 1)
     // Open quiz after a tick
@@ -162,7 +156,6 @@ function FilmWebsiteContent() {
   }
 
   const handleRetakeQuiz = () => {
-    console.log('🎯 Retaking quiz - complete reset');
 
     // Close any open modals first
     modals.closeAllModals()
@@ -172,7 +165,6 @@ function FilmWebsiteContent() {
 
     // Small delay then open quiz
     setTimeout(() => {
-      console.log('🎯 Opening quiz after reset');
       // Enable auto-reset so the quiz state is fresh but welcome screen remains
       setAutoResetQuiz(true)
       modals.openQuiz()
@@ -205,7 +197,6 @@ function FilmWebsiteContent() {
 
     // Fallback to local result
     if (localLatestResult) {
-      console.log('🎯 Using local result as fallback:', localLatestResult);
       return localLatestResult;
     }
 
@@ -284,15 +275,11 @@ function FilmWebsiteContent() {
         onOpenChange={modals.setShowSignup}
         onSwitchToSignIn={modals.switchToSignIn}
         onSuccess={() => {
-          console.log("=== SIGNUP SUCCESS CALLBACK ===")
           modals.setShowSignup(false)
-          console.log("❌ Signup modal closed via callback")
 
           // Add a small delay to ensure the signup modal closes first
           setTimeout(() => {
-            console.log("🎯 About to call handleStartQuiz (after delay)...")
             handleStartQuiz()
-            console.log("✅ handleStartQuiz completed")
           }, 100) // 100ms delay
         }}
       />
@@ -310,7 +297,6 @@ function FilmWebsiteContent() {
         onOpenChange={(open) => {
           if (!open) {
             // When closing quiz, reset it
-            console.log('🎯 Quiz modal closing - resetting state');
             // Ensure next open is fresh as well
             setQuizSession((s) => s + 1)
             // Disable auto-reset after closing
@@ -326,7 +312,6 @@ function FilmWebsiteContent() {
       <ResultsModal
         open={modals.showResults}
         onOpenChange={(open) => {
-          console.log("=== RESULTS MODAL OPEN CHANGE ===", open)
           modals.setShowResults(open)
         }}
         latestResult={normalizeLatestResult(latestResult)}
@@ -357,7 +342,7 @@ function FilmWebsiteContent() {
           </DialogHeader>
           <div className="relative w-full">
             <VideoPlayer
-              src="https://tkoohwnrcxpmkerj.public.blob.vercel-storage.com/Ambitious_FINAL_1920x1080_compat.mp4"
+              src="https://tkoohwnrcxpmkerj.public.blob.vercel-storage.com/Ambitious_FINAL_1920x1080_compat.webm"
               poster="/assets/desktop-movie-poster.png"
               title="Back Against the Wall"
               onEnded={handleFilmComplete}
