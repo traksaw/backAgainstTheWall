@@ -261,4 +261,3 @@ For questions or support, please contact the development team or open an issue i
 
 **Live Demo**: [backagainstthewall.vercel.app](https://backagainstthewall.vercel.app/)
 
-Built with ❤️ by the Back Against the Wall team
