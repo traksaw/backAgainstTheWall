@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { fetchQuizContent } from '@/lib/quiz/content'
 
-export const revalidate = 60 // cache for 1 minute; adjust as needed
+// Force dynamic rendering and disable caching so Sanity updates appear immediately
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET() {
   try {

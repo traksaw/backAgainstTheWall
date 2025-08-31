@@ -516,7 +516,7 @@ export const quizQuestions: QuizQuestion[] = [
 ];
 
 // Validate the quiz structure when this module is loaded
-console.log('🎯 Quiz Balance Validation:', validateQuizBalance(quizQuestions));
+validateQuizBalance(quizQuestions);
 
 // Export function to check quiz integrity
 export function validateQuizIntegrity() {
@@ -549,10 +549,8 @@ export function validateQuizIntegrity() {
   });
   
   if (issues.length === 0) {
-    console.log('✅ Quiz integrity check passed!');
     return { valid: true, issues: [] };
   } else {
-    console.error('❌ Quiz integrity issues found:');
     issues.forEach(issue => console.error(issue));
     return { valid: false, issues };
   }
