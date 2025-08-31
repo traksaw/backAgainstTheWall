@@ -10,6 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, CheckCircle, AlertCircle, User, Mail, MapPin, Briefcase, Lock } from "lucide-react"
+import { TermsModal } from "@/components/modals/TermsModal"
+import { PrivacyModal } from "@/components/modals/PrivacyModal"
 
 interface SignUpModalProps {
   open: boolean
@@ -34,6 +36,8 @@ export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }:
   const [currentStep, setCurrentStep] = useState(1)
   const [showPassword, setShowPassword] = useState(false)
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
+  const [showTermsModal, setShowTermsModal] = useState(false)
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -252,9 +256,9 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="w-[95vw] max-w-md bg-white text-gray-900 border-0 shadow-2xl">
+        <DialogContent className="w-[95vw] max-w-md bg-white text-gray-900 border-0 shadow-2xl rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center text-gray-900">Create Your Account</DialogTitle>
+          <DialogTitle className="text-xl sm:text-2xl font-bold text-center text-gray-900">Create Your Account</DialogTitle>
           <div className="flex items-center justify-center space-x-2 mt-4">
             {[1, 2, 3].map((step) => (
               <div key={step} className="flex items-center">
@@ -280,7 +284,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           {/* Step 1: Basic Information */}
           {currentStep === 1 && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName" className="text-sm font-medium text-gray-700 flex items-center">
                     <User className="w-4 h-4 mr-1" />
@@ -552,8 +556,20 @@ const handleSubmit = async (e: React.FormEvent) => {
                   />
                   <Label htmlFor="acceptTerms" className="text-sm text-gray-700 leading-relaxed">
                     I have read and agree to the{" "}
-                    <span className="text-[#B95D38] font-medium">Terms and Conditions</span> and{" "}
-                    <span className="text-[#B95D38] font-medium">Privacy Policy</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowTermsModal(true)}
+                      className="text-[#B95D38] font-medium hover:underline"
+                    >
+                      Terms and Conditions
+                    </button> and{" "}
+                    <button
+                      type="button"
+                      onClick={() => setShowPrivacyModal(true)}
+                      className="text-[#B95D38] font-medium hover:underline"
+                    >
+                      Privacy Policy
+                    </button>
                   </Label>
                 </div>
                 {errors.terms && (
@@ -627,6 +643,16 @@ const handleSubmit = async (e: React.FormEvent) => {
           </div>
         </form>
       </DialogContent>
+      
+      {/* Terms and Privacy Modals */}
+      <TermsModal 
+        open={showTermsModal} 
+        onOpenChange={setShowTermsModal} 
+      />
+      <PrivacyModal 
+        open={showPrivacyModal} 
+        onOpenChange={setShowPrivacyModal} 
+      />
     </Dialog>
   )
 }
