@@ -56,7 +56,7 @@ export function calculateEnhancedQuizScores(answers: Record<number, any>): QuizS
 
     type Archetype = 'Avoider' | 'Gambler' | 'Realist' | 'Architect'
     let winner: Archetype
-    let isTie = tiedArchetypes.length > 1
+    const isTie = tiedArchetypes.length > 1
 
     if (isTie) {
 

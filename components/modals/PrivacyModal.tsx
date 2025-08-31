@@ -75,7 +75,8 @@ export function PrivacyModal({ open, onOpenChange }: PrivacyModalProps) {
 
               <section className="mb-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-3">3. Information Sharing</h2>
-                <p>We do not sell, trade, or rent your personal information. We may share information in these limited circumstances:</p>
+                <p className="text-sm sm:text-base text-gray-600">We may share your information in the following circumstances: with service providers who assist us in operating our application, when required by law, or to protect our rights and the safety of our users. We don't sell your personal information.</p>
+                <p>We may share information in these limited circumstances:</p>
                 
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Service Providers</h3>
                 <p>We may share data with trusted third-party services that help us operate our application:</p>
@@ -138,6 +139,7 @@ export function PrivacyModal({ open, onOpenChange }: PrivacyModalProps) {
                   <li>Disable cookies (may affect functionality)</li>
                   <li>Opt out of non-essential communications</li>
                 </ul>
+                <p className="text-sm sm:text-base text-gray-600">You have the right to access, update, or delete your personal information. You can also opt out of certain communications. To exercise these rights, please contact us at the email address provided in the &ldquo;Contact Us&rdquo; section.</p>
               </section>
 
               <section className="mb-8">

@@ -22,15 +22,14 @@ export function TermsModal({ open, onOpenChange }: TermsModalProps) {
             </h1>
             
             <div className="prose max-w-none text-gray-700 space-y-4 sm:space-y-6">
+              <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Welcome to &ldquo;Back Against the Wall.&rdquo; These terms govern your use of our application and services.</p>
               <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6">
                 <strong>Last updated:</strong> {new Date().toLocaleDateString()}
               </p>
 
               <section className="mb-6 sm:mb-8">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">1. Acceptance of Terms</h2>
-                <p>
-                  By accessing and using the Back Against The Wall quiz application ("Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
-                </p>
+                <p className="text-sm sm:text-base text-gray-600">By accessing or using &ldquo;Back Against the Wall&rdquo; (the &ldquo;Service&rdquo;), you agree to be bound by these Terms of Service.</p>
               </section>
 
               <section className="mb-6 sm:mb-8">
@@ -54,8 +53,7 @@ export function TermsModal({ open, onOpenChange }: TermsModalProps) {
               </section>
 
               <section className="mb-6 sm:mb-8">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">4. User Conduct</h2>
-                <p className="text-sm sm:text-base">You agree not to use the Service to:</p>
+                <p className="text-sm sm:text-base text-gray-600">You may not use our service for any unlawful purpose or in any way that could damage, disable, overburden, or impair our service. You agree not to access our service using automated means (&ldquo;bots&rdquo;).</p>
                 <ul className="list-disc list-inside ml-2 sm:ml-4 mt-2 text-sm sm:text-base">
                   <li>Violate any applicable laws or regulations</li>
                   <li>Impersonate any person or entity</li>
