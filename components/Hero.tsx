@@ -35,7 +35,6 @@ export default function Hero({
 
   // Helper function to handle retake - use onRetakeQuiz if provided, otherwise onStartQuiz
   const handleRetakeQuiz = () => {
-    console.log('🎯 Hero: Retake quiz clicked');
     if (onRetakeQuiz) {
       onRetakeQuiz()
     } else {
@@ -270,9 +269,10 @@ export default function Hero({
                       <h3 className="text-xl font-semibold text-gray-900">
                         Welcome back, <span className="text-[#B95D38]">The {latestResult.archetype}</span>!
                       </h3>
+                      <p className="text-gray-600 mb-6">We'd love to hear from you! Whether you have questions about the quiz, feedback about your results, or just want to connect with the team behind “Back Against the Wall,” don't hesitate to reach out.</p>
                       <p className="text-gray-600">
                         {latestResult.hasViewedResults
-                          ? "Ready to watch the film through your archetype lens?"
+                          ? "Ready to watch the film through your archetype's lens?"
                           : "Would you like to review your results first, or go straight to the film?"
                         }
                       </p>

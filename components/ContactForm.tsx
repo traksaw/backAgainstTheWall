@@ -108,6 +108,7 @@ export default function ContactForm(): JSX.Element {
                             <div className="text-center p-8 bg-green-50 rounded-lg border border-green-200">
                                 <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
                                 <h3 className="text-lg font-semibold text-green-800 mb-2">Thank You!</h3>
+                                <p className="text-gray-600 mb-6">We&apos;d love to hear from you! Whether you have questions about the quiz, feedback about your results, or just want to connect with the team behind &ldquo;Back Against the Wall,&rdquo; don&apos;t hesitate to reach out.</p>
                                 <p className="text-green-700">
                                     Thanks for reaching out! We appreciate feedback and insights. We'll reply to your email within 1-2 business days.
                                 </p>

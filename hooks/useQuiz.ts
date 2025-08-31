@@ -29,22 +29,9 @@ export function useQuiz() {
 
     setLoading(true)
     try {
-      console.log("📊 Fetching quiz results for user:", user._id)
       const results = await QuizService.getUserQuizResults()
-      console.log("✅ Quiz results fetched:", results.length, "results")
-      
       setQuizResults(results)
       setLatestResult(results[0] || null)
-      
-      if (results[0]) {
-        console.log("📈 Latest result:", {
-          id: results[0]._id,
-          archetype: results[0].archetype,
-          score: results[0].score,
-          hasViewedResults: results[0].hasViewedResults,
-          hasWatchedFilm: results[0].hasWatchedFilm
-        })
-      }
     } catch (error) {
       console.error("Error loading quiz results:", error)
       setQuizResults([])
@@ -57,9 +44,6 @@ export function useQuiz() {
   const submitQuiz = async (answers: Record<number, any>, sessionId?: string) => {
     if (!user?._id) throw new Error("User not authenticated")
 
-    console.log("=== QUIZ SUBMISSION START ===")
-    console.log("Answers to submit:", Object.keys(answers).length)
-
     const scores = { Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 }
     Object.values(answers).forEach((answer) => {
       if (answer.archetype && answer.points) {
@@ -71,9 +55,6 @@ export function useQuiz() {
       a[1] > b[1] ? a : b
     )[0] as keyof typeof scores
 
-    console.log("Calculated scores:", scores)
-    console.log("Winning archetype:", topArchetype)
-
     setLoading(true)
     try {
       const result = await QuizService.submitQuiz({
@@ -83,8 +64,6 @@ export function useQuiz() {
         answers,
         sessionId,
       })
-      
-      console.log("✅ Quiz submitted successfully:", result)
       
       // Update local state immediately
       setLatestResult(result)
@@ -105,14 +84,12 @@ export function useQuiz() {
   ) => {
     setLoading(true)
     try {
-      console.log("🔄 Updating quiz result:", resultId, updates)
       
       if (!resultId) {
         throw new Error("No resultId passed to updateQuizResult")
       }
 
       const updatedResult = await QuizService.updateQuizResult(resultId, updates)
-      console.log("✅ Quiz result updated:", updatedResult)
 
       setQuizResults((prev) =>
         prev.map((result) =>
