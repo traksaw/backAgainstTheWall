@@ -1,12 +1,12 @@
-# Back Against the Wall 🎬
+# Back Against the Wall
 
 An interactive web application for the short film "Back Against the Wall" featuring a financial personality quiz that reveals how you handle pressure and financial decisions.
 
-## 🌟 Live Demo
+## Live Demo
 
 **[Visit the App](https://backagainstthewall.vercel.app/)**
 
-## 📖 About
+## About
 
 "Back Against the Wall" is an ambitious short film exploring financial pressure and decision-making. This companion web application allows viewers to:
 
@@ -19,12 +19,12 @@ An interactive web application for the short film "Back Against the Wall" featur
 
 The quiz identifies one of four financial personality types:
 
-- **🛡️ The Avoider** - Prioritizes security, minimizes risk
-- **🎲 The Gambler** - Takes bold risks for potential rewards  
-- **⚖️ The Realist** - Balances caution with calculated opportunities
-- **🏗️ The Architect** - Plans strategically for long-term growth
+- **The Avoider** - Prioritizes security, minimizes risk
+- **The Gambler** - Takes bold risks for potential rewards  
+- **The Realist** - Balances caution with calculated opportunities
+- **The Architect** - Plans strategically for long-term growth
 
-## ✨ Features
+## Features
 
 - **Interactive Personality Quiz** - Discover your financial archetype
 - **Personalized Results** - Detailed analysis with recommendations
@@ -34,7 +34,7 @@ The quiz identifies one of four financial personality types:
 - **Cast & Crew Profiles** - Meet the talented team behind the film
 - **Community Features** - Connect with other viewers
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 - **Next.js 14** - React framework with App Router
@@ -55,7 +55,7 @@ The quiz identifies one of four financial personality types:
 - **Git LFS** - Large file management
 - **Vercel** - Deployment and hosting
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -112,7 +112,7 @@ The application requires MongoDB collections for:
 - `quiz_results` - Quiz responses and archetype results
 - `quiz_sessions` - Session tracking and analytics
 
-## 📱 Screenshots
+## Screenshots
 
 ### Quiz Experience
 The interactive quiz guides users through financial scenarios to determine their archetype.
@@ -123,7 +123,7 @@ Detailed analysis showing personality breakdown with actionable recommendations.
 ### Film Integration
 Watch "Back Against the Wall" with insights tailored to your financial personality.
 
-## 🎯 Project Structure
+## Project Structure
 
 ```
 ├── app/                    # Next.js App Router pages
@@ -146,7 +146,7 @@ Watch "Back Against the Wall" with insights tailored to your financial personali
 └── sanity/                # Sanity CMS configuration
 ```
 
-## 🔧 Development
+## Development
 
 ### Available Scripts
 
@@ -171,14 +171,14 @@ pnpm db:seed      # Seed database with sample data
 - **Mobile-first** responsive design approach
 - **Component-driven** architecture
 
-## 🎬 About the Film
+## About the Film
 
 "Back Against the Wall" is an ambitious short film exploring themes of financial pressure, decision-making, and personal growth. The film features:
 
 - **Cast**: Jenna Lam, Travoye Joyner, Bi Jean Ngo
 - **Supported by**: 3 Left Handed Women, Independent Media Public Fund, Sundance Institute, The Asian American Foundation, Cambodian Association of Greater Philadelphia
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see our contributing guidelines for details on:
 
@@ -187,17 +187,17 @@ We welcome contributions! Please see our contributing guidelines for details on:
 - Issue reporting
 - Feature requests
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Sundance Institute for supporting independent filmmaking
 - The Asian American Foundation for community support
 - All cast, crew, and supporters who made this project possible
 
-## 📞 Contact
+## Contact
 
 For questions about the project or film:
 
