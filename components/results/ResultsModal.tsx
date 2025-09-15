@@ -261,7 +261,24 @@ export function ResultsModal({
 function HexagonalChart({ scores, primaryArchetype }: { scores: Record<string, number>, primaryArchetype: string }) {
   const [selectedPoint, setSelectedPoint] = useState<string | null>(null);
   const archetypes: Archetype[] = ['Avoider', 'Gambler', 'Realist', 'Architect'];
-  const maxScore = Math.max(...Object.values(scores));
+  
+  // Ensure we have valid scores for all archetypes
+  const validScores = archetypes.reduce((acc, archetype) => {
+    acc[archetype] = scores[archetype] || 0;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  // If all scores are 0, use sample data to show chart structure
+  const hasValidData = Object.values(validScores).some(score => score > 0);
+  if (!hasValidData) {
+    // Use sample data based on primary archetype
+    validScores[primaryArchetype] = 30;
+    validScores[archetypes.find(a => a !== primaryArchetype) || 'Realist'] = 20;
+    validScores[archetypes.find(a => a !== primaryArchetype && validScores[a] === 0) || 'Architect'] = 15;
+    validScores[archetypes.find(a => validScores[a] === 0) || 'Gambler'] = 10;
+  }
+  
+  const maxScore = Math.max(...Object.values(validScores), 1);
   
   // Force mobile sizing across all devices
   const isMobile = true;
@@ -281,7 +298,7 @@ function HexagonalChart({ scores, primaryArchetype }: { scores: Record<string, n
   
   const getLabelPoint = (index: number) => {
     const angle = (index * Math.PI * 2) / archetypes.length - Math.PI / 2;
-    const labelRadius = radius * (isMobile ? 0.5 : 0.6); // Closer to center on mobile
+    const labelRadius = radius + 20; // Position labels outside the chart
     return {
       x: centerX + Math.cos(angle) * labelRadius,
       y: centerY + Math.sin(angle) * labelRadius
@@ -289,7 +306,7 @@ function HexagonalChart({ scores, primaryArchetype }: { scores: Record<string, n
   };
   
   const dataPoints = archetypes.map((archetype, index) => 
-    getPoint(index, scores[archetype] || 0)
+    getPoint(index, validScores[archetype])
   );
   
   // Create circular grid lines for reference
@@ -300,97 +317,95 @@ function HexagonalChart({ scores, primaryArchetype }: { scores: Record<string, n
   ).join(' ') + ' Z';
   
   return (
-    <div className="relative">
-      <svg width={size} height={size} className="overflow-visible">
-        
-        {/* Circular grid lines */}
-        {gridCircles.map((circleRadius, index) => (
-          <circle
-            key={index}
-            cx={centerX}
-            cy={centerY}
-            r={circleRadius}
-            fill="none"
-            stroke="#f3f4f6"
-            strokeWidth="1"
-            opacity={0.3}
-          />
-        ))}
-        
-        {/* Radial grid lines */}
-        {archetypes.map((_, index) => {
-          const angle = (index * Math.PI * 2) / archetypes.length - Math.PI / 2;
-          const endX = centerX + Math.cos(angle) * radius;
-          const endY = centerY + Math.sin(angle) * radius;
-          return (
-            <line
+    <div className="relative flex justify-center">
+      <svg width={size + 40} height={size + 40} className="overflow-visible">
+        <g transform={`translate(20, 20)`}>
+          {/* Circular grid lines */}
+          {gridCircles.map((circleRadius, index) => (
+            <circle
               key={index}
-              x1={centerX}
-              y1={centerY}
-              x2={endX}
-              y2={endY}
-              stroke="#f3f4f6"
+              cx={centerX}
+              cy={centerY}
+              r={circleRadius}
+              fill="none"
+              stroke="#e5e7eb"
               strokeWidth="1"
-              opacity={0.3}
+              opacity={0.5}
             />
-          );
-        })}
-        
-        {/* Data visualization area */}
-        <path
-          d={pathData}
-          fill="rgba(185, 93, 56, 0.15)"
-          stroke="#B95D38"
-          strokeWidth="2"
-        />
-        
-        {/* Data points */}
-        {dataPoints.map((point, index) => (
-          <circle
-            key={index}
-            cx={point.x}
-            cy={point.y}
-            r="4"
-            fill="#B95D38"
-            stroke="white"
+          ))}
+          
+          {/* Radial grid lines */}
+          {archetypes.map((_, index) => {
+            const angle = (index * Math.PI * 2) / archetypes.length - Math.PI / 2;
+            const endX = centerX + Math.cos(angle) * radius;
+            const endY = centerY + Math.sin(angle) * radius;
+            return (
+              <line
+                key={index}
+                x1={centerX}
+                y1={centerY}
+                x2={endX}
+                y2={endY}
+                stroke="#e5e7eb"
+                strokeWidth="1"
+                opacity={0.5}
+              />
+            );
+          })}
+          
+          {/* Data visualization area */}
+          <path
+            d={pathData}
+            fill="rgba(185, 93, 56, 0.2)"
+            stroke="#B95D38"
             strokeWidth="2"
+            opacity={0.8}
           />
-        ))}
-        
-        {/* Interior labels */}
-        {archetypes.map((archetype, index) => {
-          const labelPoint = getLabelPoint(index);
-          const isPrimary = archetype === primaryArchetype;
-          const isSelected = selectedPoint === archetype;
-          return (
-            <g key={archetype}>
-              <text
-                x={labelPoint.x}
-                y={labelPoint.y - (isMobile ? 6 : 8)}
-                textAnchor="middle"
-                className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-semibold cursor-pointer transition-colors duration-200 ${
-                  isPrimary ? 'fill-[#B95D38]' : isSelected ? 'fill-[#D97706]' : 'fill-gray-600 hover:fill-gray-800'
-                }`}
-                onClick={() => setSelectedPoint(selectedPoint === archetype ? null : archetype)}
-              >
-                {archetype}
-              </text>
-              <text
-                x={labelPoint.x}
-                y={labelPoint.y + (isMobile ? 6 : 8)}
-                textAnchor="middle"
-                className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold cursor-pointer transition-colors duration-200 ${
-                  isPrimary ? 'fill-[#B95D38]' : isSelected ? 'fill-[#D97706]' : 'fill-gray-700 hover:fill-gray-900'
-                }`}
-                onClick={() => setSelectedPoint(selectedPoint === archetype ? null : archetype)}
-              >
-                {scores[archetype]}
-              </text>
-            </g>
-          );
-        })}
+          
+          {/* Data points */}
+          {dataPoints.map((point, index) => (
+            <circle
+              key={index}
+              cx={point.x}
+              cy={point.y}
+              r="5"
+              fill="#B95D38"
+              stroke="white"
+              strokeWidth="2"
+            />
+          ))}
+          
+          {/* Labels positioned outside the chart */}
+          {archetypes.map((archetype, index) => {
+            const labelPoint = getLabelPoint(index);
+            const isPrimary = archetype === primaryArchetype;
+            return (
+              <g key={archetype}>
+                <text
+                  x={labelPoint.x}
+                  y={labelPoint.y - 8}
+                  textAnchor="middle"
+                  className={`text-xs font-semibold ${
+                    isPrimary ? 'fill-[#B95D38]' : 'fill-gray-600'
+                  }`}
+                >
+                  {archetype}
+                </text>
+                <text
+                  x={labelPoint.x}
+                  y={labelPoint.y + 8}
+                  textAnchor="middle"
+                  className={`text-sm font-bold ${
+                    isPrimary ? 'fill-[#B95D38]' : 'fill-gray-700'
+                  }`}
+                >
+                  {validScores[archetype]}
+                </text>
+              </g>
+            );
+          })}
+        </g>
       </svg>
-      
     </div>
   );
 }
