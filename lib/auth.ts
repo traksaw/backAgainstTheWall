@@ -2,7 +2,7 @@
 
 import bcrypt from "bcryptjs"
 import User, { IUser } from "@/models/User"
-import { connectDB } from "@/lib/mongoose"
+import connectDB from "@/lib/mongoose"
 
 export interface SignUpData {
   email: string

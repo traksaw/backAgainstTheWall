@@ -52,15 +52,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      setLoading(true)
-      await fetchCurrentUser()
-      setIsHydrated(true)
-      setLoading(false)
-    }
+    // This effect runs once on mount to mark hydration as complete
+    setIsHydrated(true);
+  }, []);
 
-    initializeAuth()
-  }, [])
+  useEffect(() => {
+    // This effect runs only after hydration is complete
+    if (isHydrated) {
+      const initializeAuth = async () => {
+        setLoading(true);
+        await fetchCurrentUser();
+        setLoading(false);
+      };
+      initializeAuth();
+    }
+  }, [isHydrated]);
 
   const loadUserProfile = async (user: IUser) => {
     setLoading(true)

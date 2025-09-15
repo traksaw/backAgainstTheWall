@@ -1,9 +1,29 @@
 "use client"
 
 import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 export default function TermsPage() {
   const router = useRouter()
+  const [date, setDate] = useState('')
+
+  useEffect(() => {
+    setDate(new Date().toLocaleDateString())
+  }, [])
+
+  const handleClose = () => {
+    // Prefer navigating back if possible (no full reload)
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+      return
+    }
+    // If opened in a new tab, try to close the tab
+    if (typeof window !== 'undefined') {
+      window.close()
+    }
+    // Fallback: navigate to home
+    router.push('/')
+  }
   
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -15,7 +35,7 @@ export default function TermsPage() {
           
           <div className="prose max-w-none text-gray-700">
             <p className="text-lg mb-6">
-              <strong>Last updated:</strong> {new Date().toLocaleDateString()}
+              <strong>Last updated:</strong> {date}
             </p>
 
             <section className="mb-8">
@@ -114,10 +134,10 @@ export default function TermsPage() {
 
           <div className="mt-8 pt-8 border-t border-gray-200 text-center">
             <button 
-              onClick={() => router.push('/')}
+              onClick={handleClose}
               className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
             >
-              Back to Home
+              Close
             </button>
           </div>
         </div>

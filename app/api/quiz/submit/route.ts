@@ -1,7 +1,7 @@
 // Update your app/api/quiz/submit/route.ts
 import { NextResponse, NextRequest } from "next/server"
 import QuizResultModel from "@/models/QuizResult"
-import { connectDB } from "@/lib/mongoose"
+import connectDB from "@/lib/mongoose"
 import mongoose from "mongoose"
 import { getUserIdFromRequest } from "@/lib/jwt"
 
@@ -78,6 +78,8 @@ export async function POST(req: NextRequest) {
         answerStructure.scores[answer.archetype as keyof typeof answerStructure.scores] += answer.points
       }
     })
+
+    console.log("Calculated archetype scores:", answerStructure.scores)
     
     const quizResultData = {
       userId: new mongoose.Types.ObjectId(userId),

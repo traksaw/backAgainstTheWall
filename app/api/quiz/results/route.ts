@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server"
 import { getUserIdFromRequest } from "@/lib/jwt"
-import { connectDB } from "@/lib/mongoose"
+import connectDB from "@/lib/mongoose"
 import QuizResultModel from "@/models/QuizResult"
 import mongoose from "mongoose"
 

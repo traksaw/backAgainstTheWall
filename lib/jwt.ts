@@ -1,49 +1,45 @@
-import jwt, { SignOptions } from "jsonwebtoken"
-import type { NextRequest } from "next/server"
-import { cookies } from "next/headers"
+import jwt, { SignOptions } from "jsonwebtoken";
+import type { NextRequest } from "next/server";
 
-const JWT_SECRET = process.env.JWT_SECRET || "changeme-in-production"
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error(
+      "JWT_SECRET environment variable is not defined. Please add it to your .env.local file."
+    );
+  }
+  return secret;
+};
 
 interface JwtPayload {
-  userId: string
+  userId: string;
 }
 
 export function signToken(payload: JwtPayload, options?: SignOptions): string {
-  return jwt.sign(payload, JWT_SECRET, {
+  return jwt.sign(payload, getJwtSecret(), {
     expiresIn: "7d",
     ...options,
-  })
+  });
 }
 
+export function verifyToken(token: string): JwtPayload {
+  return jwt.verify(token, getJwtSecret()) as JwtPayload;
+}
 
-export function verifyToken(token: string): JwtPayload | null {
+export async function getUserIdFromRequest(
+  req: NextRequest
+): Promise<string | null> {
+  const token = req.cookies.get("token")?.value;
+  if (!token) return null;
+
   try {
-    return jwt.verify(token, JWT_SECRET) as JwtPayload
-  } catch {
-    return null
+    const decoded = verifyToken(token);
+    return decoded.userId;
+  } catch (error) {
+    console.error("Invalid token:", error);
+    return null;
   }
 }
 
-export async function verifyTokenAsync(token: string): Promise<{ userId: string }> {
-  return new Promise((resolve, reject) => {
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
-      if (err || !decoded) return reject(err)
-      resolve(decoded as { userId: string })
-    })
-  })
-}
-
-// ✅ Updated: get token from cookies on the request
-export async function getUserIdFromRequest(req: NextRequest): Promise<string | null> {
-  const token = req.cookies.get("token")?.value
-  if (!token) return null
-
-  try {
-    const decoded = await verifyTokenAsync(token)
-    return decoded.userId
-  } catch {
-    return null
-  }
-}
 
 
