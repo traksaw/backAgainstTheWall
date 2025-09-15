@@ -1,5 +1,7 @@
 # Back Against the Wall
 
+![Back Against the Wall Movie Poster](./public/assets/desktop-movie-poster.png)
+
 An interactive web application for the short film "Back Against the Wall" featuring a financial personality quiz that reveals how you handle pressure and financial decisions.
 
 ## Live Demo
