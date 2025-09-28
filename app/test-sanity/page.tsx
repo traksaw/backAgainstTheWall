@@ -7,7 +7,7 @@ interface CastMember {
   name: string
   role: string
   description: string
-  image: string
+  image?: string
   readMoreUrl?: string
   order?: number
   imageAlt?: string
