@@ -3,25 +3,28 @@
 export type Archetype = "Avoider" | "Gambler" | "Realist" | "Architect"
 
 export interface QuizAnswer {
-  id: number
+  id?: number
   archetype: Archetype
   points: number
   text: string
-  questionId?: number | string
+  questionId?: number
   question?: string
   answer?: string
 }
 
 export interface QuizResult {
-  _id: string;
-  userId: string;
+  _id?: string;
+  id?: string;
+  userId?: string;
   archetype: Archetype;
   score: number;
-  answers: Record<number, QuizAnswer>;
-  hasViewedResults: boolean;
-  hasWatchedFilm: boolean;
-  createdAt: string;
-  updatedAt: string;
+  scores: Record<Archetype, number>;
+  answers?: Record<number, QuizAnswer>;
+  hasViewedResults?: boolean;
+  hasWatchedFilm?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  sessionId?: string;
 }
 
 export interface QuizResultUpdate {

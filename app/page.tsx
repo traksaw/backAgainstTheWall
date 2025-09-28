@@ -18,7 +18,14 @@ import Footer from "@/components/Footer"
 import { VideoPlayer } from "@/components/VideoPlayer"
 import { QuizHistorySection } from "@/components/QuizHistorySection"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import type { QuizResult, Archetype, QuizScores, QuizAnswer } from '@/types/quiz'
+import { useModalState } from "@/hooks/useModalState"
+import { useQuizHandlers } from "@/hooks/useQuizHandlers"
+import { useAuth } from "@/hooks/useAuth"
+import { useQuiz } from "@/hooks/useQuiz"
+import type { QuizResult as TypesQuizResult, Archetype, QuizScores, QuizAnswer as TypesQuizAnswer } from '@/types/quiz'
+import type { QuizResult, QuizAnswer } from '@/lib/quiz'
+import type { Supporter } from "@/types/supporter"
+import type { User, Profile } from "@/types/auth"
 
 interface CastMember {
   name: string;
@@ -29,15 +36,31 @@ interface CastMember {
   order: number;
 }
 
-import { useModalState } from "@/hooks/useModalState"
-import { useQuizHandlers } from "@/hooks/useQuizHandlers"
-import { useAuth } from "@/hooks/useAuth"
-import { useQuiz } from "@/hooks/useQuiz"
-
 // This component now uses the auth context properly
 // Triggering redeploy after CORS update
 function FilmWebsiteContent() {
-  const { user, profile, signOut, loading: authLoading } = useAuth()
+  const { user: rawUser, profile: rawProfile, signOut, loading: authLoading } = useAuth()
+
+  // Convert IUser to User and Profile
+  const user: User | null = rawUser ? {
+    _id: rawUser._id,
+    email: rawUser.email,
+    first_name: rawUser.first_name || '',
+    last_name: rawUser.last_name || ''
+  } : null
+
+  const profile: Profile | null = rawProfile ? {
+    first_name: rawProfile.first_name || '',
+    last_name: rawProfile.last_name || ''
+  } : null
+
+  // Convert to UserProfile for QuizModal
+  const userProfile = {
+    _id: rawUser?._id || '',
+    email: rawUser?.email || '',
+    first_name: rawProfile?.first_name || '',
+    last_name: rawProfile?.last_name || ''
+  }
   const { latestResult, refreshResults, loading: quizLoading } = useQuiz()
   const [localLatestResult, setLocalLatestResult] = useState<QuizResult | null>(null)
   const [supporters, setSupporters] = useState<Supporter[]>([])
@@ -96,7 +119,7 @@ function FilmWebsiteContent() {
   }, [])
 
   // Handle quiz completion
-  const handleQuizComplete = async (finalAnswers: Record<number, QuizAnswer>) => {
+  const handleQuizComplete = async (finalAnswers: Record<number, TypesQuizAnswer>) => {
     try {
 
       // Step 1: Create a session ID
@@ -132,7 +155,20 @@ function FilmWebsiteContent() {
 
       // Step 6: Try backend submission in background
       try {
-        await quizHandlers.handleQuizComplete(finalAnswers);
+        // Convert TypesQuizAnswer to QuizAnswer for backend submission
+        const convertedAnswers: Record<number, QuizAnswer> = {};
+        Object.entries(finalAnswers).forEach(([key, answer]) => {
+          convertedAnswers[Number(key)] = {
+            id: answer.id || 0,
+            archetype: answer.archetype,
+            points: answer.points,
+            text: answer.text,
+            questionId: answer.questionId,
+            question: answer.question
+          };
+        });
+        
+        await quizHandlers.handleQuizComplete(convertedAnswers);
         await refreshResults();
       } catch (error) {
         console.warn('Backend submission failed, but results are shown optimistically:', error)
@@ -207,27 +243,13 @@ function FilmWebsiteContent() {
     return <LoadingScreen message="Loading..." />
   }
 
-  // Convert whatever the backend returns into a UI-friendly QuizResult
-  interface RawQuizResult {
-    _id?: string;
-    id?: string;
-    archetype?: string;
-    score?: number;
-    scores?: QuizScores;
-    createdAt?: string;
-    hasViewedResults?: boolean;
-    hasWatchedFilm?: boolean;
-    answers?: Record<number, QuizAnswer>;
-    sessionId?: string;
-  }
-
-  function normalizeLatestResult(raw: RawQuizResult): QuizResult | null {
+  function normalizeLatestResult(raw: QuizResult | null): TypesQuizResult | null {
     // First, try the backend result
     if (raw && (raw._id || raw.id)) {
       const scores: QuizScores = raw.scores ?? { Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 };
 
       return {
-        _id: raw._id || raw.id,
+        _id: raw._id || raw.id || '',
         id: String(raw._id ?? raw.id ?? ''),
         archetype: raw.archetype as Archetype,
         score: Number(raw.score ?? 0),
@@ -235,7 +257,7 @@ function FilmWebsiteContent() {
         createdAt: raw.createdAt ? new Date(raw.createdAt).toISOString() : undefined,
         hasViewedResults: raw.hasViewedResults ?? false,
         hasWatchedFilm: raw.hasWatchedFilm ?? false,
-        answers: raw.answers,
+        answers: raw.answers as Record<number, TypesQuizAnswer> | undefined,
         sessionId: raw.sessionId
       }
     }
@@ -261,11 +283,9 @@ function FilmWebsiteContent() {
       {/* Hero Section */}
       <Hero
         user={user}
-        profile={profile}
         latestResult={latestResult}
         supporters={supporters}
         onSignUp={modals.openSignup}
-        onSignIn={modals.openSignin}
         onStartQuiz={handleStartQuiz} // For first time
         onRetakeQuiz={handleRetakeQuiz} // For retaking - pass this function
         onShowResults={modals.openResults}
@@ -350,7 +370,7 @@ function FilmWebsiteContent() {
           modals.setShowQuiz(open)
         }}
         onQuizComplete={handleQuizComplete}
-        profile={profile}
+        profile={userProfile}
         autoReset={autoResetQuiz}
       />
 
@@ -392,7 +412,6 @@ function FilmWebsiteContent() {
               title="Back Against the Wall"
               onEnded={handleFilmComplete}
               onError={quizHandlers.handleVideoError}
-              archetype={latestResult?.archetype}
               className="aspect-video w-full"
               autoPlay={false}
             />

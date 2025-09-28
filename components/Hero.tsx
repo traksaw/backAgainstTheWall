@@ -6,25 +6,14 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { FadeIn, FadeInUp, FadeInScale } from "@/components/ui/fade-in"
 import SupportersSection from "./SupportersSection"
+import { Supporter } from "@/types/supporter"
+import type { QuizResult } from "@/types/quiz"
 
 interface User {
   _id: string;
   email: string;
   first_name: string;
   last_name: string;
-}
-
-interface QuizResult {
-  _id: string;
-  archetype: string;
-  hasViewedResults: boolean;
-  hasWatchedFilm: boolean;
-}
-
-interface Supporter {
-  name: string;
-  amount: number;
-  message?: string;
 }
 
 type HeroProps = {

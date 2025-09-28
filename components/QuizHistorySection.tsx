@@ -19,7 +19,7 @@ import {
   CheckCircle,
   X,
 } from "lucide-react"
-import type { IQuizResult } from "@/models/QuizResult"
+import type { QuizResult } from "@/lib/quiz"
 
 interface QuizHistorySectionProps {
   open: boolean
@@ -28,10 +28,10 @@ interface QuizHistorySectionProps {
 
 export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionProps) {
   const { quizResults, loading } = useQuiz()
-  const [selectedResult, setSelectedResult] = useState<IQuizResult | null>(null)
+  const [selectedResult, setSelectedResult] = useState<QuizResult | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
 
-  const viewResultDetails = (result: IQuizResult) => {
+  const viewResultDetails = (result: QuizResult) => {
     setSelectedResult(result)
     setShowDetailModal(true)
   }
@@ -86,24 +86,17 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
   }
 
   // Helper function to get the number of questions answered
-  const getQuestionsAnswered = (result: IQuizResult) => {
-  
-  if (result.answers?.totalQuestions) {
-    return result.answers.totalQuestions
-  }
-  if (result.answers?.responses) {
-    const count = Object.keys(result.answers.responses).length
-    return count
-  }
-  return 0
+  const getQuestionsAnswered = (result: QuizResult) => {
+    if (result.answers) {
+      return Object.keys(result.answers).length
+    }
+    return 0
   }
 
   // Helper function to get completion date
-  const getCompletionDate = (result: IQuizResult) => {
+  const getCompletionDate = (result: QuizResult) => {
     // Try different possible date fields
-    return result.completedAt || 
-           result.answers?.completedAt || 
-           result.createdAt || 
+    return result.createdAt || 
            result.updatedAt ||
            undefined
   }
@@ -273,14 +266,14 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
               </div>
 
               {/* Score Breakdown */}
-              {selectedResult.answers?.scores && (
+              {selectedResult.scores && (
                 <Card className="border-gray-200">
                   <CardHeader>
                     <CardTitle className="text-base text-gray-800">Score Breakdown</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 gap-3">
-                      {Object.entries(selectedResult.answers.scores).map(([archetype, score]) => (
+                      {Object.entries(selectedResult.scores).map(([archetype, score]) => (
                         <div key={archetype} className="text-center p-4 bg-gray-50 rounded-lg">
                           <div className="text-xl font-bold text-gray-800">{score as number}</div>
                           <div className="text-xs text-gray-600">{archetype}</div>
@@ -292,15 +285,15 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
               )}
 
               {/* Detailed Answers */}
-              {selectedResult.answers?.responses && (
+              {selectedResult.answers && (
                 <Card className="border-gray-200">
                   <CardHeader>
                     <CardTitle className="text-base text-gray-800">Your Responses</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-5">
-                      {Object.entries(selectedResult.answers.responses).map(
-                        ([questionIndex, answer]: [string, { question?: string; archetype: string; text: string; points: number }]) => {
+                      {Object.entries(selectedResult.answers).map(
+                        ([questionIndex, answer]) => {
                           const questionNum = Number.parseInt(questionIndex) + 1
                           return (
                             <div key={questionIndex} className="border-b border-gray-100 pb-4 last:border-b-0">
