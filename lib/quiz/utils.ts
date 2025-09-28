@@ -121,13 +121,11 @@ function detectSequentialPattern(pattern: number[]): boolean {
  */
 function repositionToCounterPattern(
   options: QuizOption[], 
-  favoritePosition: number, 
-  preferredArchetype?: string
+  favoritePosition: number
 ): QuizOption[] {
   const result = [...options];
   
   // Strategy: Put least likely archetype in user's favorite position
-  const archetypePriority = ['Avoider', 'Realist', 'Architect', 'Gambler']; // Order of "boring" to "exciting"
   
   // Find the most "opposite" option to put in favorite position
   const conservativeOption = result.find(opt => opt.archetype === 'Avoider') || result[0];
@@ -294,8 +292,7 @@ export function getArchetypeIcon(archetype: string): LucideIcon {
  * Enhanced pattern detection with multiple strategies
  */
 export function detectRepetitivePattern(
-  clickPattern: number[],
-  archetypeDistribution: Record<Archetype, number>
+  clickPattern: number[]
 ): boolean {
   if (clickPattern.length < 3) return false;
 

@@ -184,8 +184,8 @@ const handleSubmit = async (e: React.FormEvent) => {
       errorMessage = error.message
     } else if (typeof error === "string") {
       errorMessage = error
-    } else if (error && typeof error === "object" && "message" in error) {
-      errorMessage = (error as any).message
+    } else if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+      errorMessage = error.message
     }
 
     // Handle specific errors

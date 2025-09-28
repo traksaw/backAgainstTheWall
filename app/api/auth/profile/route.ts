@@ -7,7 +7,8 @@ export async function POST(req: Request) {
   try {
     const profile = await AuthService.getUserProfile(userId)
     return NextResponse.json(profile)
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 })
+  } catch (err) {
+    const error = err instanceof Error ? err.message : 'Failed to get user profile'
+    return NextResponse.json({ error }, { status: 400 })
   }
 }

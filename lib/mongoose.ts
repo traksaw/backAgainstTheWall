@@ -14,7 +14,7 @@ if (!MONGODB_URI) {
  * during API Route usage.
  */
 declare global {
-  var mongoose: {
+  let mongoose: {
     promise: Promise<Mongoose> | null;
     conn: Mongoose | null;
   };

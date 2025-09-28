@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { getCastAndCrew } from '@/lib/sanity'
 
 interface CastMember {
@@ -44,11 +45,14 @@ export default function TestSanity() {
       {castData.map((member, index) => (
         <div key={index} style={{ marginBottom: '2rem', border: '1px solid #ccc', padding: '1rem' }}>
           {member.image && (
-            <img
-              src={member.image}
-              alt={member.imageAlt || member.name}
-              style={{ width: '200px', height: '200px', objectFit: 'cover', marginBottom: '1rem' }}
-            />
+            <div style={{ position: 'relative', width: '200px', height: '200px', marginBottom: '1rem' }}>
+              <Image
+                src={member.image}
+                alt={member.imageAlt || member.name}
+                fill
+                style={{ objectFit: 'cover' }}
+              />
+            </div>
           )}
           <h3>{member.name}</h3>
           <p><strong>{member.role}</strong></p>

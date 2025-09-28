@@ -5,6 +5,11 @@ import connectDB from "@/lib/mongoose"
 import mongoose from "mongoose"
 import { getUserIdFromRequest } from "@/lib/jwt"
 
+interface QuizAnswer {
+  archetype: 'Avoider' | 'Gambler' | 'Realist' | 'Architect';
+  points: number;
+}
+
 export async function POST(req: NextRequest) {  
   try {
     await connectDB()
@@ -19,7 +24,7 @@ export async function POST(req: NextRequest) {
     console.log("Raw request body:", body)
     
     // ✅ FIXED: Better data extraction logic
-    let quizAnswers, sessionId, archetype, score
+    let quizAnswers: Record<number, QuizAnswer>, sessionId: string | undefined, archetype: string, score: number
     
     if (body.answers) {
       // Data structure: { answers: {...}, sessionId: "...", archetype: "...", score: 123 }
@@ -73,7 +78,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Calculate scores from answers
-    Object.values(quizAnswers).forEach((answer: any) => {
+    Object.values(quizAnswers).forEach((answer) => {
       if (answer.archetype && answer.points) {
         answerStructure.scores[answer.archetype as keyof typeof answerStructure.scores] += answer.points
       }
@@ -101,20 +106,31 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(newResult)
     
-  } catch (err: any) {
+  } catch (err) {
     console.error("=== QUIZ SUBMIT ERROR ===")
-    console.error("Error name:", err.name)
-    console.error("Error message:", err.message)
-    console.error("Error stack:", err.stack)
-    
-    if (err.name === 'ValidationError') {
-      console.error("Validation errors:", err.errors)
+    if (err instanceof Error) {
+      console.error("Error name:", err.name)
+      console.error("Error message:", err.message)
+      console.error("Error stack:", err.stack)
+      
+      if (err.name === 'ValidationError' && 'errors' in err) {
+        console.error("Validation errors:", (err as { errors: unknown }).errors)
+        return NextResponse.json({ 
+          error: "Failed to submit quiz", 
+          details: err.message,
+          validation: (err as { errors: unknown }).errors
+        }, { status: 500 })
+      }
+
+      return NextResponse.json({ 
+        error: "Failed to submit quiz", 
+        details: err.message
+      }, { status: 500 })
     }
-    
+
     return NextResponse.json({ 
       error: "Failed to submit quiz", 
-      details: err.message,
-      validation: err.name === 'ValidationError' ? err.errors : undefined
+      details: "Unknown error occurred"
     }, { status: 500 })
   }
 }

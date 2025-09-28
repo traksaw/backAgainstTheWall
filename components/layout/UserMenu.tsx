@@ -4,11 +4,21 @@
 import { Button } from "@/components/ui/button"
 import { User, BarChart3, LogOut } from "lucide-react"
 
+interface User {
+  _id: string;
+  email: string;
+}
+
+interface Profile {
+  first_name: string;
+  last_name: string;
+}
+
 interface UserMenuProps {
-  user: any
-  profile: any
-  onSignOut: () => void
-  onShowQuizHistory: () => void
+  user: User | null;
+  profile: Profile | null;
+  onSignOut: () => void;
+  onShowQuizHistory: () => void;
 }
 
 export function UserMenu({ user, profile, onSignOut, onShowQuizHistory }: UserMenuProps) {

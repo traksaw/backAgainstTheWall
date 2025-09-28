@@ -65,13 +65,13 @@ export class AuthService {
     await connectDB()
 
     try {
-      const anyUser = await User.findOne().lean()
+      await User.findOne().lean()
       return { isSetup: true, missingTables: [] }
     } catch (error) {
+      console.error('Database setup check failed:', error)
       return {
         isSetup: false,
         missingTables: ["User"],
-        error: error instanceof Error ? error.message : "Unknown error",
       }
     }
   }

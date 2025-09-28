@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { ExternalLink } from "lucide-react";
-import { FadeIn, FadeInUp } from "@/components/ui/fade-in";
+import { FadeInUp } from "@/components/ui/fade-in";
 import { cn } from "@/lib/utils";
 
 interface CastMember {
@@ -17,24 +17,6 @@ interface CastCrewGridProps {
   castMembers: CastMember[];
 }
 
-// Enhanced loading skeleton
-const LoadingSkeleton = ({ type, index }: { type: 'cast' | 'crew', index: number }) => (
-  <div 
-    className={cn(
-      "text-center space-y-3 animate-pulse",
-      type === 'cast' ? "md:grid-cols-2 lg:grid-cols-3" : "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-    )}
-    style={{ animationDelay: `${index * 100}ms` }}
-  >
-    <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 animate-pulse"></div>
-    <div className="space-y-2">
-      <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
-      <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto animate-pulse"></div>
-      <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
-      <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto animate-pulse"></div>
-    </div>
-  </div>
-);
 
 export default function CastCrewGrid({ castMembers }: CastCrewGridProps) {
   const [isVisible, setIsVisible] = useState(false);

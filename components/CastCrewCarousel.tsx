@@ -17,23 +17,6 @@ interface CastCrewCarouselProps {
   castMembers?: CastMember[];
 }
 
-// Loading skeleton component
-const LoadingSkeleton = ({ index }: { index: number }) => (
-  <div 
-    className="flex-shrink-0 w-[75%] max-w-xs snap-start"
-    style={{ animationDelay: `${index * 100}ms` }}
-  >
-    <div className="bg-gray-50 rounded-xl shadow-sm p-4 text-center space-y-2 h-full animate-pulse">
-      <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-3 animate-pulse"></div>
-      <div className="space-y-2">
-        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-        <div className="h-3 bg-gray-200 rounded w-3/4 mx-auto animate-pulse"></div>
-        <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
-        <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto animate-pulse"></div>
-      </div>
-    </div>
-  </div>
-);
 
 export default function CastCrewCarousel({ castMembers = [] }: CastCrewCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);

@@ -10,7 +10,7 @@ interface FilmWebsiteClientProps {
 }
 
 export function FilmWebsiteClient({ initialSupporters }: FilmWebsiteClientProps) {
-  const { user, profile, signOut, loading: authLoading } = useAuth()
+  const { user, signOut, loading: authLoading } = useAuth()
   const [supporters] = useState<Supporter[]>(initialSupporters)
   const [isHydrated, setIsHydrated] = useState(false)
 

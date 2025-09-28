@@ -31,8 +31,9 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
     }
 
     return NextResponse.json(updated)
-  } catch (err: any) {
-    console.error("Update quiz result failed:", err)
+  } catch (err) {
+    const error = err instanceof Error ? err.message : 'Unknown error'
+    console.error("Update quiz result failed:", error)
     return NextResponse.json({ error: "Failed to update quiz result" }, { status: 500 })
   }
 }

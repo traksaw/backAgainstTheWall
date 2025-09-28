@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { FadeIn, FadeInUp, FadeInScale } from "@/components/ui/fade-in"
+import { FadeInUp, FadeInScale } from "@/components/ui/fade-in"
 import { Supporter } from "@/types/supporter"
 
 type SupportersSectionProps = {
@@ -36,7 +36,7 @@ export default function SupportersSection({ supporters }: SupportersSectionProps
             <FadeInScale delay={600} duration={800}>
               <div className="flex justify-center items-center py-4 md:py-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl">
-                  {featuredSupporters.map((supporter, index) => (
+                  {featuredSupporters.map(supporter => (
                     <div key={supporter.name} className="flex justify-center">
                       <div className="relative w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64">
                         {supporter.website ? (
@@ -79,7 +79,7 @@ export default function SupportersSection({ supporters }: SupportersSectionProps
                   Community Partners
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 max-w-5xl mx-auto">
-                  {regularSupporters.map((supporter, index) => (
+                  {regularSupporters.map(supporter => (
                     <div key={supporter.name} className="flex flex-col items-center space-y-2">
                       <div className="relative w-20 h-20 md:w-24 md:h-24">
                         {supporter.website ? (

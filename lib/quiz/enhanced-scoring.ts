@@ -20,7 +20,12 @@ export interface QuizScoringResult {
     confidence: number
 }
 
-export function calculateEnhancedQuizScores(answers: Record<number, any>): QuizScoringResult {
+interface QuizAnswer {
+  archetype: string;
+  points: number;
+}
+
+export function calculateEnhancedQuizScores(answers: Record<number, QuizAnswer>): QuizScoringResult {
     const scores = {
         Avoider: 0,
         Gambler: 0,
@@ -296,7 +301,7 @@ export const enhancedQuizQuestions = [
 ]
 
 // Update the scoring function in your quiz logic
-export function improvedCalculateQuizScores(answers: Record<number, any>) {
+export function improvedCalculateQuizScores(answers: Record<number, QuizAnswer>) {
     const result = calculateEnhancedQuizScores(answers)
 
     return {
@@ -307,7 +312,11 @@ export function improvedCalculateQuizScores(answers: Record<number, any>) {
 }
 
 // Helper function to detect if quiz is giving same results
-export function analyzeQuizBias(quizResults: any[]) {
+interface QuizResult {
+  archetype: string;
+}
+
+export function analyzeQuizBias(quizResults: QuizResult[]) {
     const archetypeCounts: Record<string, number> = quizResults.reduce((acc: Record<string, number>, result) => {
         acc[result.archetype] = (acc[result.archetype] || 0) + 1
         return acc

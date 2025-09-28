@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { useAuth } from "@/hooks/useAuth"
 import { useQuiz } from "@/hooks/useQuiz"
 import {
   Calendar,
@@ -28,7 +27,6 @@ interface QuizHistorySectionProps {
 }
 
 export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionProps) {
-  const { user } = useAuth()
   const { quizResults, loading } = useQuiz()
   const [selectedResult, setSelectedResult] = useState<IQuizResult | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
@@ -302,7 +300,7 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
                   <CardContent>
                     <div className="space-y-5">
                       {Object.entries(selectedResult.answers.responses).map(
-                        ([questionIndex, answer]: [string, any]) => {
+                        ([questionIndex, answer]: [string, { question?: string; archetype: string; text: string; points: number }]) => {
                           const questionNum = Number.parseInt(questionIndex) + 1
                           return (
                             <div key={questionIndex} className="border-b border-gray-100 pb-4 last:border-b-0">

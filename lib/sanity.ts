@@ -17,7 +17,15 @@ export const client = createClient({
 })
 
 const builder = imageUrlBuilder(client)
-export const urlFor = (source: any) => builder.image(source)
+interface SanityImage {
+  _type: 'image';
+  asset: {
+    _ref: string;
+    _type: 'reference';
+  };
+}
+
+export const urlFor = (source: string | SanityImage) => builder.image(source)
 
 export async function getCastAndCrew() {
   // Return empty array if no client available
