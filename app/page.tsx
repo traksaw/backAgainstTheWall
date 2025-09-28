@@ -296,16 +296,30 @@ function FilmWebsiteContent() {
       <section className="py-12 sm:py-16 md:py-24 bg-white">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="block md:hidden">
-            <CastCrewCarousel castMembers={castData.castMembers} />
+            {castData.loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38] mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading cast and crew information...</p>
+              </div>
+            ) : castData.hasData ? (
+              <CastCrewCarousel castMembers={castData.castMembers} />
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-600">No cast and crew information available.</p>
+                {castData.error && (
+                  <button
+                    onClick={castData.retry}
+                    className="text-[#B95D38] hover:underline mt-2"
+                  >
+                    Try again
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-          {castData.loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38] mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading cast and crew information...</p>
-            </div>
-          ) : castData.hasData ? (
+          {castData.hasData ? (
             <CastCrewGrid castMembers={castData.castMembers} />
-          ) : (
+          ) : !castData.loading ? (
             <div className="text-center py-12">
               <p className="text-gray-600">No cast and crew information available.</p>
               {castData.error && (
@@ -317,7 +331,7 @@ function FilmWebsiteContent() {
                 </button>
               )}
             </div>
-          )}
+          ) : null}
         </div>
       </section>
 
