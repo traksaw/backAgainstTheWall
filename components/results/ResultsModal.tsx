@@ -146,11 +146,11 @@ export function ResultsModal({
                   <div className="flex flex-col items-center space-y-3">
                     <h3 className="text-base font-semibold text-gray-800 text-center">Your Financial Personality Profile</h3>
                     <HexagonalChart 
-                      scores={latestResult.answers?.scores || {}}
+                      scores={latestResult.scores || {}}
                       primaryArchetype={latestResult.archetype} 
                     />
                     <p className="text-xs text-gray-600 text-center max-w-md">
-                      This chart shows your scores across all four financial personality types based on your quiz responses. Your highest score is <span className="font-semibold text-[#B95D38]">{latestResult.archetype}</span> with {latestResult.answers?.scores?.[latestResult.archetype] || latestResult.score} points.
+                      This chart shows your scores across all four financial personality types based on your quiz responses. Your highest score is <span className="font-semibold text-[#B95D38]">{latestResult.archetype}</span> with {latestResult.scores?.[latestResult.archetype] || latestResult.score} points.
                     </p>
                   </div>
 

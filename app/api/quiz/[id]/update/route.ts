@@ -4,7 +4,7 @@ import connectDB from "@/lib/mongoose"
 import QuizResultModel from "@/models/QuizResult"
 import { getUserIdFromRequest } from "@/lib/jwt"
 
-export async function PUT(req: NextRequest, context: { params: { id: string } }) {
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   await connectDB()
 
   const userId = await getUserIdFromRequest(req)
@@ -12,7 +12,7 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { id } = context.params
+  const { id } = await context.params
   if (!id) {
     return NextResponse.json({ error: "Missing quiz result ID" }, { status: 400 })
   }

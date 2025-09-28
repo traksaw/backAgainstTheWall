@@ -3,14 +3,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { QuizService } from "@/lib/quiz"
+import { QuizService, type QuizResult } from "@/lib/quiz"
 import { useAuth } from "@/hooks/useAuth"
-import type { IQuizResult } from "@/models/QuizResult"
 
 export function useQuiz() {
   const { user } = useAuth()
-  const [quizResults, setQuizResults] = useState<IQuizResult[]>([])
-  const [latestResult, setLatestResult] = useState<IQuizResult | null>(null)
+  const [quizResults, setQuizResults] = useState<QuizResult[]>([])
+  const [latestResult, setLatestResult] = useState<QuizResult | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -80,7 +79,7 @@ export function useQuiz() {
 
   const updateQuizResult = async (
     resultId: string,
-    updates: Partial<IQuizResult>
+    updates: Partial<QuizResult>
   ) => {
     setLoading(true)
     try {
@@ -93,11 +92,11 @@ export function useQuiz() {
 
       setQuizResults((prev) =>
         prev.map((result) =>
-          result._id.toString() === resultId ? updatedResult : result
+          (result._id || result.id)?.toString() === resultId ? updatedResult : result
         )
       )
 
-      if (latestResult?._id.toString() === resultId) {
+      if ((latestResult?._id || latestResult?.id)?.toString() === resultId) {
         setLatestResult(updatedResult)
       }
 

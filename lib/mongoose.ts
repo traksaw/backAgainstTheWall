@@ -1,4 +1,4 @@
-import mongoose, { Mongoose } from 'mongoose';
+import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -14,9 +14,10 @@ if (!MONGODB_URI) {
  * during API Route usage.
  */
 declare global {
-  let mongoose: {
-    promise: Promise<Mongoose> | null;
-    conn: Mongoose | null;
+  // eslint-disable-next-line no-var
+  var mongoose: {
+    conn: typeof import('mongoose') | null;
+    promise: Promise<typeof import('mongoose')> | null;
   };
 }
 

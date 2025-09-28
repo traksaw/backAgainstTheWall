@@ -35,9 +35,8 @@ export function createAdvancedRandomizedQuestions(
       
       // Move the user's preferred archetype away from their favorite position
       const favoritePosition = patternAnalysis.favoritePosition;
-      const preferredArchetype = patternAnalysis.dominantArchetype;
       
-      shuffledOptions = repositionToCounterPattern(shuffledOptions, favoritePosition, preferredArchetype);
+      shuffledOptions = repositionToCounterPattern(shuffledOptions, favoritePosition);
     }
     
     // Strategy 3: Ensure archetype balance across positions

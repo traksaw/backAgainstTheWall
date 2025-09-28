@@ -128,7 +128,7 @@ export function useQuizState() {
     setArchetypeDistribution(newDistribution);
 
     // Enhanced pattern detection with multiple strategies
-    const isPatternDetected = detectRepetitivePattern(newClickPattern, newDistribution);
+    const isPatternDetected = detectRepetitivePattern(newClickPattern);
     
     if (isPatternDetected && newClickPattern.length >= 3) {
       // Apply immediate countermeasures to remaining questions
