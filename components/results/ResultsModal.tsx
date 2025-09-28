@@ -41,7 +41,8 @@ export function ResultsModal({
         if (!cancelled && data?.archetypes) {
           setArchetypesMap(data.archetypes as Record<string, ArchetypeResult>);
         }
-      } catch (e) {
+      } catch (error) {
+        console.error('Failed to fetch quiz content:', error);
         // Fallback uses static import; no state change needed
       }
     })();
@@ -145,11 +146,11 @@ export function ResultsModal({
                   <div className="flex flex-col items-center space-y-3">
                     <h3 className="text-base font-semibold text-gray-800 text-center">Your Financial Personality Profile</h3>
                     <HexagonalChart 
-                      scores={(latestResult.answers as any)?.scores || {}} 
+                      scores={latestResult.answers?.scores || {}}
                       primaryArchetype={latestResult.archetype} 
                     />
                     <p className="text-xs text-gray-600 text-center max-w-md">
-                      This chart shows your scores across all four financial personality types based on your quiz responses. Your highest score is <span className="font-semibold text-[#B95D38]">{latestResult.archetype}</span> with {(latestResult.answers as any)?.scores?.[latestResult.archetype] || latestResult.score} points.
+                      This chart shows your scores across all four financial personality types based on your quiz responses. Your highest score is <span className="font-semibold text-[#B95D38]">{latestResult.archetype}</span> with {latestResult.answers?.scores?.[latestResult.archetype] || latestResult.score} points.
                     </p>
                   </div>
 
@@ -259,7 +260,6 @@ export function ResultsModal({
 
 // Minimal Chart Component - Clean & Accessible & Mobile-Responsive
 function HexagonalChart({ scores, primaryArchetype }: { scores: Record<string, number>, primaryArchetype: string }) {
-  const [selectedPoint, setSelectedPoint] = useState<string | null>(null);
   const archetypes: Archetype[] = ['Avoider', 'Gambler', 'Realist', 'Architect'];
   
   // Ensure we have valid scores for all archetypes
@@ -416,7 +416,7 @@ function RecommendationsGrid({ archetype, archetypesMap }: { archetype: string, 
   
   return (
     <div className="space-y-6">
-      {recommendations.map((category: any, categoryIndex: number) => (
+      {recommendations.map((category) => (
         <div key={category.title} className="bg-white rounded-2xl p-6 shadow-sm">
           {/* Category Header */}
           <div className="flex items-center gap-3 mb-6">
@@ -434,7 +434,7 @@ function RecommendationsGrid({ archetype, archetypesMap }: { archetype: string, 
           
           {/* Cards Grid - always single column */}
           <div className="grid grid-cols-1 gap-3">
-            {category.items.map((item: any, itemIndex: number) => (
+            {category.items.map((item, itemIndex) => (
               <div
                 key={itemIndex}
                 className="group bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-3 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer"

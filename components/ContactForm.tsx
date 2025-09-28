@@ -2,9 +2,8 @@ import React, { JSX, useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Instagram, Twitter, Facebook, ExternalLink, Users, Calendar, CheckCircle } from "lucide-react";
-import { FadeIn, FadeInUp, FadeInLeft, FadeInRight } from "@/components/ui/fade-in";
+import { CheckCircle } from "lucide-react";
+import { FadeIn, FadeInLeft } from "@/components/ui/fade-in";
 
 // TypeScript interfaces
 interface FormData {

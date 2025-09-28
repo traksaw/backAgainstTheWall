@@ -5,24 +5,29 @@
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useQuizState } from "@/hooks/useQuizState"
-import { useQuizLogic } from "@/hooks/useQuizLogic"
 import { useQuiz } from "@/hooks/useQuiz"
-import type { QuizAnswer } from "@/types/quiz"
 import { useEffect, useMemo, useState } from "react"
+import type { QuizAnswer } from "@/types/quiz"
+
+interface UserProfile {
+  _id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+}
 // Removed micro-toast for a more minimal flow
 
 interface QuizModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onQuizComplete: (quizData: any) => void
-  profile: any
+  onQuizComplete: (answers: Record<number, QuizAnswer>) => void
+  profile: UserProfile
   // When true, the quiz will hard reset upon opening (but not auto-start), so welcome screen stays
   autoReset?: boolean
 }
 
 export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoReset = false }: QuizModalProps) {
   const quizState = useQuizState()
-  const quizLogic = useQuizLogic()
   const { loading: quizLoading } = useQuiz()
 
   const {
@@ -99,7 +104,8 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
         console.error('=== QUIZ MODAL: COMPLETION ERROR ===')
         console.error('Error details:', error)
         console.error('Error stack:', (error as Error)?.stack)
-        alert(`Quiz completion failed: ${(error as any)?.message || 'Unknown error'}`)
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        alert(`Quiz completion failed: ${errorMessage}`)
       }
     }
   }

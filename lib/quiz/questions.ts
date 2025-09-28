@@ -1,5 +1,5 @@
 // lib/quiz/questions.ts - Optimized version
-import { QuizQuestion, QuizOption } from '@/types/quiz';
+import { QuizQuestion } from '@/types/quiz';
 import { validateQuizBalance } from '@/lib/quiz/utils';
 
 export const quizQuestions: QuizQuestion[] = [

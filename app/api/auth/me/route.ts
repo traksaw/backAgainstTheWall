@@ -4,10 +4,6 @@ import { AuthService } from "@/lib/auth"
 
 export async function GET(req: NextRequest) {
 
-  const tokenCookie = req.cookies.get("token")
-
-  const authHeader = req.headers.get('authorization')
-  
   try {
     const userId = await getUserIdFromRequest(req)    
     // Check if userId exists
@@ -30,8 +26,9 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json(user)
-  } catch (err: any) {
-    console.log('Error in auth route:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch (err) {
+    const error = err as Error
+    console.log('Error in auth route:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

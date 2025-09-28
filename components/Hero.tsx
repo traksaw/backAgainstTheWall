@@ -7,28 +7,44 @@ import { Button } from "@/components/ui/button"
 import { FadeIn, FadeInUp, FadeInScale } from "@/components/ui/fade-in"
 import SupportersSection from "./SupportersSection"
 
+interface User {
+  _id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+}
+
+interface QuizResult {
+  _id: string;
+  archetype: string;
+  hasViewedResults: boolean;
+  hasWatchedFilm: boolean;
+}
+
+interface Supporter {
+  name: string;
+  amount: number;
+  message?: string;
+}
+
 type HeroProps = {
-  user: any
-  profile: any
-  latestResult: any
-  supporters?: any[]
-  onSignUp: () => void
-  onSignIn: () => void
-  onStartQuiz: () => void
-  onRetakeQuiz?: () => void // Added this prop
-  onShowResults: () => void
-  onWatchFilm: () => void
+  user: User | null;
+  latestResult: QuizResult | null;
+  supporters?: Supporter[];
+  onSignUp: () => void;
+  onStartQuiz: () => void;
+  onRetakeQuiz?: () => void;
+  onShowResults: () => void;
+  onWatchFilm: () => void;
 }
 
 export default function Hero({
   user,
-  profile,
   latestResult,
   supporters = [],
   onSignUp,
-  onSignIn,
   onStartQuiz,
-  onRetakeQuiz, // Added this
+  onRetakeQuiz,
   onShowResults,
   onWatchFilm,
 }: HeroProps) {

@@ -4,7 +4,22 @@ import type { Archetype, ArchetypeResult, QuizQuestion } from '@/types/quiz'
 import { archetypeResults as staticArchetypeResults } from './archetypes'
 import { quizQuestions as staticQuizQuestions } from './questions'
 
-function mapArchetypeDocToResult(doc: any): ArchetypeResult | null {
+interface ArchetypeDoc {
+  key?: Archetype;
+  summary?: string;
+  strengths?: string[];
+  blindSpots?: string[];
+  reflectionQuestion?: string;
+  filmCharacterTieIn?: string;
+  exploration?: {
+    description?: string;
+    tips?: string[];
+    resources?: string[];
+    nextSteps?: string[];
+  };
+}
+
+function mapArchetypeDocToResult(doc: ArchetypeDoc): ArchetypeResult | null {
   const key = doc?.key as Archetype
   if (!key) return null
   return {
@@ -23,7 +38,16 @@ function mapArchetypeDocToResult(doc: any): ArchetypeResult | null {
   }
 }
 
-function mapQuestionDocToQuestion(doc: any): QuizQuestion | null {
+interface QuestionDoc {
+  questionId?: number;
+  text?: string;
+  options?: Array<{
+    text: string;
+    archetype: Archetype;
+  }>;
+}
+
+function mapQuestionDocToQuestion(doc: QuestionDoc): QuizQuestion | null {
   if (!doc?.questionId || !doc?.text || !Array.isArray(doc?.options)) return null
   // Build a lookup of static points by questionId and archetype
   const staticByArchetype: Record<string, number> = (() => {
@@ -39,7 +63,7 @@ function mapQuestionDocToQuestion(doc: any): QuizQuestion | null {
   return {
     id: doc.questionId,
     text: doc.text,
-    options: doc.options.map((opt: any, idx: number) => ({
+    options: doc.options.map((opt, idx: number) => ({
       id: idx + 1,
       text: opt.text,
       archetype: opt.archetype,

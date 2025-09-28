@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useEffect } from "react"
+import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Play, Loader2 } from "lucide-react"
 
@@ -12,7 +12,6 @@ interface VideoPlayerProps {
   onError?: (error: string) => void
   className?: string
   autoPlay?: boolean
-  archetype?: string
   webmSrc?: string
 }
 
@@ -25,7 +24,6 @@ export function VideoPlayer({
   onError,
   className = "",
   autoPlay = false,
-  archetype,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)

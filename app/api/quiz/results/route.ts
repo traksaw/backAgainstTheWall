@@ -6,8 +6,6 @@ import mongoose from "mongoose"
 
 export async function GET(req: NextRequest) {
   
-  const tokenCookie = req.cookies.get("token")
-  
   await connectDB()
 
   const userId = await getUserIdFromRequest(req)
@@ -22,8 +20,9 @@ export async function GET(req: NextRequest) {
       .lean()
 
     return NextResponse.json(results)
-  } catch (err: any) {
-    console.error("Failed to fetch quiz results:", err)
-    return NextResponse.json({ error: "Failed to fetch quiz results" }, { status: 500 })
+  } catch (err) {
+    const error = err as Error
+    console.error("Failed to fetch quiz results:", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

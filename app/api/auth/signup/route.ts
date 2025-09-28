@@ -29,7 +29,8 @@ export async function POST(req: Request) {
     })
 
     return res
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 })
+  } catch (err) {
+    const error = err instanceof Error ? err.message : 'Failed to create user'
+    return NextResponse.json({ error }, { status: 400 })
   }
 }

@@ -47,9 +47,9 @@ export function SignInModal({ open, onOpenChange, onSwitchToSignUp }: SignInModa
       console.error("Signin failed in component:", {
         error,
         errorType: typeof error,
-        message: (error as any)?.message,
-        name: (error as any)?.name,
-        stack: (error as any)?.stack,
+        message: error instanceof Error ? error.message : String(error),
+        name: error instanceof Error ? error.name : 'Unknown',
+        stack: error instanceof Error ? error.stack : undefined,
       })
 
       // Set user-friendly error message
@@ -59,8 +59,8 @@ export function SignInModal({ open, onOpenChange, onSwitchToSignUp }: SignInModa
         errorMessage = error.message
       } else if (typeof error === "string") {
         errorMessage = error
-      } else if (error && typeof error === "object" && "message" in error) {
-        errorMessage = (error as any).message
+      } else if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+        errorMessage = error.message
       }
 
       // Handle specific Supabase errors

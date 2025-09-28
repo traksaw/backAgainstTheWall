@@ -12,8 +12,25 @@ export interface QuizAnswer {
   answer?: string
 }
 
+export interface QuizResult {
+  _id: string;
+  userId: string;
+  archetype: Archetype;
+  score: number;
+  answers: Record<number, QuizAnswer>;
+  hasViewedResults: boolean;
+  hasWatchedFilm: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QuizResultUpdate {
+  hasViewedResults?: boolean;
+  hasWatchedFilm?: boolean;
+}
+
 export class QuizService {
-  static async getUserQuizResults(): Promise<any[]> {
+  static async getUserQuizResults(): Promise<QuizResult[]> {
     const res = await fetch("/api/quiz/results", {
       credentials: "include",
     })
@@ -23,12 +40,12 @@ export class QuizService {
   }
 
   static async submitQuiz(data: {
-    answers: Record<number, any>
+    answers: Record<number, QuizAnswer>
     sessionId?: string
     archetype: string
     score: number
     scores?: Record<string, number>
-  }): Promise<any> {
+  }): Promise<QuizResult> {
     try {
       const res = await fetch("/api/quiz/submit", {
         method: "POST",
@@ -64,7 +81,7 @@ export class QuizService {
     }
   }
 
-  static async updateQuizResult(resultId: string, updates: any): Promise<any> {
+  static async updateQuizResult(resultId: string, updates: QuizResultUpdate): Promise<QuizResult> {
     const res = await fetch(`/api/quiz/${resultId}/update`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },

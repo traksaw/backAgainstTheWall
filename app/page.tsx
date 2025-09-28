@@ -2,14 +2,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getSupporters } from "@/lib/sanity"
-import { Supporter } from "@/types/supporter"
+import { getSupporters, getCastAndCrew } from "@/lib/sanity"
 import { QuizModal } from "@/components/quiz/QuizModal"
 import { ResultsModal } from "@/components/results/ResultsModal"
 import { UserMenu } from "@/components/layout/UserMenu"
 import { LoadingScreen } from "@/components/layout/LoadingScreen"
-import { SignUpModal } from "@/components/auth/SignUpModal"
 import { SignInModal } from "@/components/auth/SignInModal"
+import { SignUpModal } from "@/components/auth/SignUpModal"
 import Hero from "@/components/Hero"
 import CastCrewCarousel from "@/components/CastCrewCarousel"
 import CastCrewGrid from "@/components/CastCrewGrid"
@@ -18,47 +17,78 @@ import SocialAndEvent from "@/components/SocialAndEvents"
 import Footer from "@/components/Footer"
 import { VideoPlayer } from "@/components/VideoPlayer"
 import { QuizHistorySection } from "@/components/QuizHistorySection"
-import { ClientOnly } from "@/components/ClientOnly"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import type { QuizResult, Archetype, QuizScores, QuizAnswer } from '@/types/quiz'
-import { useQuizLogic } from "@/hooks/useQuizLogic"
+
+interface CastMember {
+  name: string;
+  role: string;
+  description: string;
+  image: string;
+  readMoreUrl?: string;
+  order: number;
+}
+
 import { useModalState } from "@/hooks/useModalState"
-import { useCastData } from "@/hooks/useCastData"
 import { useQuizHandlers } from "@/hooks/useQuizHandlers"
-import { useQuizState } from "@/hooks/useQuizState"
 import { useAuth } from "@/hooks/useAuth"
 import { useQuiz } from "@/hooks/useQuiz"
 
 // This component now uses the auth context properly
 // Triggering redeploy after CORS update
 function FilmWebsiteContent() {
-  const { user, profile, signOut, loading: authLoading, isHydrated } = useAuth()
+  const { user, profile, signOut, loading: authLoading } = useAuth()
   const { latestResult, refreshResults, loading: quizLoading } = useQuiz()
   const [localLatestResult, setLocalLatestResult] = useState<QuizResult | null>(null)
   const [supporters, setSupporters] = useState<Supporter[]>([])
-  const [supportersLoading, setSupportersLoading] = useState(true)
   const [quizSession, setQuizSession] = useState(0)
   const [autoResetQuiz, setAutoResetQuiz] = useState(false)
 
   // Replace 15+ useState calls with clean hooks
   const modals = useModalState()
-  const castData = useCastData()
+  const [castData, setCastData] = useState<{ castMembers: CastMember[]; loading: boolean; error: Error | null; hasData: boolean; retry: () => void; }>({ 
+    castMembers: [],
+    loading: true,
+    error: null,
+    hasData: false,
+    retry: () => {}
+  })
+
+  useEffect(() => {
+    const fetchCastData = async () => {
+      try {
+        const data = await getCastAndCrew()
+        setCastData({
+          castMembers: data,
+          loading: false,
+          error: null,
+          hasData: data.length > 0,
+          retry: fetchCastData
+        })
+      } catch (error) {
+        setCastData(prev => ({
+          ...prev,
+          loading: false,
+          error: error instanceof Error ? error : new Error('Failed to fetch cast data'),
+          hasData: false,
+          retry: fetchCastData
+        }))
+      }
+    }
+
+    fetchCastData()
+  }, [])
   const quizHandlers = useQuizHandlers()
-  const quizState = useQuizState()
-  const quizLogic = useQuizLogic()
 
   // Fetch supporters data on component mount
   useEffect(() => {
     const fetchSupporters = async () => {
       try {
-        setSupportersLoading(true)
         const supportersData = await getSupporters()
         setSupporters(supportersData)
       } catch (error) {
         console.error('Error fetching supporters:', error)
         setSupporters([])
-      } finally {
-        setSupportersLoading(false)
       }
     }
 
@@ -69,24 +99,26 @@ function FilmWebsiteContent() {
   const handleQuizComplete = async (finalAnswers: Record<number, QuizAnswer>) => {
     try {
 
-      // Step 1: Process quiz data locally first
-      const quizData = quizLogic.processQuizCompletion(finalAnswers);
+      // Step 1: Create a session ID
+      const sessionId = `quiz_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const scores: QuizScores = { Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 };
+      const archetype: Archetype = 'Realist';  // Default archetype, will be updated by backend
 
       // Step 2: Close quiz modal immediately
       modals.setShowQuiz(false);
 
       // Step 3: Create a properly formatted result object
       const formattedResult: QuizResult = {
-        _id: quizData.sessionId,
-        id: quizData.sessionId,
-        archetype: quizData.archetype,
-        score: quizData.score,
-        scores: quizData.scores,
+        _id: sessionId,
+        id: sessionId,
+        archetype: archetype,
+        score: 0,  // Will be updated by backend
+        scores: scores,
         createdAt: new Date().toISOString(),
         hasViewedResults: false,
         hasWatchedFilm: false,
         answers: finalAnswers,
-        sessionId: quizData.sessionId
+        sessionId: sessionId
       };
 
 
@@ -103,13 +135,13 @@ function FilmWebsiteContent() {
         await quizHandlers.handleQuizComplete(finalAnswers);
         await refreshResults();
       } catch (error) {
-        // Backend submission failed, but results are shown optimistically.
+        console.warn('Backend submission failed, but results are shown optimistically:', error)
       }
 
     } catch (error) {
       console.error('❌ Quiz completion error:', error);
       modals.setShowQuiz(false);
-      alert(`Quiz failed: ${(error as any)?.message}`);
+      alert(`Quiz failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -133,7 +165,7 @@ function FilmWebsiteContent() {
       modals.setShowResults(false);
       modals.setShowFilm(true);
     } catch (error) {
-      // Failed to update results, but proceed to show film anyway.
+      console.warn('Failed to update results, but proceeding to show film:', error);
       modals.setShowResults(false);
       modals.setShowFilm(true);
     }
@@ -176,7 +208,20 @@ function FilmWebsiteContent() {
   }
 
   // Convert whatever the backend returns into a UI-friendly QuizResult
-  function normalizeLatestResult(raw: any): QuizResult | null {
+  interface RawQuizResult {
+    _id?: string;
+    id?: string;
+    archetype?: string;
+    score?: number;
+    scores?: QuizScores;
+    createdAt?: string;
+    hasViewedResults?: boolean;
+    hasWatchedFilm?: boolean;
+    answers?: Record<number, QuizAnswer>;
+    sessionId?: string;
+  }
+
+  function normalizeLatestResult(raw: RawQuizResult): QuizResult | null {
     // First, try the backend result
     if (raw && (raw._id || raw.id)) {
       const scores: QuizScores = raw.scores ?? { Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 };
@@ -372,8 +417,6 @@ function FilmWebsiteContent() {
 
 export default function Page() {
   return (
-    <ClientOnly>
-      <FilmWebsiteContent />
-    </ClientOnly>
+    <FilmWebsiteContent />
   )
 }
