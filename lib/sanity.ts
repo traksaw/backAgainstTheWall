@@ -1,5 +1,14 @@
 import { createClient } from '@sanity/client'
 import imageUrlBuilder from '@sanity/image-url'
+import { castAndCrew } from '@/data/cast-and-crew'
+// Use hardcoded values for development to ensure consistency
+const config = {
+  projectId: 'u6u93177',
+  dataset: 'production',
+  apiVersion: '2023-05-03',
+  useCdn: false,
+  token: process.env.SANITY_API_TOKEN // Add token for dataset creation
+}
 
 export interface CastMember {
   name: string;
@@ -9,14 +18,10 @@ export interface CastMember {
   readMoreUrl?: string;
   order: number;
 }
-export const client = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'u6u93177',
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-  useCdn: true,
-  apiVersion: process.env.NEXT_PUBLIC_SANITY_API_VERSION || '2025-08-10',
-})
 
-const builder = imageUrlBuilder(client)
+// Create Sanity client with hardcoded config
+export const client = createClient(config)
+
 interface SanityImage {
   _type: 'image';
   asset: {
@@ -25,65 +30,93 @@ interface SanityImage {
   };
 }
 
-export const urlFor = (source: string | SanityImage) => builder.image(source)
+const builder = client ? imageUrlBuilder(client) : null
+
+export const urlFor = (source: string | SanityImage) => {
+  if (!builder) {
+    // Return a fallback URL if no client is available
+    return { url: () => source.toString() }
+  }
+  return builder.image(source)
+}
+
+// Static fallback data
+const fallbackCastMembers = [
+  {
+    name: "Jenna Lam",
+    role: "Samara, Executive Producer & Director",
+    description: "Award-winning filmmaker with a passion for stories that explore human psychology and social issues. Jenna brings over a decade of experience in independent filmmaking, with previous work showcased at Sundance and SXSW.",
+    image: "/cast/jenna.jpeg",
+    order: 1,
+    readMoreUrl: "https://www.linkedin.com/in/jennalamx/"
+  },
+  {
+    name: "Corey Brown",
+    role: "Boyfriend",
+    description: "Talented actor bringing depth and authenticity to the role of the supportive boyfriend. Corey's performance captures the nuanced dynamics of relationships under financial pressure.",
+    image: "/cast/corey-brown.jpg",
+    order: 2
+  },
+  {
+    name: "Gracie Prahek",
+    role: "Mom",
+    description: "Accomplished actress whose portrayal of the concerned mother brings emotional weight to the family dynamics central to the story.",
+    image: "/cast/gracie-prahek.jpg",
+    order: 3
+  }
+]
+
+const fallbackSupporters = [
+  {
+    name: "Cambodian Americans of Greater Philadelphia",
+    type: "foundation" as const,
+    logo: "/logos/CAGP-logo.avif",
+    description: "Supporting innovative Cambodian storytelling and cultural productions.",
+    featured: true,
+    order: 1
+  },
+  {
+    name: "The Asian American Fund",
+    type: "foundation" as const,
+    logo: "/logos/TAAF-logo-black.png",
+    description: "Championing contemporary art and emerging Asian Americanartists.",
+    featured: true,
+    order: 2
+  },
+  {
+    name: "International Media Public Fund",
+    type: "foundation" as const,
+    logo: "/logos/ipmf-logo.png",
+    description: "Advancing global media collaboration and innovative storytelling platforms.",
+    featured: true,
+    order: 3
+  },
+  {
+    name: "Sundance Film Festival",
+    type: "foundation" as const,
+    logo: "/logos/sundance-logo.png",
+    description: "Celebrating independent cinema and supporting emerging filmmakers worldwide.",
+    featured: true,
+    order: 4
+  },
+  {
+    name: "3 Left Handed Women",
+    type: "corporate" as const,
+    logo: "/logos/3left-handed-logo.png",
+    description: "Innovative creative agency specializing in film production and media services.",
+    featured: true,
+    order: 5
+  }
+]
 
 export async function getCastAndCrew() {
-  // Return empty array if no client available
-  if (!client) {
-    console.warn('Sanity client not configured - returning empty cast list')
-    return []
-  }
-
-  try {
-    const castMembers = await client.fetch(`
-      *[_type == "castMember"] | order(order asc) {
-        name,
-        role,
-        description,
-        "image": image.asset->url,
-        readMoreUrl,
-        order
-      }
-    `, {}, {
-      next: { 
-        revalidate: 10, // Cache for 60 seconds
-        tags: ['cast-and-crew'] // Tag for webhook revalidation
-      }
-    })
-    return Array.isArray(castMembers) ? castMembers : []
-  } catch (error) {
-    console.error('Error fetching cast and crew:', error)
-    return []
-  }
+  // For now, always use fallback data to avoid API errors
+  console.log('Using fallback cast data (Sanity temporarily disabled)')
+  return castAndCrew
 }
 
 export async function getSupporters() {
-  // Return empty array if no client available
-  if (!client) {
-    console.warn('Sanity client not configured - returning empty supporters list')
-    return []
-  }
-
-  try {
-    const supporters = await client.fetch(`
-      *[_type == "supporter"] | order(order asc) {
-        name,
-        type,
-        "logo": logo.asset->url,
-        website,
-        description,
-        featured,
-        order
-      }
-    `, {}, {
-      next: { 
-        revalidate: 10, // Cache for 60 seconds
-        tags: ['supporters'] // Tag for webhook revalidation
-      }
-    })
-    return Array.isArray(supporters) ? supporters : []
-  } catch (error) {
-    console.error('Error fetching supporters:', error)
-    return []
-  }
+  // For now, always use fallback data to avoid API errors
+  console.log('Using fallback supporters data (Sanity temporarily disabled)')
+  return fallbackSupporters
 }

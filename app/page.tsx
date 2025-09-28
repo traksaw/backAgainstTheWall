@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react"
 import { getSupporters, getCastAndCrew } from "@/lib/sanity"
+import { castAndCrew } from "@/data/cast-and-crew"
 import { QuizModal } from "@/components/quiz/QuizModal"
 import { ResultsModal } from "@/components/results/ResultsModal"
 import { UserMenu } from "@/components/layout/UserMenu"
@@ -80,22 +81,49 @@ function FilmWebsiteContent() {
   useEffect(() => {
     const fetchCastData = async () => {
       try {
+        setCastData(prev => ({ ...prev, loading: true, error: null }))
         const data = await getCastAndCrew()
+
+        // Ensure data is an array; if empty, use static fallback
+        if (Array.isArray(data)) {
+          if (data.length > 0) {
+            setCastData({
+              castMembers: data as CastMember[],
+              loading: false,
+              error: null,
+              hasData: true,
+              retry: fetchCastData
+            })
+          } else {
+            console.warn('No cast data from Sanity. Using static fallback castAndCrew.')
+            setCastData({
+              castMembers: castAndCrew as unknown as CastMember[],
+              loading: false,
+              error: null,
+              hasData: true,
+              retry: fetchCastData
+            })
+          }
+        } else {
+          console.error('getCastAndCrew did not return an array:', data)
+          setCastData({
+            castMembers: castAndCrew as unknown as CastMember[],
+            loading: false,
+            error: new Error('Invalid data format received (using fallback)'),
+            hasData: true,
+            retry: fetchCastData
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching cast data:', error)
+        // On error, also use static fallback
         setCastData({
-          castMembers: data,
+          castMembers: castAndCrew as unknown as CastMember[],
           loading: false,
-          error: null,
-          hasData: data.length > 0,
+          error: new Error(error instanceof Error ? error.message : 'Unknown error occurred'),
+          hasData: true,
           retry: fetchCastData
         })
-      } catch (error) {
-        setCastData(prev => ({
-          ...prev,
-          loading: false,
-          error: error instanceof Error ? error : new Error('Failed to fetch cast data'),
-          hasData: false,
-          retry: fetchCastData
-        }))
       }
     }
 
