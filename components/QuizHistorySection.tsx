@@ -105,6 +105,9 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="w-[95vw] max-w-lg bg-white text-gray-900 border-0 p-0 rounded-2xl shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Loading Quiz History</DialogTitle>
+          </DialogHeader>
           <div className="max-h-[70vh] overflow-y-auto app-pad-lg" tabIndex={0} style={{ WebkitOverflowScrolling: 'touch' }}>
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
