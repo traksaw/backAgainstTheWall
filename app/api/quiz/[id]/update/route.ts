@@ -1,6 +1,6 @@
 // app/api/quiz/[id]/update/route.ts
 import { NextResponse, NextRequest } from "next/server"
-import { connectDB } from "@/lib/mongoose"
+import connectDB from "@/lib/mongoose"
 import QuizResultModel from "@/models/QuizResult"
 import { getUserIdFromRequest } from "@/lib/jwt"
 
