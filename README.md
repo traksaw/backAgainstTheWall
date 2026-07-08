@@ -119,11 +119,15 @@ The application requires MongoDB collections for:
 ### Quiz Experience
 The interactive quiz guides users through financial scenarios to determine their archetype.
 
-### Personalized Results  
-Detailed analysis showing personality breakdown with actionable recommendations.
+![Quiz experience](./public/assets/screenshots/quiz-experience.png)
+
+### Personalized Results
+Detailed analysis showing personality breakdown with actionable recommendations. Results are tied to a signed-in account — sign up on the [live app](https://backagainstthewall.vercel.app/) to see your archetype breakdown.
 
 ### Film Integration
-Watch "Back Against the Wall" with insights tailored to your financial personality.
+Watch "Back Against the Wall" with insights tailored to your financial personality — or as a guest, without taking the quiz.
+
+![Film integration, guest view](./public/assets/screenshots/film-integration.png)
 
 ## Project Structure
 
