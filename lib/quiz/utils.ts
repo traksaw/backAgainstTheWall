@@ -11,6 +11,20 @@ export const EMPTY_SCORES: QuizScores = ARCHETYPES.reduce((acc, a) => {
 }, {} as QuizScores)
 
 /**
+ * Unbiased Fisher-Yates shuffle for DISPLAY ORDER ONLY (question/option order).
+ * `.sort(() => Math.random() - 0.5)` is statistically biased — do not use it.
+ * Math.random() must never be used for scoring or tie-breaking (see WAS-9).
+ */
+export function fisherYatesShuffle<T>(items: T[]): T[] {
+  const result = [...items]
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[result[i], result[j]] = [result[j], result[i]]
+  }
+  return result
+}
+
+/**
  * Enhanced shuffling with multiple anti-pattern strategies
  */
 export function createAdvancedRandomizedQuestions(
@@ -21,14 +35,14 @@ export function createAdvancedRandomizedQuestions(
   const patternAnalysis = analyzeClickingPattern(userClickPattern);
   
   // Step 2: Shuffle question order first
-  let shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
+  let shuffledQuestions = fisherYatesShuffle(questions);
   
   // Step 3: Apply sophisticated option shuffling to each question
   shuffledQuestions = shuffledQuestions.map((question, questionIndex) => {
     let shuffledOptions = [...question.options];
     
     // Strategy 1: Basic randomization
-    shuffledOptions = shuffledOptions.sort(() => Math.random() - 0.5);
+    shuffledOptions = fisherYatesShuffle(shuffledOptions);
     
     // Strategy 2: Anti-pattern positioning
     if (patternAnalysis.isRepetitive) {
@@ -178,16 +192,20 @@ function addPointVariations(options: QuizOption[]): QuizOption[] {
  * Optimize question order for maximum engagement
  */
 function optimizeQuestionOrder(questions: QuizQuestion[]): QuizQuestion[] {
-  const result = [...questions];
-  
   // Ensure we don't start or end with the same archetype bias
   // This prevents users from identifying patterns in question progression
-  
-  return result.sort(() => Math.random() - 0.5); // Additional final shuffle
+  return fisherYatesShuffle(questions); // Additional final shuffle
 }
 
 /**
  * Enhanced quiz scoring with better tie-breaking
+ *
+ * WAS-9: this function (and getWinningArchetype below) must be a pure,
+ * deterministic function of `answers`. Do NOT reintroduce Math.random()
+ * or any other non-deterministic input here — the same answers must always
+ * produce the same scores/archetype, or a retaken quiz erodes user trust.
+ * Math.random() belongs only in display-order shuffling (see
+ * createAdvancedRandomizedQuestions), never in scoring or tie-breaking.
  */
 export function calculateQuizScores(answers: Record<number, QuizAnswer>): QuizScores {
   const scores: QuizScores = { Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 }
@@ -246,27 +264,26 @@ export function getWinningArchetype(
   const recentWinners = tied.filter(a => recentCounts[a] === maxRecent)
   if (recentWinners.length === 1) return recentWinners[0]
 
-  // 4) tie-breaker #2: weighted randomness to avoid deterministic bias
-  // Slight weights encourage variety without overpowering raw scores
+  // 4) tie-breaker #2: fixed archetype weighting (deterministic, documented)
+  // These weights are a fixed nudge, not randomness — they exist so a tie
+  // doesn't always resolve to whichever archetype happens to be first in
+  // the scores object. NEVER add jitter/Math.random() here (see WAS-9).
   const TIE_WEIGHTS: Record<Archetype, number> = {
     Avoider: 1.0,
     Gambler: 1.1,
     Realist: 1.15,
     Architect: 1.1,
   }
-  const candidates = (recentWinners.length > 0 ? recentWinners : tied).map(a => {
-    const base = scores[a]
-    const jitter = 0.95 + Math.random() * 0.1 // 5% noise
-    return {
-      a,
-      w: base * (TIE_WEIGHTS[a] ?? 1) * jitter,
-    }
-  })
-  candidates.sort((x, y) => y.w - x.w)
-  if (candidates.length > 0) return candidates[0].a
+  const pool = recentWinners.length > 0 ? recentWinners : tied
+  const weighted = pool.map(a => ({ a, w: scores[a] * (TIE_WEIGHTS[a] ?? 1) }))
+  const maxWeight = Math.max(...weighted.map(c => c.w))
+  const weightedWinners = weighted.filter(c => c.w === maxWeight).map(c => c.a)
+  if (weightedWinners.length === 1) return weightedWinners[0]
 
-  // 5) ultimate fallback: random among tied (should rarely happen)
-  return tied[Math.floor(Math.random() * tied.length)]
+  // 5) ultimate fallback: fixed archetype priority order (deterministic).
+  // Any tie surviving weighting resolves to whichever archetype comes
+  // first in ARCHETYPES — a fixed, documented rule, never random.
+  return ARCHETYPES.find(a => weightedWinners.includes(a)) ?? weightedWinners[0]
 }
 
 /**
