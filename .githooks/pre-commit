@@ -1,0 +1,14 @@
+#!/bin/sh
+# Blocks committing .env files. This repo leaked .env.local to git history
+# once already (WAS-5) — never again.
+
+blocked=$(git diff --cached --name-only --diff-filter=ACM | grep -E '(^|/)\.env($|\.[^.]+$)' | grep -vE '\.env\.(example|sample|template)$')
+
+if [ -n "$blocked" ]; then
+  echo "Blocked: attempting to commit an .env file:"
+  echo "$blocked"
+  echo ""
+  echo "Env files hold live secrets and must never be committed (see WAS-5)."
+  echo "If this is a template with no real values, name it .env.example instead."
+  exit 1
+fi

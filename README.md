@@ -98,6 +98,15 @@ The quiz identifies one of four financial personality types:
    BLOB_READ_WRITE_TOKEN=your_blob_token
    ```
 
+   **Never commit `.env.local` (or any `.env*` file).** It holds live
+   credentials. This repo previously leaked a full `.env.local` into git
+   history (WAS-5) because it was committed before `.gitignore` excluded
+   it — being gitignored later does not remove it from history.
+   `pnpm install` sets up a pre-commit hook (`.githooks/`)
+   that blocks staging any `.env*` file (except `.env.example`), but
+   don't rely on it as your only safeguard — double check `git status`
+   before committing.
+
 4. **Run the development server**
    ```bash
    pnpm dev
