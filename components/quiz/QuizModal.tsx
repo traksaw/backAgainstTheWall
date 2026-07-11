@@ -5,7 +5,6 @@
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useQuizState } from "@/hooks/useQuizState"
-import { useQuiz } from "@/hooks/useQuiz"
 import { useEffect, useMemo, useState } from "react"
 import type { QuizAnswer } from "@/types/quiz"
 
@@ -24,11 +23,11 @@ interface QuizModalProps {
   profile: UserProfile
   // When true, the quiz will hard reset upon opening (but not auto-start), so welcome screen stays
   autoReset?: boolean
+  quizLoading: boolean
 }
 
-export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoReset = false }: QuizModalProps) {
+export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoReset = false, quizLoading }: QuizModalProps) {
   const quizState = useQuizState()
-  const { loading: quizLoading } = useQuiz()
 
   const {
     currentQuestion,
