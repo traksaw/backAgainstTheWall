@@ -3,9 +3,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const findByIdAndUpdateMock = vi.fn()
 const findByIdMock = vi.fn()
 const selectMock = vi.fn()
+const findOneMock = vi.fn()
+const createMock = vi.fn()
 
 vi.mock('@/lib/mongoose', () => ({
   default: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock('bcryptjs', () => ({
+  default: {
+    hash: vi.fn().mockResolvedValue('hashed-password'),
+    compare: vi.fn().mockResolvedValue(true),
+  },
 }))
 
 vi.mock('@/models/User', () => ({
@@ -15,10 +24,63 @@ vi.mock('@/models/User', () => ({
       findByIdMock(...args)
       return { select: (...selectArgs: unknown[]) => selectMock(...selectArgs) }
     },
+    findOne: (...args: unknown[]) => findOneMock(...args),
+    create: (...args: unknown[]) => createMock(...args),
   },
 }))
 
 import { AuthService } from './auth'
+
+describe('AuthService email normalization (WAS-19)', () => {
+  beforeEach(() => {
+    findOneMock.mockReset()
+    createMock.mockReset()
+  })
+
+  it('signUp lowercases and trims the email before checking for an existing user and before creating', async () => {
+    findOneMock.mockResolvedValue(null)
+    createMock.mockResolvedValue({ _id: 'user-a', email: 'foo@x.com' })
+
+    await AuthService.signUp({
+      email: '  Foo@X.com  ',
+      password: 'password123',
+      firstName: 'Foo',
+      lastName: 'Bar',
+      zip_code: '90210',
+      occupationStatus: 'Working Professional',
+    })
+
+    expect(findOneMock).toHaveBeenCalledWith({ email: 'foo@x.com' })
+    const [createArgs] = createMock.mock.calls[0]
+    expect(createArgs.email).toBe('foo@x.com')
+  })
+
+  it('signUp rejects a signup whose normalized email already exists, even with different casing', async () => {
+    findOneMock.mockResolvedValue({ _id: 'existing-user', email: 'foo@x.com' })
+
+    await expect(
+      AuthService.signUp({
+        email: 'FOO@x.com',
+        password: 'password123',
+        firstName: 'Foo',
+        lastName: 'Bar',
+        zip_code: '90210',
+        occupationStatus: 'Working Professional',
+      })
+    ).rejects.toThrow('User already exists')
+
+    expect(findOneMock).toHaveBeenCalledWith({ email: 'foo@x.com' })
+    expect(createMock).not.toHaveBeenCalled()
+  })
+
+  it('signIn lowercases and trims the email before querying', async () => {
+    findOneMock.mockResolvedValue({ _id: 'user-a', email: 'foo@x.com', passwordHash: 'hashed-password' })
+
+    await AuthService.signIn('  Foo@X.com  ', 'password123')
+
+    expect(findOneMock).toHaveBeenCalledWith({ email: 'foo@x.com' })
+  })
+})
 
 describe('AuthService.updateUserProfile (same mass-assignment bug class as WAS-6)', () => {
   beforeEach(() => {

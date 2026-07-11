@@ -15,7 +15,10 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
   {
-    email: { type: String, required: true, unique: true },
+    // WAS-19: schema-level backstop for AuthService's normalizeEmail() - keeps
+    // the unique index case/whitespace-insensitive even if some other write
+    // path ever bypasses lib/auth.ts.
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true },
     first_name: String,
     last_name: String,
