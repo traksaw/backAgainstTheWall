@@ -5,7 +5,6 @@ import type { ReactNode } from "react"
 import { QuizModal } from "@/components/quiz/QuizModal"
 import { ResultsModal } from "@/components/results/ResultsModal"
 import { UserMenu } from "@/components/layout/UserMenu"
-import { LoadingScreen } from "@/components/layout/LoadingScreen"
 import { SignInModal } from "@/components/auth/SignInModal"
 import { SignUpModal } from "@/components/auth/SignUpModal"
 import Hero from "@/components/Hero"
@@ -27,7 +26,7 @@ interface HomeInteractiveShellProps {
 }
 
 export function HomeInteractiveShell({ supporters, children }: HomeInteractiveShellProps) {
-  const { user: rawUser, profile: rawProfile, signOut, loading: authLoading } = useAuth()
+  const { user: rawUser, profile: rawProfile, signOut } = useAuth()
 
   const user: User | null = rawUser ? {
     _id: rawUser._id,
@@ -176,10 +175,6 @@ export function HomeInteractiveShell({ supporters, children }: HomeInteractiveSh
     }
 
     return null;
-  }
-
-  if (authLoading) {
-    return <LoadingScreen message="Loading..." />
   }
 
   return (
