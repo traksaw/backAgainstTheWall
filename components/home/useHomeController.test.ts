@@ -113,20 +113,27 @@ describe('useHomeController quiz completion', () => {
     expect(result.current.showResults).toBe(true)
   })
 
-  it('prefers the server-confirmed result once its sessionId matches the optimistic one', async () => {
+  it('prefers the server-confirmed result once its sessionId matches the optimistic one, without dropping scores the API never echoes back', async () => {
     // Stateful override, scoped to this test only (see the top-of-file comment): mirrors
     // real useQuiz by holding latestResult in React state and updating it once submitQuiz
     // resolves, echoing back the sessionId it was actually called with.
+    //
+    // Realistic response shape: none of app/api/quiz/{submit,[id]/update,results} ever
+    // return a top-level `scores` field (models/QuizResult.ts's schema has no such field —
+    // only a differently-shaped, internal `answers.scores`). So this mock intentionally
+    // omits it, the way the real API does, to catch a regression where reconciliation
+    // would otherwise silently blank out the scores computed optimistically on the client
+    // (which is exactly the second flash-bug a prior review caught in this same code path).
     mockedUseQuiz.mockImplementation(() => {
       const [latestResult, setLatestResult] = useState<QuizResult | null>(null)
       const submitQuiz = vi.fn(async (quizData: QuizSubmissionData): Promise<QuizResult> => {
-        const serverResult: QuizResult = {
+        const serverResult = {
           _id: 'server-1',
           sessionId: quizData.sessionId,
           archetype: quizData.archetype,
           score: quizData.score,
-          scores: quizData.scores,
-        }
+          // no `scores`, no `answers` — matches the real API's response shape
+        } as unknown as QuizResult
         setLatestResult(serverResult)
         return serverResult
       })
@@ -146,9 +153,11 @@ describe('useHomeController quiz completion', () => {
       await result.current.completeQuiz({ 1: answer('Realist', 5) })
     })
 
-    // Once useQuiz's own latestResult reflects the server's confirmed record (same
-    // sessionId, real _id), reconciliation should prefer it over the optimistic one.
+    // Server result wins for the fields it does confirm (real `_id`)...
     expect(result.current.latestResult?._id).toBeDefined()
+    // ...but the optimistically-computed scores must survive the reconciliation, since the
+    // server response never carried its own top-level `scores` to overwrite them with.
+    expect(result.current.latestResult?.scores?.Realist).toBe(5)
   })
 
   it('retakeQuiz clears the previous optimistic result so a stale one cannot leak into the new attempt', async () => {

@@ -11,7 +11,19 @@ function reconcileLatestResult(
   optimisticResult: QuizResult | null
 ): QuizResult | null {
   if (serverResult && optimisticResult && serverResult.sessionId === optimisticResult.sessionId) {
-    return serverResult
+    // Prefer the server result (real `_id`, persisted `hasViewedResults`/`hasWatchedFilm`,
+    // etc.) but never let it silently blank out fields the API doesn't actually echo back.
+    // None of app/api/quiz/{submit,[id]/update,results} return a top-level `scores`, and
+    // the server's `answers` (when present) is a differently-shaped internal record
+    // ({responses, scores, totalQuestions, completedAt}), not this frontend's
+    // Record<number, QuizAnswer> — so both fall back to the optimistic value, which was
+    // computed correctly and synchronously on the client.
+    return {
+      ...optimisticResult,
+      ...serverResult,
+      scores: serverResult.scores ?? optimisticResult.scores,
+      answers: serverResult.answers ?? optimisticResult.answers,
+    }
   }
   return optimisticResult ?? serverResult
 }
