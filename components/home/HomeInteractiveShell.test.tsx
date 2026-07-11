@@ -7,16 +7,8 @@ vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({ user: null, profile: null, signOut: vi.fn(), loading: true }),
 }))
 
-vi.mock('@/hooks/useQuiz', () => ({
-  useQuiz: () => ({
-    latestResult: null,
-    loading: false,
-    refreshResults: vi.fn(),
-  }),
-}))
-
-vi.mock('@/hooks/useModalState', () => ({
-  useModalState: () => ({
+vi.mock('@/components/home/useHomeController', () => ({
+  useHomeController: () => ({
     showSignup: false,
     showSignin: false,
     showQuiz: false,
@@ -29,25 +21,25 @@ vi.mock('@/hooks/useModalState', () => ({
     setShowResults: vi.fn(),
     setShowFilm: vi.fn(),
     setShowQuizHistory: vi.fn(),
-    openQuiz: vi.fn(),
+    quizSession: 0,
+    autoResetQuiz: false,
+    latestResult: null,
+    quizLoading: false,
+    openSignup: vi.fn(),
+    openSignin: vi.fn(),
     openResults: vi.fn(),
     openFilm: vi.fn(),
-    openSignup: vi.fn(),
     openQuizHistory: vi.fn(),
+    closeAllModals: vi.fn(),
     switchToSignIn: vi.fn(),
     switchToSignUp: vi.fn(),
-    closeAllModals: vi.fn(),
-  }),
-}))
-
-vi.mock('@/hooks/useQuizHandlers', () => ({
-  useQuizHandlers: () => ({
-    handleQuizComplete: vi.fn(),
-    handleResultsViewed: vi.fn(),
-    handleFilmComplete: vi.fn(),
+    signupSucceeded: vi.fn(),
+    startQuiz: vi.fn(),
+    retakeQuiz: vi.fn(),
+    completeQuiz: vi.fn(),
+    viewResults: vi.fn(),
+    completeFilm: vi.fn(),
     handleVideoError: vi.fn(),
-    handleStartNewQuiz: vi.fn(),
-    quizLoading: false,
   }),
 }))
 
