@@ -4,6 +4,7 @@ import mongoose from "mongoose"
 import connectDB from "@/lib/mongoose"
 import QuizResultModel from "@/models/QuizResult"
 import { getUserIdFromRequest } from "@/lib/jwt"
+import { quizUpdateSchema } from "@/lib/validation"
 
 // WAS-6: the only fields this endpoint is allowed to touch. Never spread the
 // raw request body into an update - that's mass assignment, and it let any
@@ -31,7 +32,21 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
     return NextResponse.json({ error: "Missing quiz result ID" }, { status: 400 })
   }
 
-  const updates = await req.json()
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+  }
+
+  const parsed = quizUpdateSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid request body", details: parsed.error.flatten() },
+      { status: 400 }
+    )
+  }
+  const updates = parsed.data
 
   try {
     // Filtering by { _id, userId } together means a result that exists but

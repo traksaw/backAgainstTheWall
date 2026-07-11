@@ -4,65 +4,32 @@ import QuizResultModel from "@/models/QuizResult"
 import connectDB from "@/lib/mongoose"
 import mongoose from "mongoose"
 import { getUserIdFromRequest } from "@/lib/jwt"
+import { quizSubmitSchema } from "@/lib/validation"
 
-interface QuizAnswer {
-  archetype: 'Avoider' | 'Gambler' | 'Realist' | 'Architect';
-  points: number;
-}
-
-export async function POST(req: NextRequest) {  
+export async function POST(req: NextRequest) {
   try {
     await connectDB()
     const userId = await getUserIdFromRequest(req)
-    
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await req.json()
-    console.log("=== QUIZ SUBMIT API DEBUG ===")
-    console.log("Raw request body:", body)
-    
-    // ✅ FIXED: Better data extraction logic
-    let quizAnswers: Record<number, QuizAnswer>, sessionId: string | undefined, archetype: string, score: number
-    
-    if (body.answers) {
-      // Data structure: { answers: {...}, sessionId: "...", archetype: "...", score: 123 }
-      quizAnswers = body.answers
-      sessionId = body.sessionId
-      archetype = body.archetype
-      score = body.score
-    } else {
-      // Legacy data structure or different format
-      console.log("Using legacy data structure")
-      quizAnswers = body.quizAnswers || body
-      sessionId = body.sessionId
-      archetype = body.archetype
-      score = body.score
+    let body: unknown
+    try {
+      body = await req.json()
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
     }
 
-    console.log("Extracted data:", {
-      quizAnswers: quizAnswers ? Object.keys(quizAnswers).length : 0,
-      sessionId,
-      archetype,
-      score
-    })
-
-    // Validate required fields
-    if (!quizAnswers) {
-      console.error("Missing quiz answers field")
-      return NextResponse.json({ error: "Missing quiz answers field" }, { status: 400 })
+    const parsed = quizSubmitSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsed.error.flatten() },
+        { status: 400 }
+      )
     }
-    
-    if (!archetype || archetype === 'undefined') {
-      console.error("Missing or invalid archetype field:", archetype)
-      return NextResponse.json({ error: "Missing or invalid archetype field" }, { status: 400 })
-    }
-    
-    if (score === undefined || score === null || isNaN(score)) {
-      console.error("Missing or invalid score field:", score)
-      return NextResponse.json({ error: "Missing or invalid score field" }, { status: 400 })
-    }
+    const { answers: quizAnswers, sessionId, archetype, score } = parsed.data
 
     // Calculate structured answers for the database
     const answerStructure = {
