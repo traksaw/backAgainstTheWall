@@ -66,24 +66,22 @@ export function HomeInteractiveShell({ supporters, children }: HomeInteractiveSh
       {children}
 
       <SignUpModal
-        open={controller.showSignup}
-        onOpenChange={controller.setShowSignup}
+        open={controller.activeModal === 'signup'}
+        onOpenChange={(open) => !open && controller.closeActiveModal()}
         onSwitchToSignIn={controller.switchToSignIn}
         onSuccess={controller.signupSucceeded}
       />
 
       <SignInModal
-        open={controller.showSignin}
-        onOpenChange={controller.setShowSignin}
+        open={controller.activeModal === 'signin'}
+        onOpenChange={(open) => !open && controller.closeActiveModal()}
         onSwitchToSignUp={controller.switchToSignUp}
       />
 
       <QuizModal
         key={controller.quizSession}
-        open={controller.showQuiz}
-        onOpenChange={(open) => {
-          if (!open) controller.setShowQuiz(false)
-        }}
+        open={controller.activeModal === 'quiz'}
+        onOpenChange={(open) => !open && controller.closeActiveModal()}
         onQuizComplete={controller.completeQuiz}
         profile={userProfile}
         autoReset={controller.autoResetQuiz}
@@ -91,15 +89,15 @@ export function HomeInteractiveShell({ supporters, children }: HomeInteractiveSh
       />
 
       <ResultsModal
-        open={controller.showResults}
-        onOpenChange={controller.setShowResults}
+        open={controller.activeModal === 'results'}
+        onOpenChange={(open) => !open && controller.closeActiveModal()}
         latestResult={controller.latestResult}
         onResultsViewed={controller.viewResults}
         loading={controller.quizLoading}
         onRetakeQuiz={controller.retakeQuiz}
       />
 
-      <Dialog open={controller.showFilm} onOpenChange={controller.setShowFilm}>
+      <Dialog open={controller.activeModal === 'film'} onOpenChange={(open) => !open && controller.closeActiveModal()}>
         <DialogContent className="w-[95vw] max-w-5xl bg-black border-0 max-h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl sm:text-2xl font-bold text-center text-white">
@@ -141,8 +139,8 @@ export function HomeInteractiveShell({ supporters, children }: HomeInteractiveSh
       </Dialog>
 
       <QuizHistorySection
-        open={controller.showQuizHistory}
-        onOpenChange={controller.setShowQuizHistory}
+        open={controller.activeModal === 'quizHistory'}
+        onOpenChange={(open) => !open && controller.closeActiveModal()}
       />
     </div>
   )
