@@ -94,6 +94,11 @@ The quiz identifies one of four financial personality types:
    # Authentication
    JWT_SECRET=your_jwt_secret
    
+   # Email (Resend)
+   RESEND_API_KEY=your_resend_api_key
+   EMAIL_FROM=onboarding@resend.dev
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   
    # Vercel Blob (for video hosting)
    BLOB_READ_WRITE_TOKEN=your_blob_token
    ```
