@@ -4,9 +4,21 @@
 import { useState } from "react"
 import { useQuiz } from "@/hooks/useQuiz"
 import { useQuizLogic } from "@/hooks/useQuizLogic"
+import type { QuizAnswer, QuizResult } from "@/types/quiz"
+
+function reconcileLatestResult(
+  serverResult: QuizResult | null,
+  optimisticResult: QuizResult | null
+): QuizResult | null {
+  if (serverResult && optimisticResult && serverResult.sessionId === optimisticResult.sessionId) {
+    return serverResult
+  }
+  return optimisticResult ?? serverResult
+}
 
 export function useHomeController() {
-  const { loading: quizLoading } = useQuiz()
+  const { latestResult: serverLatestResult, loading: quizLoading, submitQuiz, updateQuizResult } = useQuiz()
+  const quizLogic = useQuizLogic()
 
   const [showSignup, setShowSignup] = useState(false)
   const [showSignin, setShowSignin] = useState(false)
@@ -17,6 +29,7 @@ export function useHomeController() {
 
   const [quizSession, setQuizSession] = useState(0)
   const [autoResetQuiz, setAutoResetQuiz] = useState(false)
+  const [optimisticResult, setOptimisticResult] = useState<QuizResult | null>(null)
 
   const closeAllModals = () => {
     setShowSignup(false)
@@ -43,6 +56,7 @@ export function useHomeController() {
 
   const retakeQuiz = () => {
     closeAllModals()
+    setOptimisticResult(null)
     setQuizSession((s) => s + 1)
     setTimeout(() => {
       setAutoResetQuiz(true)
@@ -57,12 +71,84 @@ export function useHomeController() {
     }, 100)
   }
 
+  const completeQuiz = async (answers: Record<number, QuizAnswer>) => {
+    try {
+      const quizData = quizLogic.processQuizCompletion(answers)
+
+      const optimistic: QuizResult = {
+        archetype: quizData.archetype,
+        score: quizData.score,
+        scores: quizData.scores,
+        answers: quizData.answers,
+        sessionId: quizData.sessionId,
+        createdAt: new Date().toISOString(),
+        hasViewedResults: false,
+        hasWatchedFilm: false,
+      }
+
+      setShowQuiz(false)
+      setOptimisticResult(optimistic)
+      setTimeout(() => {
+        setShowResults(true)
+      }, 300)
+
+      try {
+        await submitQuiz(quizData)
+      } catch (error) {
+        console.warn('Backend submission failed, but results are shown optimistically:', error)
+      }
+    } catch (error) {
+      console.error('Quiz completion error:', error)
+      setShowQuiz(false)
+      alert(`Quiz failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  const latestResult = reconcileLatestResult(serverLatestResult, optimisticResult)
+
+  const viewResults = async () => {
+    if (latestResult && !latestResult.hasViewedResults) {
+      const resultId = latestResult._id
+      if (!resultId) {
+        console.error('No valid ID found in latestResult:', latestResult)
+      } else {
+        try {
+          await updateQuizResult(resultId, { hasViewedResults: true })
+        } catch (error) {
+          console.warn('Failed to update results viewed:', error)
+        }
+      }
+    }
+    setShowResults(false)
+    setShowFilm(true)
+  }
+
+  const completeFilm = async () => {
+    if (latestResult && !latestResult.hasWatchedFilm) {
+      const resultId = latestResult._id
+      if (!resultId) {
+        console.error('No valid ID found in latestResult:', latestResult)
+      } else {
+        try {
+          await updateQuizResult(resultId, { hasWatchedFilm: true })
+        } catch (error) {
+          console.warn('Failed to update film watched:', error)
+        }
+      }
+    }
+    setShowFilm(false)
+  }
+
+  const handleVideoError = (error: string) => {
+    console.error('Video playback error:', error)
+  }
+
   return {
     showSignup, showSignin, showQuiz, showResults, showFilm, showQuizHistory,
     setShowQuiz, setShowResults, setShowFilm, setShowQuizHistory,
-    quizSession, autoResetQuiz, quizLoading,
+    quizSession, autoResetQuiz, latestResult, quizLoading,
     openSignup, openSignin, openQuizHistory, closeAllModals,
     switchToSignIn, switchToSignUp, signupSucceeded,
-    startQuiz, retakeQuiz,
+    startQuiz, retakeQuiz, completeQuiz, viewResults, completeFilm, handleVideoError,
   }
 }
