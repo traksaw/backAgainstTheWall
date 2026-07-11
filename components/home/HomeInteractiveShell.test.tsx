@@ -2,52 +2,35 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { HomeInteractiveShell } from './HomeInteractiveShell'
+import type { useHomeController as RealUseHomeController } from '@/components/home/useHomeController'
 
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({ user: null, profile: null, signOut: vi.fn(), loading: true }),
 }))
 
-vi.mock('@/hooks/useQuiz', () => ({
-  useQuiz: () => ({
+vi.mock('@/components/home/useHomeController', () => ({
+  useHomeController: (): ReturnType<typeof RealUseHomeController> => ({
+    activeModal: null,
+    pendingModal: null,
+    quizSession: 0,
+    autoResetQuiz: false,
     latestResult: null,
-    loading: false,
-    refreshResults: vi.fn(),
-  }),
-}))
-
-vi.mock('@/hooks/useModalState', () => ({
-  useModalState: () => ({
-    showSignup: false,
-    showSignin: false,
-    showQuiz: false,
-    showResults: false,
-    showFilm: false,
-    showQuizHistory: false,
-    setShowSignup: vi.fn(),
-    setShowSignin: vi.fn(),
-    setShowQuiz: vi.fn(),
-    setShowResults: vi.fn(),
-    setShowFilm: vi.fn(),
-    setShowQuizHistory: vi.fn(),
-    openQuiz: vi.fn(),
+    quizLoading: false,
+    openSignup: vi.fn(),
+    openSignin: vi.fn(),
     openResults: vi.fn(),
     openFilm: vi.fn(),
-    openSignup: vi.fn(),
     openQuizHistory: vi.fn(),
+    closeActiveModal: vi.fn(),
     switchToSignIn: vi.fn(),
     switchToSignUp: vi.fn(),
-    closeAllModals: vi.fn(),
-  }),
-}))
-
-vi.mock('@/hooks/useQuizHandlers', () => ({
-  useQuizHandlers: () => ({
-    handleQuizComplete: vi.fn(),
-    handleResultsViewed: vi.fn(),
-    handleFilmComplete: vi.fn(),
+    signupSucceeded: vi.fn(),
+    startQuiz: vi.fn(),
+    retakeQuiz: vi.fn(),
+    completeQuiz: vi.fn(),
+    viewResults: vi.fn(),
+    completeFilm: vi.fn(),
     handleVideoError: vi.fn(),
-    handleStartNewQuiz: vi.fn(),
-    quizLoading: false,
   }),
 }))
 

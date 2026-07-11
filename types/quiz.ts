@@ -66,10 +66,12 @@ export interface ArchetypeResult {
 export interface QuizResult {
   _id?: string                          // Your ResultsModal expects _id
   id?: string                          // Backup id field
+  userId?: string                      // added: was lib/quiz.ts-only
   archetype: Archetype                 // Required
   score: number                        // Required
   scores: QuizScores                   // Required
   createdAt?: string                   // ISO string format
+  updatedAt?: string                   // added: was lib/quiz.ts-only
   hasViewedResults?: boolean           // For your UI state tracking
   hasWatchedFilm?: boolean            // For your UI state tracking
   answers?: Record<number, QuizAnswer> // For QuizAnswersDisplay component
