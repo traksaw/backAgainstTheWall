@@ -1,31 +1,7 @@
 // lib/quiz.ts
 
-export type Archetype = "Avoider" | "Gambler" | "Realist" | "Architect"
-
-export interface QuizAnswer {
-  id?: number
-  archetype: Archetype
-  points: number
-  text: string
-  questionId?: number
-  question?: string
-  answer?: string
-}
-
-export interface QuizResult {
-  _id?: string;
-  id?: string;
-  userId?: string;
-  archetype: Archetype;
-  score: number;
-  scores: Record<Archetype, number>;
-  answers?: Record<number, QuizAnswer>;
-  hasViewedResults?: boolean;
-  hasWatchedFilm?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  sessionId?: string;
-}
+import type { Archetype, QuizAnswer, QuizResult } from "@/types/quiz"
+export type { Archetype, QuizAnswer, QuizResult }
 
 export interface QuizResultUpdate {
   hasViewedResults?: boolean;
