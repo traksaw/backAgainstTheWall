@@ -13,6 +13,19 @@ export interface SignUpData {
   occupationStatus: string
 }
 
+// WAS-6: never spread caller-supplied updates directly into a Mongo update -
+// same mass-assignment bug as the quiz-result endpoint
+// (app/api/quiz/[id]/update). A generic profile update must never be able to
+// touch passwordHash or email: password changes need their own
+// current-password-verified flow, and email changes need their own
+// verification flow. Neither exists yet, so neither belongs here.
+const ALLOWED_PROFILE_UPDATE_FIELDS = [
+  "first_name",
+  "last_name",
+  "zip_code",
+  "occupation_status",
+] as const
+
 export class AuthService {
   static async signUp(userData: SignUpData) {
     await connectDB()
@@ -58,7 +71,11 @@ export class AuthService {
 
   static async updateUserProfile(userId: string, updates: Partial<IUser>) {
     await connectDB()
-    return await User.findByIdAndUpdate(userId, updates, { new: true })
+    const picked: Partial<IUser> = {}
+    for (const field of ALLOWED_PROFILE_UPDATE_FIELDS) {
+      if (field in updates) picked[field] = updates[field]
+    }
+    return await User.findByIdAndUpdate(userId, picked, { new: true })
   }
 
   static async checkDatabaseSetup() {
