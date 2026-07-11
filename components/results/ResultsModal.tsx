@@ -2,7 +2,7 @@
 
 "use client"
 
-import { Dialog, DialogContent, DialogDescription } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { QuizResult, Archetype } from "@/types/quiz"
 import { useState, useRef, useEffect } from "react"
@@ -62,6 +62,7 @@ export function ResultsModal({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="w-[95vw] max-w-md bg-white text-gray-900 border-0 p-0 rounded-2xl shadow-2xl">
+          <DialogTitle className="sr-only">Your Quiz Results</DialogTitle>
           <div className="max-h-[70vh] overflow-y-auto">
             <div className="flex items-center justify-center py-12 px-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B95D38]"></div>
@@ -76,6 +77,7 @@ export function ResultsModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-lg bg-gradient-to-br from-amber-50 to-orange-50 text-gray-900 border-0 p-0 rounded-2xl shadow-2xl">
+        <DialogTitle className="sr-only">Your Quiz Results</DialogTitle>
         <DialogDescription className="sr-only">
           Your quiz results including your primary archetype and personalized recommendations. Use the buttons to watch the film, retake the quiz, or close.
         </DialogDescription>
