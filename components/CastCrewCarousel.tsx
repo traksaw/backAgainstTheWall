@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { ExternalLink } from "lucide-react";
@@ -7,7 +9,7 @@ interface CastMember {
   name: string
   role: string
   description: string
-  image: string
+  image?: string
   readMoreUrl?: string
   order?: number
   imageAlt?: string
