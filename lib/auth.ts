@@ -100,6 +100,25 @@ export class AuthService {
     }
   }
 
+  static async resetPassword(token: string, newPassword: string) {
+    await connectDB()
+
+    const tokenHash = hashToken(token)
+    const user = await User.findOne({
+      resetPasswordTokenHash: tokenHash,
+      resetPasswordExpires: { $gt: new Date() },
+    })
+    // Same generic error whether the token doesn't exist or has expired -
+    // distinguishing the two only helps an attacker probing token validity.
+    if (!user) throw new Error("Invalid or expired token")
+
+    const passwordHash = await bcrypt.hash(newPassword, 10)
+    await User.findByIdAndUpdate(user._id, {
+      passwordHash,
+      $unset: { resetPasswordTokenHash: 1, resetPasswordExpires: 1 },
+    })
+  }
+
   static async signOut() {
     // You would clear cookies or session here if implemented
     return true

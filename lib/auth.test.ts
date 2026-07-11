@@ -188,3 +188,38 @@ describe('AuthService.requestPasswordReset (WAS-32)', () => {
     expect(sendPasswordResetEmailMock).toHaveBeenCalledWith('me@example.com', 'raw-token')
   })
 })
+
+describe('AuthService.resetPassword (WAS-32)', () => {
+  beforeEach(() => {
+    findOneMock.mockReset()
+    findByIdAndUpdateMock.mockReset()
+  })
+
+  it('rejects an unknown or expired token', async () => {
+    findOneMock.mockResolvedValue(null)
+
+    await expect(AuthService.resetPassword('bad-token', 'newpassword123')).rejects.toThrow(
+      'Invalid or expired token'
+    )
+    expect(findByIdAndUpdateMock).not.toHaveBeenCalled()
+  })
+
+  it('hashes the new password and clears the reset token fields on success', async () => {
+    findOneMock.mockResolvedValue({ _id: 'user-a' })
+    findByIdAndUpdateMock.mockResolvedValue(undefined)
+
+    await AuthService.resetPassword('good-token', 'newpassword123')
+
+    expect(findOneMock).toHaveBeenCalledWith({
+      resetPasswordTokenHash: 'hashed-good-token',
+      resetPasswordExpires: { $gt: expect.any(Date) },
+    })
+    expect(findByIdAndUpdateMock).toHaveBeenCalledWith(
+      'user-a',
+      expect.objectContaining({
+        passwordHash: 'hashed-password',
+        $unset: { resetPasswordTokenHash: 1, resetPasswordExpires: 1 },
+      })
+    )
+  })
+})
