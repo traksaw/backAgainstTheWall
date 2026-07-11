@@ -5,6 +5,7 @@
 import { useState, useEffect } from "react"
 import { QuizService, type QuizResult } from "@/lib/quiz"
 import { useAuth } from "@/hooks/useAuth"
+import type { QuizSubmissionData } from "@/types/quiz"
 
 export function useQuiz() {
   const { user } = useAuth()
@@ -40,34 +41,14 @@ export function useQuiz() {
     }
   }
 
-  const submitQuiz = async (answers: Record<number, any>, sessionId?: string) => {
+  const submitQuiz = async (quizData: QuizSubmissionData) => {
     if (!user?._id) throw new Error("User not authenticated")
-
-    const scores = { Avoider: 0, Gambler: 0, Realist: 0, Architect: 0 }
-    Object.values(answers).forEach((answer) => {
-      if (answer.archetype && answer.points) {
-        scores[answer.archetype as keyof typeof scores] += answer.points
-      }
-    })
-
-    const topArchetype = Object.entries(scores).reduce((a, b) =>
-      a[1] > b[1] ? a : b
-    )[0] as keyof typeof scores
 
     setLoading(true)
     try {
-      const result = await QuizService.submitQuiz({
-        archetype: topArchetype,
-        score: scores[topArchetype],
-        scores, // Include the full scores breakdown
-        answers,
-        sessionId,
-      })
-      
-      // Update local state immediately
+      const result = await QuizService.submitQuiz(quizData)
       setLatestResult(result)
       setQuizResults((prev) => [result, ...prev])
-      
       return result
     } catch (error) {
       console.error("Error submitting quiz:", error)
