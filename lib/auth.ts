@@ -3,6 +3,8 @@
 import bcrypt from "bcryptjs"
 import User, { IUser } from "@/models/User"
 import connectDB from "@/lib/mongoose"
+import { generateToken, hashToken } from "@/lib/tokens"
+import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/email"
 
 export interface SignUpData {
   email: string
@@ -34,6 +36,9 @@ const ALLOWED_PROFILE_UPDATE_FIELDS = [
 function normalizeEmail(email: string): string {
   return email.toLowerCase().trim()
 }
+
+const ONE_HOUR_MS = 60 * 60 * 1000
+const ONE_DAY_MS = 24 * ONE_HOUR_MS
 
 export class AuthService {
   static async signUp(userData: SignUpData) {
@@ -72,6 +77,27 @@ export class AuthService {
     if (!isMatch) throw new Error("Invalid email or password")
 
     return user
+  }
+
+  static async requestPasswordReset(email: string) {
+    await connectDB()
+
+    const user = await User.findOne({ email: normalizeEmail(email) })
+    // WAS-32: anti-enumeration - the caller (route) always reports success
+    // either way, so a missing user is a silent no-op, not an error.
+    if (!user) return
+
+    const { token, tokenHash } = generateToken()
+    await User.findByIdAndUpdate(user._id, {
+      resetPasswordTokenHash: tokenHash,
+      resetPasswordExpires: new Date(Date.now() + ONE_HOUR_MS),
+    })
+
+    try {
+      await sendPasswordResetEmail(user.email, token)
+    } catch (err) {
+      console.error("Failed to send password reset email:", err)
+    }
   }
 
   static async signOut() {

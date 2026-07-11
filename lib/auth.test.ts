@@ -29,6 +29,19 @@ vi.mock('@/models/User', () => ({
   },
 }))
 
+const generateTokenMock = vi.fn()
+vi.mock('@/lib/tokens', () => ({
+  generateToken: () => generateTokenMock(),
+  hashToken: (token: string) => `hashed-${token}`,
+}))
+
+const sendPasswordResetEmailMock = vi.fn()
+const sendVerificationEmailMock = vi.fn()
+vi.mock('@/lib/email', () => ({
+  sendPasswordResetEmail: (...args: unknown[]) => sendPasswordResetEmailMock(...args),
+  sendVerificationEmail: (...args: unknown[]) => sendVerificationEmailMock(...args),
+}))
+
 import { AuthService } from './auth'
 
 describe('AuthService email normalization (WAS-19)', () => {
@@ -136,5 +149,42 @@ describe('AuthService.getUserProfile (WAS-7: never leak passwordHash)', () => {
 
     expect(findByIdMock).toHaveBeenCalledWith('user-a')
     expect(selectMock).toHaveBeenCalledWith('-passwordHash')
+  })
+})
+
+describe('AuthService.requestPasswordReset (WAS-32)', () => {
+  beforeEach(() => {
+    findOneMock.mockReset()
+    findByIdAndUpdateMock.mockReset()
+    generateTokenMock.mockReset()
+    sendPasswordResetEmailMock.mockReset()
+    generateTokenMock.mockReturnValue({ token: 'raw-token', tokenHash: 'hashed-raw-token' })
+  })
+
+  it('does nothing when no user matches the normalized email (anti-enumeration)', async () => {
+    findOneMock.mockResolvedValue(null)
+
+    await AuthService.requestPasswordReset('nobody@example.com')
+
+    expect(findOneMock).toHaveBeenCalledWith({ email: 'nobody@example.com' })
+    expect(findByIdAndUpdateMock).not.toHaveBeenCalled()
+    expect(sendPasswordResetEmailMock).not.toHaveBeenCalled()
+  })
+
+  it('stores a hashed token with an expiry and emails the raw token', async () => {
+    findOneMock.mockResolvedValue({ _id: 'user-a', email: 'me@example.com' })
+    findByIdAndUpdateMock.mockResolvedValue(undefined)
+
+    await AuthService.requestPasswordReset('  Me@Example.com  ')
+
+    expect(findOneMock).toHaveBeenCalledWith({ email: 'me@example.com' })
+    expect(findByIdAndUpdateMock).toHaveBeenCalledWith(
+      'user-a',
+      expect.objectContaining({
+        resetPasswordTokenHash: 'hashed-raw-token',
+        resetPasswordExpires: expect.any(Date),
+      })
+    )
+    expect(sendPasswordResetEmailMock).toHaveBeenCalledWith('me@example.com', 'raw-token')
   })
 })
