@@ -24,6 +24,23 @@ export const signUpSchema = z.object({
   occupationStatus: z.string().min(1),
 })
 
+export const requestResetSchema = z.object({
+  email: z.string().email(),
+})
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(1),
+})
+
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1),
+})
+
+export const resendVerificationSchema = z.object({
+  email: z.string().email(),
+})
+
 const archetypeSchema = z.enum(["Avoider", "Gambler", "Realist", "Architect"])
 
 const quizAnswerSchema = z.object({
