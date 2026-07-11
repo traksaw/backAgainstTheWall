@@ -47,6 +47,16 @@ const DETERMINISM_CASES: Array<{
     },
     expected: 'Gambler',
   },
+  {
+    name: 'score tie AND recency tie, weight breaks the tie (Realist > Avoider)',
+    answers: {
+      1: answer('Realist', 5),
+      2: answer('Avoider', 5),
+      3: answer('Gambler', 1),
+      4: answer('Architect', 1),
+    },
+    expected: 'Realist',
+  },
 ]
 
 const RUNS = 50

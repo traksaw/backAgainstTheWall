@@ -274,8 +274,9 @@ export function getWinningArchetype(
     Realist: 1.15,
     Architect: 1.1,
   }
-  const pool = recentWinners.length > 0 ? recentWinners : tied
-  const weighted = pool.map(a => ({ a, w: scores[a] * (TIE_WEIGHTS[a] ?? 1) }))
+  // recentWinners is always non-empty here: maxRecent is derived from tied,
+  // so at least one archetype in tied matches it.
+  const weighted = recentWinners.map(a => ({ a, w: scores[a] * (TIE_WEIGHTS[a] ?? 1) }))
   const maxWeight = Math.max(...weighted.map(c => c.w))
   const weightedWinners = weighted.filter(c => c.w === maxWeight).map(c => c.a)
   if (weightedWinners.length === 1) return weightedWinners[0]
@@ -283,7 +284,12 @@ export function getWinningArchetype(
   // 5) ultimate fallback: fixed archetype priority order (deterministic).
   // Any tie surviving weighting resolves to whichever archetype comes
   // first in ARCHETYPES — a fixed, documented rule, never random.
-  return ARCHETYPES.find(a => weightedWinners.includes(a)) ?? weightedWinners[0]
+  // weightedWinners is always a non-empty subset of ARCHETYPES, so this
+  // loop always returns before the throw below.
+  for (const a of ARCHETYPES) {
+    if (weightedWinners.includes(a)) return a
+  }
+  throw new Error('[getWinningArchetype] unreachable: no weighted winner found')
 }
 
 /**
