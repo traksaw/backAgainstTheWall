@@ -1,10 +1,58 @@
 // components/home/useHomeController.ts
 "use client"
 
-import { useState } from "react"
+import { useReducer, useRef, useEffect } from "react"
 import { useQuiz } from "@/hooks/useQuiz"
 import { useQuizLogic } from "@/hooks/useQuizLogic"
 import type { QuizAnswer, QuizResult } from "@/types/quiz"
+
+export type ModalKey = 'signup' | 'signin' | 'quiz' | 'results' | 'film' | 'quizHistory'
+const MODAL_TRANSITION_MS = 250 // safely past DialogContent's 200ms CSS exit animation
+
+interface ModalState {
+  activeModal: ModalKey | null
+  pendingModal: ModalKey | null
+  quizSession: number
+  autoResetQuiz: boolean
+  optimisticResult: QuizResult | null
+}
+
+type ModalAction =
+  | { type: 'OPEN'; modal: ModalKey }
+  | { type: 'CLOSE' }
+  | { type: 'CLOSE_THEN_OPEN'; modal: ModalKey }
+  | { type: 'SETTLE' }
+  | { type: 'QUIZ_SESSION_STARTED'; autoReset: boolean }
+  | { type: 'QUIZ_COMPLETED'; result: QuizResult }
+
+const initialState: ModalState = {
+  activeModal: null,
+  pendingModal: null,
+  quizSession: 0,
+  autoResetQuiz: false,
+  optimisticResult: null,
+}
+
+function modalReducer(state: ModalState, action: ModalAction): ModalState {
+  switch (action.type) {
+    case 'OPEN':
+      return { ...state, activeModal: action.modal, pendingModal: null }
+    case 'CLOSE':
+      return { ...state, activeModal: null, pendingModal: null }
+    case 'CLOSE_THEN_OPEN':
+      return { ...state, activeModal: null, pendingModal: action.modal }
+    case 'SETTLE':
+      return state.pendingModal
+        ? { ...state, activeModal: state.pendingModal, pendingModal: null }
+        : state
+    case 'QUIZ_SESSION_STARTED':
+      return { ...state, quizSession: state.quizSession + 1, autoResetQuiz: action.autoReset, optimisticResult: null }
+    case 'QUIZ_COMPLETED':
+      return { ...state, optimisticResult: action.result }
+    default:
+      return state
+  }
+}
 
 function reconcileLatestResult(
   serverResult: QuizResult | null,
@@ -31,64 +79,44 @@ function reconcileLatestResult(
 export function useHomeController() {
   const { latestResult: serverLatestResult, loading: quizLoading, submitQuiz, updateQuizResult } = useQuiz()
   const quizLogic = useQuizLogic()
+  const [state, dispatch] = useReducer(modalReducer, initialState)
+  const settleTimer = useRef<ReturnType<typeof setTimeout>>()
 
-  const [showSignup, setShowSignup] = useState(false)
-  const [showSignin, setShowSignin] = useState(false)
-  const [showQuiz, setShowQuiz] = useState(false)
-  const [showResults, setShowResults] = useState(false)
-  const [showFilm, setShowFilm] = useState(false)
-  const [showQuizHistory, setShowQuizHistory] = useState(false)
+  useEffect(() => () => clearTimeout(settleTimer.current), [])
 
-  const [quizSession, setQuizSession] = useState(0)
-  const [autoResetQuiz, setAutoResetQuiz] = useState(false)
-  const [optimisticResult, setOptimisticResult] = useState<QuizResult | null>(null)
-
-  const closeAllModals = () => {
-    setShowSignup(false)
-    setShowSignin(false)
-    setShowQuiz(false)
-    setShowResults(false)
-    setShowFilm(false)
-    setShowQuizHistory(false)
+  const closeThenOpen = (modal: ModalKey) => {
+    clearTimeout(settleTimer.current)
+    dispatch({ type: 'CLOSE_THEN_OPEN', modal })
+    settleTimer.current = setTimeout(() => dispatch({ type: 'SETTLE' }), MODAL_TRANSITION_MS)
   }
 
-  const openSignup = () => { closeAllModals(); setShowSignup(true) }
-  const openSignin = () => { closeAllModals(); setShowSignin(true) }
-  const openResults = () => { closeAllModals(); setShowResults(true) }
-  const openFilm = () => { closeAllModals(); setShowFilm(true) }
-  const openQuizHistory = () => { closeAllModals(); setShowQuizHistory(true) }
-  const switchToSignIn = () => { setShowSignup(false); setShowSignin(true) }
-  const switchToSignUp = () => { setShowSignin(false); setShowSignup(true) }
+  const openSignup = () => dispatch({ type: 'OPEN', modal: 'signup' })
+  const openSignin = () => dispatch({ type: 'OPEN', modal: 'signin' })
+  const openResults = () => dispatch({ type: 'OPEN', modal: 'results' })
+  const openFilm = () => dispatch({ type: 'OPEN', modal: 'film' })
+  const openQuizHistory = () => closeThenOpen('quizHistory')
+  const closeActiveModal = () => dispatch({ type: 'CLOSE' })
+  const switchToSignIn = () => dispatch({ type: 'OPEN', modal: 'signin' })
+  const switchToSignUp = () => dispatch({ type: 'OPEN', modal: 'signup' })
 
   const startQuiz = () => {
-    setQuizSession((s) => s + 1)
-    setTimeout(() => {
-      closeAllModals()
-      setShowQuiz(true)
-    }, 50)
+    dispatch({ type: 'QUIZ_SESSION_STARTED', autoReset: false })
+    closeThenOpen('quiz')
   }
 
   const retakeQuiz = () => {
-    closeAllModals()
-    setOptimisticResult(null)
-    setQuizSession((s) => s + 1)
-    setTimeout(() => {
-      setAutoResetQuiz(true)
-      setShowQuiz(true)
-    }, 150)
+    dispatch({ type: 'QUIZ_SESSION_STARTED', autoReset: true })
+    closeThenOpen('quiz')
   }
 
   const signupSucceeded = () => {
-    setShowSignup(false)
-    setTimeout(() => {
-      startQuiz()
-    }, 100)
+    closeThenOpen('quiz')
+    dispatch({ type: 'QUIZ_SESSION_STARTED', autoReset: false })
   }
 
   const completeQuiz = async (answers: Record<number, QuizAnswer>) => {
     try {
       const quizData = quizLogic.processQuizCompletion(answers)
-
       const optimistic: QuizResult = {
         archetype: quizData.archetype,
         score: quizData.score,
@@ -99,12 +127,8 @@ export function useHomeController() {
         hasViewedResults: false,
         hasWatchedFilm: false,
       }
-
-      setShowQuiz(false)
-      setOptimisticResult(optimistic)
-      setTimeout(() => {
-        setShowResults(true)
-      }, 300)
+      dispatch({ type: 'QUIZ_COMPLETED', result: optimistic })
+      closeThenOpen('results')
 
       try {
         await submitQuiz(quizData)
@@ -113,12 +137,12 @@ export function useHomeController() {
       }
     } catch (error) {
       console.error('Quiz completion error:', error)
-      setShowQuiz(false)
+      dispatch({ type: 'CLOSE' })
       alert(`Quiz failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
-  const latestResult = reconcileLatestResult(serverLatestResult, optimisticResult)
+  const latestResult = reconcileLatestResult(serverLatestResult, state.optimisticResult)
 
   const viewResults = async () => {
     if (latestResult && !latestResult.hasViewedResults) {
@@ -133,8 +157,7 @@ export function useHomeController() {
         }
       }
     }
-    setShowResults(false)
-    setShowFilm(true)
+    closeThenOpen('film')
   }
 
   const completeFilm = async () => {
@@ -150,7 +173,7 @@ export function useHomeController() {
         }
       }
     }
-    setShowFilm(false)
+    dispatch({ type: 'CLOSE' })
   }
 
   const handleVideoError = (error: string) => {
@@ -158,10 +181,13 @@ export function useHomeController() {
   }
 
   return {
-    showSignup, showSignin, showQuiz, showResults, showFilm, showQuizHistory,
-    setShowSignup, setShowSignin, setShowQuiz, setShowResults, setShowFilm, setShowQuizHistory,
-    quizSession, autoResetQuiz, latestResult, quizLoading,
-    openSignup, openSignin, openResults, openFilm, openQuizHistory, closeAllModals,
+    activeModal: state.activeModal,
+    pendingModal: state.pendingModal,
+    quizSession: state.quizSession,
+    autoResetQuiz: state.autoResetQuiz,
+    latestResult,
+    quizLoading,
+    openSignup, openSignin, openResults, openFilm, openQuizHistory, closeActiveModal,
     switchToSignIn, switchToSignUp, signupSucceeded,
     startQuiz, retakeQuiz, completeQuiz, viewResults, completeFilm, handleVideoError,
   }

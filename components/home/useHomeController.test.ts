@@ -45,23 +45,21 @@ function answer(archetype: QuizAnswer['archetype'], points: number, text = 'answ
 describe('useHomeController modal/session state', () => {
   it('starts with every modal closed', () => {
     const { result } = renderHook(() => useHomeController())
-    expect(result.current.showSignup).toBe(false)
-    expect(result.current.showQuiz).toBe(false)
+    expect(result.current.activeModal).toBeNull()
   })
 
   it('openSignup opens signup and closes everything else', () => {
     const { result } = renderHook(() => useHomeController())
     act(() => result.current.openSignup())
-    expect(result.current.showSignup).toBe(true)
-    expect(result.current.showSignin).toBe(false)
+    expect(result.current.activeModal).toBe('signup')
   })
 
   it('switchToSignIn swaps signup for signin without a buffer', () => {
     const { result } = renderHook(() => useHomeController())
     act(() => result.current.openSignup())
+    expect(result.current.activeModal).toBe('signup')
     act(() => result.current.switchToSignIn())
-    expect(result.current.showSignup).toBe(false)
-    expect(result.current.showSignin).toBe(true)
+    expect(result.current.activeModal).toBe('signin')
   })
 
   describe('with fake timers', () => {
@@ -77,11 +75,44 @@ describe('useHomeController modal/session state', () => {
       const { result } = renderHook(() => useHomeController())
       const sessionBefore = result.current.quizSession
       act(() => result.current.startQuiz())
-      expect(result.current.showQuiz).toBe(false) // not yet — still buffering
-      act(() => vi.advanceTimersByTime(60))
-      expect(result.current.showQuiz).toBe(true)
+      expect(result.current.activeModal).toBeNull() // not yet — still buffering
+      act(() => vi.advanceTimersByTime(250))
+      expect(result.current.activeModal).toBe('quiz')
       expect(result.current.quizSession).toBe(sessionBefore + 1)
     })
+  })
+})
+
+describe('useHomeController activeModal/pendingModal (Phase 2)', () => {
+  it('exposes a single activeModal instead of six booleans', () => {
+    const { result } = renderHook(() => useHomeController())
+    expect(result.current.activeModal).toBeNull()
+    act(() => result.current.openSignup())
+    expect(result.current.activeModal).toBe('signup')
+  })
+
+  it('buffers cross-modal transitions through pendingModal for exactly MODAL_TRANSITION_MS', () => {
+    vi.useFakeTimers()
+    const { result } = renderHook(() => useHomeController())
+    act(() => result.current.startQuiz())
+    expect(result.current.activeModal).toBeNull()
+    expect(result.current.pendingModal).toBe('quiz')
+    act(() => vi.advanceTimersByTime(249))
+    expect(result.current.activeModal).toBeNull()
+    act(() => vi.advanceTimersByTime(1))
+    expect(result.current.activeModal).toBe('quiz')
+    expect(result.current.pendingModal).toBeNull()
+    vi.useRealTimers()
+  })
+
+  it('a second CLOSE_THEN_OPEN before SETTLE overwrites pendingModal (last request wins)', () => {
+    vi.useFakeTimers()
+    const { result } = renderHook(() => useHomeController())
+    act(() => result.current.startQuiz())
+    act(() => result.current.openQuizHistory())
+    act(() => vi.advanceTimersByTime(250))
+    expect(result.current.activeModal).toBe('quizHistory')
+    vi.useRealTimers()
   })
 })
 
@@ -109,8 +140,8 @@ describe('useHomeController quiz completion', () => {
     expect(result.current.latestResult?.archetype).toBe('Architect')
     expect(result.current.latestResult?.scores.Architect).toBe(9)
 
-    act(() => vi.advanceTimersByTime(300))
-    expect(result.current.showResults).toBe(true)
+    act(() => vi.advanceTimersByTime(250))
+    expect(result.current.activeModal).toBe('results')
   })
 
   it('prefers the server-confirmed result once its sessionId matches the optimistic one, without dropping scores the API never echoes back', async () => {
