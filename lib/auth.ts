@@ -151,6 +151,16 @@ export class AuthService {
     })
   }
 
+  static async resendVerification(email: string) {
+    await connectDB()
+
+    const user = await User.findOne({ email: normalizeEmail(email) })
+    // Same anti-enumeration reasoning as requestPasswordReset.
+    if (!user) return
+
+    await AuthService.issueVerificationToken(user)
+  }
+
   static async signOut() {
     // You would clear cookies or session here if implemented
     return true

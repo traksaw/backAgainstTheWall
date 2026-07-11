@@ -297,3 +297,35 @@ describe('AuthService.signUp also issues a verification token (WAS-32)', () => {
     expect(sendVerificationEmailMock).toHaveBeenCalledWith('foo@x.com', 'raw-token')
   })
 })
+
+describe('AuthService.resendVerification (WAS-32)', () => {
+  beforeEach(() => {
+    findOneMock.mockReset()
+    findByIdAndUpdateMock.mockReset()
+    generateTokenMock.mockReset()
+    sendVerificationEmailMock.mockReset()
+    generateTokenMock.mockReturnValue({ token: 'raw-token', tokenHash: 'hashed-raw-token' })
+  })
+
+  it('does nothing when no user matches the normalized email (anti-enumeration)', async () => {
+    findOneMock.mockResolvedValue(null)
+
+    await AuthService.resendVerification('nobody@example.com')
+
+    expect(findByIdAndUpdateMock).not.toHaveBeenCalled()
+    expect(sendVerificationEmailMock).not.toHaveBeenCalled()
+  })
+
+  it('issues a fresh verification token for an existing user', async () => {
+    findOneMock.mockResolvedValue({ _id: 'user-a', email: 'me@example.com' })
+    findByIdAndUpdateMock.mockResolvedValue(undefined)
+
+    await AuthService.resendVerification('me@example.com')
+
+    expect(findByIdAndUpdateMock).toHaveBeenCalledWith(
+      'user-a',
+      expect.objectContaining({ emailVerificationTokenHash: 'hashed-raw-token' })
+    )
+    expect(sendVerificationEmailMock).toHaveBeenCalledWith('me@example.com', 'raw-token')
+  })
+})
