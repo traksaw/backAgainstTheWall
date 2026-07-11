@@ -51,4 +51,13 @@ describe('POST /api/auth/profile (WAS-7: identity must come from the session, no
 
     expect(getUserProfileMock).toHaveBeenCalledWith('507f1f77bcf86cd799439011')
   })
+
+  it('returns 404 when the session references a user that no longer exists', async () => {
+    getUserIdFromRequestMock.mockResolvedValue('507f1f77bcf86cd799439011')
+    getUserProfileMock.mockResolvedValue(null)
+
+    const res = await POST(makeRequest({}))
+
+    expect(res.status).toBe(404)
+  })
 })

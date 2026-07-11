@@ -13,6 +13,9 @@ export async function POST(req: NextRequest) {
 
   try {
     const profile = await AuthService.getUserProfile(userId)
+    if (!profile) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
     return NextResponse.json(profile)
   } catch (err) {
     const error = err instanceof Error ? err.message : 'Failed to get user profile'
