@@ -9,7 +9,6 @@ interface AuthContextType {
   profile: IUser | null
   session: null
   loading: boolean
-  isHydrated: boolean
   signUp: (data: any) => Promise<void>
   signIn: (data: any) => Promise<void>
   signOut: () => Promise<void>
@@ -24,7 +23,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<IUser | null>(null)
   const [session, setSession] = useState<null>(null)
   const [loading, setLoading] = useState(true)
-  const [isHydrated, setIsHydrated] = useState(false)
 
   // ✅ Extract fetchCurrentUser so we can reuse it
   const fetchCurrentUser = async () => {
@@ -42,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null)
         return null
       }
-      
+
     } catch (err) {
       console.error("Failed to fetch current user:", err)
       setUser(null)
@@ -52,21 +50,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    // This effect runs once on mount to mark hydration as complete
-    setIsHydrated(true);
+    const initializeAuth = async () => {
+      setLoading(true);
+      await fetchCurrentUser();
+      setLoading(false);
+    };
+    initializeAuth();
   }, []);
-
-  useEffect(() => {
-    // This effect runs only after hydration is complete
-    if (isHydrated) {
-      const initializeAuth = async () => {
-        setLoading(true);
-        await fetchCurrentUser();
-        setLoading(false);
-      };
-      initializeAuth();
-    }
-  }, [isHydrated]);
 
   const loadUserProfile = async (user: IUser) => {
     setLoading(true)
@@ -199,16 +189,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     profile,
     session,
     loading,
-    isHydrated,
     signUp,
     signIn,
     signOut,
     updateProfile,
     refreshProfile,
-  }
-
-  if (!isHydrated) {
-    return <div className="w-full h-screen flex items-center justify-center text-xl">Loading...</div>
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
