@@ -186,6 +186,10 @@ pnpm db:seed      # Seed database with sample data
 - **Mobile-first** responsive design approach
 - **Component-driven** architecture
 
+### API Route Security
+
+Every API route that accepts a body **must** validate it with a `zod` schema (see `lib/validation.ts`) before that data touches the database. Mongoose queries like `User.findOne({ email })` trust that `email` is already a string — an unvalidated body lets a caller pass an object instead (e.g. `{ "email": { "$ne": null } }`), turning it into a Mongo query operator instead of a value. This was the root cause closed in WAS-8; don't reintroduce it in a new route by skipping `schema.safeParse(await req.json())`.
+
 ## About the Film
 
 "Back Against the Wall" is an ambitious short film exploring themes of financial pressure, decision-making, and personal growth. The film features:

@@ -1,11 +1,26 @@
 import { NextResponse } from "next/server"
 import { AuthService } from "@/lib/auth"
 import { signToken } from "@/lib/jwt"
+import { signInSchema } from "@/lib/validation"
 
 export async function POST(req: Request) {
-  const { email, password } = await req.json()
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+  }
 
   try {
+    const parsed = signInSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+    const { email, password } = parsed.data
+
     const user = await AuthService.signIn(email, password)
     
     const token = signToken({ userId: user._id.toString() })

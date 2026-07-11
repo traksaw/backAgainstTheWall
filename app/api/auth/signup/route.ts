@@ -3,11 +3,25 @@
 import { NextResponse } from "next/server"
 import { AuthService } from "@/lib/auth"
 import { signToken } from "@/lib/jwt"
+import { signUpSchema } from "@/lib/validation"
 
 export async function POST(req: Request) {
+  let body: unknown
   try {
-    const data = await req.json()
-    const user = await AuthService.signUp(data)
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+  }
+
+  try {
+    const parsed = signUpSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+    const user = await AuthService.signUp(parsed.data)
     
     // Auto-sign in the user after successful signup
     const token = signToken({ userId: user._id.toString() })

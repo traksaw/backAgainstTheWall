@@ -39,6 +39,14 @@ function makeRequest(body: unknown) {
   })
 }
 
+function makeRawRequest(rawBody: string) {
+  return new NextRequest('http://localhost/api/quiz/result-id/update', {
+    method: 'PUT',
+    body: rawBody,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
 function makeParams(id: string) {
   return { params: Promise.resolve({ id }) }
 }
@@ -105,5 +113,29 @@ describe('PUT /api/quiz/[id]/update (WAS-6: IDOR + mass assignment)', () => {
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.hasWatchedFilm).toBe(true)
+  })
+})
+
+describe('PUT /api/quiz/[id]/update (WAS-8: reject malformed bodies before they reach Mongoose)', () => {
+  beforeEach(() => {
+    findOneAndUpdateMock.mockClear()
+    findByIdAndUpdateMock.mockClear()
+    leanMock.mockReset()
+    getUserIdFromRequestMock.mockReset()
+    getUserIdFromRequestMock.mockResolvedValue('507f1f77bcf86cd799439011')
+  })
+
+  it('rejects a non-boolean value for hasViewedResults with 400 instead of querying the database', async () => {
+    const res = await PUT(makeRequest({ hasViewedResults: { $ne: null } }), makeParams('result-id'))
+
+    expect(res.status).toBe(400)
+    expect(findOneAndUpdateMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects a non-JSON body with 400 instead of crashing', async () => {
+    const res = await PUT(makeRawRequest('not-json'), makeParams('result-id'))
+
+    expect(res.status).toBe(400)
+    expect(findOneAndUpdateMock).not.toHaveBeenCalled()
   })
 })

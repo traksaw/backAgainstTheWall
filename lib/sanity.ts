@@ -41,31 +41,6 @@ export const urlFor = (source: string | SanityImage) => {
 }
 
 // Static fallback data
-const fallbackCastMembers = [
-  {
-    name: "Jenna Lam",
-    role: "Samara, Executive Producer & Director",
-    description: "Award-winning filmmaker with a passion for stories that explore human psychology and social issues. Jenna brings over a decade of experience in independent filmmaking, with previous work showcased at Sundance and SXSW.",
-    image: "/cast/jenna.jpeg",
-    order: 1,
-    readMoreUrl: "https://www.linkedin.com/in/jennalamx/"
-  },
-  {
-    name: "Corey Brown",
-    role: "Boyfriend",
-    description: "Talented actor bringing depth and authenticity to the role of the supportive boyfriend. Corey's performance captures the nuanced dynamics of relationships under financial pressure.",
-    image: "/cast/corey-brown.jpg",
-    order: 2
-  },
-  {
-    name: "Gracie Prahek",
-    role: "Mom",
-    description: "Accomplished actress whose portrayal of the concerned mother brings emotional weight to the family dynamics central to the story.",
-    image: "/cast/gracie-prahek.jpg",
-    order: 3
-  }
-]
-
 const fallbackSupporters = [
   {
     name: "Cambodian Americans of Greater Philadelphia",
