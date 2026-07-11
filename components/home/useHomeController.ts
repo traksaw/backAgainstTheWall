@@ -54,6 +54,8 @@ export function useHomeController() {
 
   const openSignup = () => { closeAllModals(); setShowSignup(true) }
   const openSignin = () => { closeAllModals(); setShowSignin(true) }
+  const openResults = () => { closeAllModals(); setShowResults(true) }
+  const openFilm = () => { closeAllModals(); setShowFilm(true) }
   const openQuizHistory = () => { closeAllModals(); setShowQuizHistory(true) }
   const switchToSignIn = () => { setShowSignup(false); setShowSignin(true) }
   const switchToSignUp = () => { setShowSignin(false); setShowSignup(true) }
@@ -157,9 +159,9 @@ export function useHomeController() {
 
   return {
     showSignup, showSignin, showQuiz, showResults, showFilm, showQuizHistory,
-    setShowQuiz, setShowResults, setShowFilm, setShowQuizHistory,
+    setShowSignup, setShowSignin, setShowQuiz, setShowResults, setShowFilm, setShowQuizHistory,
     quizSession, autoResetQuiz, latestResult, quizLoading,
-    openSignup, openSignin, openQuizHistory, closeAllModals,
+    openSignup, openSignin, openResults, openFilm, openQuizHistory, closeAllModals,
     switchToSignIn, switchToSignUp, signupSucceeded,
     startQuiz, retakeQuiz, completeQuiz, viewResults, completeFilm, handleVideoError,
   }
