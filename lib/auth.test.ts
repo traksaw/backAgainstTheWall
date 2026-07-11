@@ -29,7 +29,13 @@ vi.mock('@/models/User', () => ({
   },
 }))
 
-const generateTokenMock = vi.fn()
+// Default return value so describe blocks that don't care about
+// verification-token behavior (e.g. the WAS-19 email-normalization tests,
+// which call signUp but never reset/configure this mock) don't crash when
+// signUp's new issueVerificationToken step destructures the result -
+// vi.fn() with no implementation returns undefined by default, and
+// vitest doesn't auto-reset mocks between describe blocks in this file.
+const generateTokenMock = vi.fn().mockReturnValue({ token: 'unused-token', tokenHash: 'unused-token-hash' })
 vi.mock('@/lib/tokens', () => ({
   generateToken: () => generateTokenMock(),
   hashToken: (token: string) => `hashed-${token}`,
@@ -254,5 +260,40 @@ describe('AuthService.verifyEmail (WAS-32)', () => {
         $unset: { emailVerificationTokenHash: 1, emailVerificationExpires: 1 },
       })
     )
+  })
+})
+
+describe('AuthService.signUp also issues a verification token (WAS-32)', () => {
+  beforeEach(() => {
+    findOneMock.mockReset()
+    createMock.mockReset()
+    findByIdAndUpdateMock.mockReset()
+    generateTokenMock.mockReset()
+    sendVerificationEmailMock.mockReset()
+    generateTokenMock.mockReturnValue({ token: 'raw-token', tokenHash: 'hashed-raw-token' })
+  })
+
+  it('stores a verification token and sends the verification email after creating the user', async () => {
+    findOneMock.mockResolvedValue(null)
+    createMock.mockResolvedValue({ _id: 'user-a', email: 'foo@x.com' })
+    findByIdAndUpdateMock.mockResolvedValue(undefined)
+
+    await AuthService.signUp({
+      email: 'foo@x.com',
+      password: 'password123',
+      firstName: 'Foo',
+      lastName: 'Bar',
+      zip_code: '90210',
+      occupationStatus: 'Working Professional',
+    })
+
+    expect(findByIdAndUpdateMock).toHaveBeenCalledWith(
+      'user-a',
+      expect.objectContaining({
+        emailVerificationTokenHash: 'hashed-raw-token',
+        emailVerificationExpires: expect.any(Date),
+      })
+    )
+    expect(sendVerificationEmailMock).toHaveBeenCalledWith('foo@x.com', 'raw-token')
   })
 })

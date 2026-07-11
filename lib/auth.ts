@@ -64,6 +64,8 @@ export class AuthService {
       occupation_status: userData.occupationStatus,
     })
 
+    await AuthService.issueVerificationToken(user)
+
     return user
   }
 
@@ -77,6 +79,20 @@ export class AuthService {
     if (!isMatch) throw new Error("Invalid email or password")
 
     return user
+  }
+
+  private static async issueVerificationToken(user: Pick<IUser, "_id" | "email">) {
+    const { token, tokenHash } = generateToken()
+    await User.findByIdAndUpdate(user._id, {
+      emailVerificationTokenHash: tokenHash,
+      emailVerificationExpires: new Date(Date.now() + ONE_DAY_MS),
+    })
+
+    try {
+      await sendVerificationEmail(user.email, token)
+    } catch (err) {
+      console.error("Failed to send verification email:", err)
+    }
   }
 
   static async requestPasswordReset(email: string) {
