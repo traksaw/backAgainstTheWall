@@ -26,17 +26,32 @@ const ALLOWED_PROFILE_UPDATE_FIELDS = [
   "occupation_status",
 ] as const
 
+// WAS-19: email is our uniqueness key for sign-in, so it must be normalized
+// the same way on every read and write - otherwise "Foo@x.com" and
+// "foo@x.com" register as separate accounts and the "already exists" check
+// can be bypassed by changing case. Any other field used as a user
+// identifier in the future (e.g. a username) needs this same treatment.
+function normalizeEmail(email: string): string {
+  return email.toLowerCase().trim()
+}
+
 export class AuthService {
   static async signUp(userData: SignUpData) {
     await connectDB()
 
-    const existing = await User.findOne({ email: userData.email })
+    const email = normalizeEmail(userData.email)
+
+    const existing = await User.findOne({ email })
     if (existing) throw new Error("User already exists")
 
     const passwordHash = await bcrypt.hash(userData.password, 10)
 
+    // Not migrating existing duplicate-case accounts here - this repo has no
+    // production users yet, so there's nothing to merge. If that's no longer
+    // true when this lands, run a one-time script to dedupe by lowercased
+    // email before this normalization goes live.
     const user = await User.create({
-      email: userData.email,
+      email,
       passwordHash,
       first_name: userData.firstName,
       last_name: userData.lastName,
@@ -50,7 +65,7 @@ export class AuthService {
   static async signIn(email: string, password: string) {
     await connectDB()
 
-    const user = await User.findOne({ email })
+    const user = await User.findOne({ email: normalizeEmail(email) })
     if (!user) throw new Error("Invalid email or password")
 
     const isMatch = await bcrypt.compare(password, user.passwordHash)
