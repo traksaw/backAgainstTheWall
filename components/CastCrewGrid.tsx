@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect, useRef } from "react";
 import { ExternalLink } from "lucide-react";
 import { FadeInUp } from "@/components/ui/fade-in";
@@ -7,7 +9,7 @@ interface CastMember {
   name: string
   role: string
   description: string
-  image: string
+  image?: string
   readMoreUrl?: string
   order?: number
   imageAlt?: string
