@@ -2,13 +2,14 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { HomeInteractiveShell } from './HomeInteractiveShell'
+import type { useHomeController as RealUseHomeController } from '@/components/home/useHomeController'
 
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({ user: null, profile: null, signOut: vi.fn(), loading: true }),
 }))
 
 vi.mock('@/components/home/useHomeController', () => ({
-  useHomeController: () => ({
+  useHomeController: (): ReturnType<typeof RealUseHomeController> => ({
     showSignup: false,
     showSignin: false,
     showQuiz: false,
