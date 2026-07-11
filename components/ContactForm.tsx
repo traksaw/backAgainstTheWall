@@ -1,3 +1,5 @@
+"use client"
+
 import React, { JSX, useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
