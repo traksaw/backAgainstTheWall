@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const findByIdAndUpdateMock = vi.fn()
+const findByIdMock = vi.fn()
+const selectMock = vi.fn()
 
 vi.mock('@/lib/mongoose', () => ({
   default: vi.fn().mockResolvedValue(undefined),
@@ -9,6 +11,10 @@ vi.mock('@/lib/mongoose', () => ({
 vi.mock('@/models/User', () => ({
   default: {
     findByIdAndUpdate: (...args: unknown[]) => findByIdAndUpdateMock(...args),
+    findById: (...args: unknown[]) => {
+      findByIdMock(...args)
+      return { select: (...selectArgs: unknown[]) => selectMock(...selectArgs) }
+    },
   },
 }))
 
@@ -52,5 +58,21 @@ describe('AuthService.updateUserProfile (same mass-assignment bug class as WAS-6
       zip_code: '90210',
       occupation_status: 'retired',
     })
+  })
+})
+
+describe('AuthService.getUserProfile (WAS-7: never leak passwordHash)', () => {
+  beforeEach(() => {
+    findByIdMock.mockReset()
+    selectMock.mockReset()
+  })
+
+  it('excludes passwordHash from the query projection', async () => {
+    selectMock.mockResolvedValue({ _id: 'user-a', email: 'me@example.com' })
+
+    await AuthService.getUserProfile('user-a')
+
+    expect(findByIdMock).toHaveBeenCalledWith('user-a')
+    expect(selectMock).toHaveBeenCalledWith('-passwordHash')
   })
 })
