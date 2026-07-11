@@ -29,13 +29,7 @@ vi.mock('@/models/User', () => ({
   },
 }))
 
-// Default return value so describe blocks that don't care about
-// verification-token behavior (e.g. the WAS-19 email-normalization tests,
-// which call signUp but never reset/configure this mock) don't crash when
-// signUp's new issueVerificationToken step destructures the result -
-// vi.fn() with no implementation returns undefined by default, and
-// vitest doesn't auto-reset mocks between describe blocks in this file.
-const generateTokenMock = vi.fn().mockReturnValue({ token: 'unused-token', tokenHash: 'unused-token-hash' })
+const generateTokenMock = vi.fn()
 vi.mock('@/lib/tokens', () => ({
   generateToken: () => generateTokenMock(),
   hashToken: (token: string) => `hashed-${token}`,
@@ -54,6 +48,12 @@ describe('AuthService email normalization (WAS-19)', () => {
   beforeEach(() => {
     findOneMock.mockReset()
     createMock.mockReset()
+    // signUp now calls generateToken() transitively (via issueVerificationToken).
+    // These tests don't care about the token's actual value, only that signUp
+    // doesn't crash - vi.fn() with no implementation returns undefined by
+    // default, and signUp destructures the result, so it needs a safe value here.
+    generateTokenMock.mockReset()
+    generateTokenMock.mockReturnValue({ token: 'unused-token', tokenHash: 'unused-token-hash' })
   })
 
   it('signUp lowercases and trims the email before checking for an existing user and before creating', async () => {
