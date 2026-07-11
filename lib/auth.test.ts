@@ -223,3 +223,36 @@ describe('AuthService.resetPassword (WAS-32)', () => {
     )
   })
 })
+
+describe('AuthService.verifyEmail (WAS-32)', () => {
+  beforeEach(() => {
+    findOneMock.mockReset()
+    findByIdAndUpdateMock.mockReset()
+  })
+
+  it('rejects an unknown or expired token', async () => {
+    findOneMock.mockResolvedValue(null)
+
+    await expect(AuthService.verifyEmail('bad-token')).rejects.toThrow('Invalid or expired token')
+    expect(findByIdAndUpdateMock).not.toHaveBeenCalled()
+  })
+
+  it('marks the user verified and clears the verification token fields on success', async () => {
+    findOneMock.mockResolvedValue({ _id: 'user-a' })
+    findByIdAndUpdateMock.mockResolvedValue(undefined)
+
+    await AuthService.verifyEmail('good-token')
+
+    expect(findOneMock).toHaveBeenCalledWith({
+      emailVerificationTokenHash: 'hashed-good-token',
+      emailVerificationExpires: { $gt: expect.any(Date) },
+    })
+    expect(findByIdAndUpdateMock).toHaveBeenCalledWith(
+      'user-a',
+      expect.objectContaining({
+        emailVerified: true,
+        $unset: { emailVerificationTokenHash: 1, emailVerificationExpires: 1 },
+      })
+    )
+  })
+})

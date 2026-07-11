@@ -119,6 +119,22 @@ export class AuthService {
     })
   }
 
+  static async verifyEmail(token: string) {
+    await connectDB()
+
+    const tokenHash = hashToken(token)
+    const user = await User.findOne({
+      emailVerificationTokenHash: tokenHash,
+      emailVerificationExpires: { $gt: new Date() },
+    })
+    if (!user) throw new Error("Invalid or expired token")
+
+    await User.findByIdAndUpdate(user._id, {
+      emailVerified: true,
+      $unset: { emailVerificationTokenHash: 1, emailVerificationExpires: 1 },
+    })
+  }
+
   static async signOut() {
     // You would clear cookies or session here if implemented
     return true
