@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { useAuth } from "@/hooks/useAuth"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -273,11 +273,11 @@ const handleSubmit = async (e: React.FormEvent) => {
               </div>
             ))}
           </div>
-          <p className="text-center text-gray-600 mt-2">
+          <DialogDescription className="text-center text-gray-600 mt-2">
             {currentStep === 1 && "Let's start with your basic information"}
             {currentStep === 2 && "Set up your account security"}
             {currentStep === 3 && "Review and accept our terms"}
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">

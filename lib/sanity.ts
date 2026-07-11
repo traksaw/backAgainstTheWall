@@ -84,6 +84,10 @@ const fallbackSupporters = [
   }
 ]
 
+// TODO(re-enable Sanity): app/page.tsx calls these with no try/catch — that's only
+// safe while they unconditionally return static data below. When wiring the real
+// Sanity fetch back in, add the try/catch HERE (returning castAndCrew/fallbackSupporters
+// on failure) so a network/API error can't crash the page render.
 export async function getCastAndCrew() {
   // For now, always use fallback data to avoid API errors
   console.log('Using fallback cast data (Sanity temporarily disabled)')

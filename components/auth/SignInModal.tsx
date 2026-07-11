@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { useAuth } from "@/hooks/useAuth"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -96,7 +96,9 @@ export function SignInModal({ open, onOpenChange, onSwitchToSignUp }: SignInModa
       <DialogContent className="w-[95vw] max-w-md bg-white text-gray-900 border-0 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center text-gray-900">Welcome Back</DialogTitle>
-          <p className="text-center text-gray-600 mt-2">Sign in to continue your journey</p>
+          <DialogDescription className="text-center text-gray-600 mt-2">
+            Sign in to continue your journey
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
