@@ -168,9 +168,12 @@ export class AuthService {
 
   static async getUserProfile(userId: string): Promise<IUser | null> {
     await connectDB()
-    // WAS-7: passwordHash must never leave the server. This is shared by
-    // both /api/auth/profile and /api/auth/me.
-    return await User.findById(userId).select("-passwordHash")
+    // WAS-7/WAS-32: passwordHash and the token-hash/expiry fields must
+    // never leave the server. Shared by both /api/auth/profile and
+    // /api/auth/me.
+    return await User.findById(userId).select(
+      "-passwordHash -resetPasswordTokenHash -resetPasswordExpires -emailVerificationTokenHash -emailVerificationExpires"
+    )
   }
 
   static async updateUserProfile(userId: string, updates: Partial<IUser>) {

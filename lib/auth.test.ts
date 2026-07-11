@@ -148,13 +148,15 @@ describe('AuthService.getUserProfile (WAS-7: never leak passwordHash)', () => {
     selectMock.mockReset()
   })
 
-  it('excludes passwordHash from the query projection', async () => {
+  it('excludes passwordHash and token-hash fields from the query projection', async () => {
     selectMock.mockResolvedValue({ _id: 'user-a', email: 'me@example.com' })
 
     await AuthService.getUserProfile('user-a')
 
     expect(findByIdMock).toHaveBeenCalledWith('user-a')
-    expect(selectMock).toHaveBeenCalledWith('-passwordHash')
+    expect(selectMock).toHaveBeenCalledWith(
+      '-passwordHash -resetPasswordTokenHash -resetPasswordExpires -emailVerificationTokenHash -emailVerificationExpires'
+    )
   })
 })
 
