@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import * as Sentry from "@sentry/nextjs"
 import { AuthService } from "@/lib/auth"
 import { resetPasswordSchema } from "@/lib/validation"
 
@@ -26,6 +27,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: err.message }, { status: 400 })
     }
     console.error("Unexpected error in reset-password route:", err)
+    Sentry.captureException(err)
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 })
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import * as Sentry from '@sentry/nextjs'
 import { fetchQuizContent } from '@/lib/quiz/content'
 
 // Force dynamic rendering and disable caching so Sanity updates appear immediately
@@ -11,6 +12,7 @@ export async function GET() {
     return NextResponse.json({ success: true, ...data })
   } catch (e) {
     console.error('Error in /api/quiz/content:', e)
+    Sentry.captureException(e)
     return NextResponse.json({ success: false, error: 'Failed to load quiz content' }, { status: 500 })
   }
 }

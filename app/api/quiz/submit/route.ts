@@ -1,5 +1,6 @@
 // Update your app/api/quiz/submit/route.ts
 import { NextResponse, NextRequest } from "next/server"
+import * as Sentry from "@sentry/nextjs"
 import QuizResultModel from "@/models/QuizResult"
 import connectDB from "@/lib/mongoose"
 import mongoose from "mongoose"
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
     
   } catch (err) {
     console.error("=== QUIZ SUBMIT ERROR ===")
+    Sentry.captureException(err)
     if (err instanceof Error) {
       console.error("Error name:", err.name)
       console.error("Error message:", err.message)

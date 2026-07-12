@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import * as Sentry from "@sentry/nextjs"
 import { AuthService } from "@/lib/auth"
 import { signToken } from "@/lib/jwt"
 import { signInSchema } from "@/lib/validation"
@@ -44,6 +45,11 @@ export async function POST(req: Request) {
 
     return res
   } catch (err) {
+    // Wrong email/password is expected user behavior, not a bug - only
+    // report anything else (DB errors, token signing failures, etc).
+    if (!(err instanceof Error && err.message === 'Invalid email or password')) {
+      Sentry.captureException(err)
+    }
     const error = err instanceof Error ? err.message : 'Invalid email or password'
     return NextResponse.json({ error }, { status: 401 })
   }

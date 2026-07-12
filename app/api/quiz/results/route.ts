@@ -1,4 +1,5 @@
 import { NextResponse, NextRequest } from "next/server"
+import * as Sentry from "@sentry/nextjs"
 import { getUserIdFromRequest } from "@/lib/jwt"
 import connectDB from "@/lib/mongoose"
 import QuizResultModel from "@/models/QuizResult"
@@ -23,6 +24,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     const error = err as Error
     console.error("Failed to fetch quiz results:", error)
+    Sentry.captureException(err)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
