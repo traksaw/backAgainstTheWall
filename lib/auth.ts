@@ -40,6 +40,23 @@ function normalizeEmail(email: string): string {
 const ONE_HOUR_MS = 60 * 60 * 1000
 const ONE_DAY_MS = 24 * ONE_HOUR_MS
 
+// WAS-32: requestPasswordReset/resendVerification return the same generic
+// response whether or not the account exists, so the enumeration guard
+// depends on the response also taking the same amount of TIME either way.
+// The "user found" path awaits a real Resend API call (hundreds of ms); the
+// "user not found" path used to return right after a single fast DB lookup,
+// which is a timing oracle that reveals account existence even though the
+// response body/status are identical. Pad the "not found" path with a fixed
+// delay that approximates typical email-send latency. This is a fixed
+// approximation, not a measurement of actual Resend latency - it won't be
+// exact, but it closes the multi-hundred-ms gap that made timing trivially
+// distinguishable.
+const ANTI_ENUMERATION_DELAY_MS = 300
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 export class AuthService {
   static async signUp(userData: SignUpData) {
     await connectDB()
@@ -100,8 +117,12 @@ export class AuthService {
 
     const user = await User.findOne({ email: normalizeEmail(email) })
     // WAS-32: anti-enumeration - the caller (route) always reports success
-    // either way, so a missing user is a silent no-op, not an error.
-    if (!user) return
+    // either way, so a missing user is a silent no-op, not an error. The
+    // delay keeps this path's timing close to the "user found" path below.
+    if (!user) {
+      await delay(ANTI_ENUMERATION_DELAY_MS)
+      return
+    }
 
     const { token, tokenHash } = generateToken()
     await User.findByIdAndUpdate(user._id, {
@@ -155,8 +176,12 @@ export class AuthService {
     await connectDB()
 
     const user = await User.findOne({ email: normalizeEmail(email) })
-    // Same anti-enumeration reasoning as requestPasswordReset.
-    if (!user) return
+    // Same anti-enumeration reasoning as requestPasswordReset, including the
+    // timing-oracle mitigation delay.
+    if (!user) {
+      await delay(ANTI_ENUMERATION_DELAY_MS)
+      return
+    }
 
     await AuthService.issueVerificationToken(user)
   }
