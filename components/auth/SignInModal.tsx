@@ -11,9 +11,10 @@ interface SignInModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSwitchToSignUp: () => void
+  onSwitchToForgotPassword: () => void
 }
 
-export function SignInModal({ open, onOpenChange, onSwitchToSignUp }: SignInModalProps) {
+export function SignInModal({ open, onOpenChange, onSwitchToSignUp, onSwitchToForgotPassword }: SignInModalProps) {
   const { signIn } = useAuth()
   const [formData, setFormData] = useState({
     email: "",
@@ -119,6 +120,16 @@ export function SignInModal({ open, onOpenChange, onSwitchToSignUp }: SignInModa
             required
             className="border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38]"
           />
+
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={onSwitchToForgotPassword}
+              className="text-sm text-[#B95D38] hover:text-[#B95D38]/90 font-medium"
+            >
+              Forgot your password?
+            </button>
+          </div>
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
