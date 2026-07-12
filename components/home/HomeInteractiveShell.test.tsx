@@ -24,6 +24,7 @@ vi.mock('@/components/home/useHomeController', () => ({
     closeActiveModal: vi.fn(),
     switchToSignIn: vi.fn(),
     switchToSignUp: vi.fn(),
+    switchToForgotPassword: vi.fn(),
     signupSucceeded: vi.fn(),
     startQuiz: vi.fn(),
     retakeQuiz: vi.fn(),

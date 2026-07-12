@@ -3,6 +3,8 @@
 import bcrypt from "bcryptjs"
 import User, { IUser } from "@/models/User"
 import connectDB from "@/lib/mongoose"
+import { generateToken, hashToken } from "@/lib/tokens"
+import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/email"
 
 export interface SignUpData {
   email: string
@@ -35,6 +37,26 @@ function normalizeEmail(email: string): string {
   return email.toLowerCase().trim()
 }
 
+const ONE_HOUR_MS = 60 * 60 * 1000
+const ONE_DAY_MS = 24 * ONE_HOUR_MS
+
+// WAS-32: requestPasswordReset/resendVerification return the same generic
+// response whether or not the account exists, so the enumeration guard
+// depends on the response also taking the same amount of TIME either way.
+// The "user found" path awaits a real Resend API call (hundreds of ms); the
+// "user not found" path used to return right after a single fast DB lookup,
+// which is a timing oracle that reveals account existence even though the
+// response body/status are identical. Pad the "not found" path with a fixed
+// delay that approximates typical email-send latency. This is a fixed
+// approximation, not a measurement of actual Resend latency - it won't be
+// exact, but it closes the multi-hundred-ms gap that made timing trivially
+// distinguishable.
+const ANTI_ENUMERATION_DELAY_MS = 300
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 export class AuthService {
   static async signUp(userData: SignUpData) {
     await connectDB()
@@ -59,6 +81,8 @@ export class AuthService {
       occupation_status: userData.occupationStatus,
     })
 
+    await AuthService.issueVerificationToken(user)
+
     return user
   }
 
@@ -74,6 +98,94 @@ export class AuthService {
     return user
   }
 
+  private static async issueVerificationToken(user: Pick<IUser, "_id" | "email">) {
+    const { token, tokenHash } = generateToken()
+    await User.findByIdAndUpdate(user._id, {
+      emailVerificationTokenHash: tokenHash,
+      emailVerificationExpires: new Date(Date.now() + ONE_DAY_MS),
+    })
+
+    try {
+      await sendVerificationEmail(user.email, token)
+    } catch (err) {
+      console.error("Failed to send verification email:", err)
+    }
+  }
+
+  static async requestPasswordReset(email: string) {
+    await connectDB()
+
+    const user = await User.findOne({ email: normalizeEmail(email) })
+    // WAS-32: anti-enumeration - the caller (route) always reports success
+    // either way, so a missing user is a silent no-op, not an error. The
+    // delay keeps this path's timing close to the "user found" path below.
+    if (!user) {
+      await delay(ANTI_ENUMERATION_DELAY_MS)
+      return
+    }
+
+    const { token, tokenHash } = generateToken()
+    await User.findByIdAndUpdate(user._id, {
+      resetPasswordTokenHash: tokenHash,
+      resetPasswordExpires: new Date(Date.now() + ONE_HOUR_MS),
+    })
+
+    try {
+      await sendPasswordResetEmail(user.email, token)
+    } catch (err) {
+      console.error("Failed to send password reset email:", err)
+    }
+  }
+
+  static async resetPassword(token: string, newPassword: string) {
+    await connectDB()
+
+    const tokenHash = hashToken(token)
+    const user = await User.findOne({
+      resetPasswordTokenHash: tokenHash,
+      resetPasswordExpires: { $gt: new Date() },
+    })
+    // Same generic error whether the token doesn't exist or has expired -
+    // distinguishing the two only helps an attacker probing token validity.
+    if (!user) throw new Error("Invalid or expired token")
+
+    const passwordHash = await bcrypt.hash(newPassword, 10)
+    await User.findByIdAndUpdate(user._id, {
+      passwordHash,
+      $unset: { resetPasswordTokenHash: 1, resetPasswordExpires: 1 },
+    })
+  }
+
+  static async verifyEmail(token: string) {
+    await connectDB()
+
+    const tokenHash = hashToken(token)
+    const user = await User.findOne({
+      emailVerificationTokenHash: tokenHash,
+      emailVerificationExpires: { $gt: new Date() },
+    })
+    if (!user) throw new Error("Invalid or expired token")
+
+    await User.findByIdAndUpdate(user._id, {
+      emailVerified: true,
+      $unset: { emailVerificationTokenHash: 1, emailVerificationExpires: 1 },
+    })
+  }
+
+  static async resendVerification(email: string) {
+    await connectDB()
+
+    const user = await User.findOne({ email: normalizeEmail(email) })
+    // Same anti-enumeration reasoning as requestPasswordReset, including the
+    // timing-oracle mitigation delay.
+    if (!user) {
+      await delay(ANTI_ENUMERATION_DELAY_MS)
+      return
+    }
+
+    await AuthService.issueVerificationToken(user)
+  }
+
   static async signOut() {
     // You would clear cookies or session here if implemented
     return true
@@ -81,9 +193,12 @@ export class AuthService {
 
   static async getUserProfile(userId: string): Promise<IUser | null> {
     await connectDB()
-    // WAS-7: passwordHash must never leave the server. This is shared by
-    // both /api/auth/profile and /api/auth/me.
-    return await User.findById(userId).select("-passwordHash")
+    // WAS-7/WAS-32: passwordHash and the token-hash/expiry fields must
+    // never leave the server. Shared by both /api/auth/profile and
+    // /api/auth/me.
+    return await User.findById(userId).select(
+      "-passwordHash -resetPasswordTokenHash -resetPasswordExpires -emailVerificationTokenHash -emailVerificationExpires"
+    )
   }
 
   static async updateUserProfile(userId: string, updates: Partial<IUser>) {

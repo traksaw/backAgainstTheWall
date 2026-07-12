@@ -6,6 +6,8 @@ import { ResultsModal } from "@/components/results/ResultsModal"
 import { UserMenu } from "@/components/layout/UserMenu"
 import { SignInModal } from "@/components/auth/SignInModal"
 import { SignUpModal } from "@/components/auth/SignUpModal"
+import { ForgotPasswordModal } from "@/components/auth/ForgotPasswordModal"
+import { VerificationBanner } from "@/components/auth/VerificationBanner"
 import Hero from "@/components/Hero"
 import { VideoPlayer } from "@/components/VideoPlayer"
 import { QuizHistorySection } from "@/components/QuizHistorySection"
@@ -21,14 +23,15 @@ interface HomeInteractiveShellProps {
 }
 
 export function HomeInteractiveShell({ supporters, children }: HomeInteractiveShellProps) {
-  const { user: rawUser, profile: rawProfile, signOut } = useAuth()
+  const { user: rawUser, profile: rawProfile, signOut, resendVerification } = useAuth()
   const controller = useHomeController()
 
   const user: User | null = rawUser ? {
     _id: rawUser._id,
     email: rawUser.email,
     first_name: rawUser.first_name || '',
-    last_name: rawUser.last_name || ''
+    last_name: rawUser.last_name || '',
+    emailVerified: rawUser.emailVerified ?? false
   } : null
 
   const profile: Profile | null = rawProfile ? {
@@ -45,6 +48,10 @@ export function HomeInteractiveShell({ supporters, children }: HomeInteractiveSh
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
+      {user && !user.emailVerified && (
+        <VerificationBanner email={user.email} onResend={resendVerification} />
+      )}
+
       <UserMenu
         user={user}
         profile={profile}
@@ -76,6 +83,13 @@ export function HomeInteractiveShell({ supporters, children }: HomeInteractiveSh
         open={controller.activeModal === 'signin'}
         onOpenChange={(open) => !open && controller.closeActiveModal()}
         onSwitchToSignUp={controller.switchToSignUp}
+        onSwitchToForgotPassword={controller.switchToForgotPassword}
+      />
+
+      <ForgotPasswordModal
+        open={controller.activeModal === 'forgotPassword'}
+        onOpenChange={(open) => !open && controller.closeActiveModal()}
+        onSwitchToSignIn={controller.switchToSignIn}
       />
 
       <QuizModal

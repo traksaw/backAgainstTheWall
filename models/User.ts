@@ -9,6 +9,11 @@ export interface IUser extends Document {
   last_name?: string
   zip_code?: string
   occupation_status?: string
+  emailVerified: boolean
+  resetPasswordTokenHash?: string
+  resetPasswordExpires?: Date
+  emailVerificationTokenHash?: string
+  emailVerificationExpires?: Date
   createdAt: Date
   updatedAt: Date
 }
@@ -24,6 +29,16 @@ const UserSchema = new Schema<IUser>(
     last_name: String,
     zip_code: String,
     occupation_status: String,
+    // WAS-32: emailVerified is display-only for now - no route currently
+    // gates on it. The four token fields below store only a SHA-256 hash
+    // of the token that was emailed (see lib/tokens.ts), never the raw
+    // token, plus an expiry. Both pairs are cleared on successful use,
+    // which is what makes the token single-use.
+    emailVerified: { type: Boolean, default: false },
+    resetPasswordTokenHash: String,
+    resetPasswordExpires: Date,
+    emailVerificationTokenHash: String,
+    emailVerificationExpires: Date,
   },
   { timestamps: true }
 )

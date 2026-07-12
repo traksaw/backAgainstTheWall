@@ -6,7 +6,7 @@ import { useQuiz } from "@/hooks/useQuiz"
 import { useQuizLogic } from "@/hooks/useQuizLogic"
 import type { QuizAnswer, QuizResult } from "@/types/quiz"
 
-export type ModalKey = 'signup' | 'signin' | 'quiz' | 'results' | 'film' | 'quizHistory'
+export type ModalKey = 'signup' | 'signin' | 'forgotPassword' | 'quiz' | 'results' | 'film' | 'quizHistory'
 const MODAL_TRANSITION_MS = 250 // safely past DialogContent's 200ms CSS exit animation
 
 interface ModalState {
@@ -98,6 +98,7 @@ export function useHomeController() {
   const closeActiveModal = () => dispatch({ type: 'CLOSE' })
   const switchToSignIn = () => dispatch({ type: 'OPEN', modal: 'signin' })
   const switchToSignUp = () => dispatch({ type: 'OPEN', modal: 'signup' })
+  const switchToForgotPassword = () => dispatch({ type: 'OPEN', modal: 'forgotPassword' })
 
   const startQuiz = () => {
     dispatch({ type: 'QUIZ_SESSION_STARTED', autoReset: false })
@@ -188,7 +189,7 @@ export function useHomeController() {
     latestResult,
     quizLoading,
     openSignup, openSignin, openResults, openFilm, openQuizHistory, closeActiveModal,
-    switchToSignIn, switchToSignUp, signupSucceeded,
+    switchToSignIn, switchToSignUp, switchToForgotPassword, signupSucceeded,
     startQuiz, retakeQuiz, completeQuiz, viewResults, completeFilm, handleVideoError,
   }
 }

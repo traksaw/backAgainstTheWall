@@ -29,12 +29,31 @@ vi.mock('@/models/User', () => ({
   },
 }))
 
+const generateTokenMock = vi.fn()
+vi.mock('@/lib/tokens', () => ({
+  generateToken: () => generateTokenMock(),
+  hashToken: (token: string) => `hashed-${token}`,
+}))
+
+const sendPasswordResetEmailMock = vi.fn()
+const sendVerificationEmailMock = vi.fn()
+vi.mock('@/lib/email', () => ({
+  sendPasswordResetEmail: (...args: unknown[]) => sendPasswordResetEmailMock(...args),
+  sendVerificationEmail: (...args: unknown[]) => sendVerificationEmailMock(...args),
+}))
+
 import { AuthService } from './auth'
 
 describe('AuthService email normalization (WAS-19)', () => {
   beforeEach(() => {
     findOneMock.mockReset()
     createMock.mockReset()
+    // signUp now calls generateToken() transitively (via issueVerificationToken).
+    // These tests don't care about the token's actual value, only that signUp
+    // doesn't crash - vi.fn() with no implementation returns undefined by
+    // default, and signUp destructures the result, so it needs a safe value here.
+    generateTokenMock.mockReset()
+    generateTokenMock.mockReturnValue({ token: 'unused-token', tokenHash: 'unused-token-hash' })
   })
 
   it('signUp lowercases and trims the email before checking for an existing user and before creating', async () => {
@@ -129,12 +148,186 @@ describe('AuthService.getUserProfile (WAS-7: never leak passwordHash)', () => {
     selectMock.mockReset()
   })
 
-  it('excludes passwordHash from the query projection', async () => {
+  it('excludes passwordHash and token-hash fields from the query projection', async () => {
     selectMock.mockResolvedValue({ _id: 'user-a', email: 'me@example.com' })
 
     await AuthService.getUserProfile('user-a')
 
     expect(findByIdMock).toHaveBeenCalledWith('user-a')
-    expect(selectMock).toHaveBeenCalledWith('-passwordHash')
+    expect(selectMock).toHaveBeenCalledWith(
+      '-passwordHash -resetPasswordTokenHash -resetPasswordExpires -emailVerificationTokenHash -emailVerificationExpires'
+    )
+  })
+})
+
+describe('AuthService.requestPasswordReset (WAS-32)', () => {
+  beforeEach(() => {
+    findOneMock.mockReset()
+    findByIdAndUpdateMock.mockReset()
+    generateTokenMock.mockReset()
+    sendPasswordResetEmailMock.mockReset()
+    generateTokenMock.mockReturnValue({ token: 'raw-token', tokenHash: 'hashed-raw-token' })
+  })
+
+  it('does nothing when no user matches the normalized email (anti-enumeration)', async () => {
+    findOneMock.mockResolvedValue(null)
+
+    await AuthService.requestPasswordReset('nobody@example.com')
+
+    expect(findOneMock).toHaveBeenCalledWith({ email: 'nobody@example.com' })
+    expect(findByIdAndUpdateMock).not.toHaveBeenCalled()
+    expect(sendPasswordResetEmailMock).not.toHaveBeenCalled()
+  })
+
+  it('stores a hashed token with an expiry and emails the raw token', async () => {
+    findOneMock.mockResolvedValue({ _id: 'user-a', email: 'me@example.com' })
+    findByIdAndUpdateMock.mockResolvedValue(undefined)
+
+    await AuthService.requestPasswordReset('  Me@Example.com  ')
+
+    expect(findOneMock).toHaveBeenCalledWith({ email: 'me@example.com' })
+    expect(findByIdAndUpdateMock).toHaveBeenCalledWith(
+      'user-a',
+      expect.objectContaining({
+        resetPasswordTokenHash: 'hashed-raw-token',
+        resetPasswordExpires: expect.any(Date),
+      })
+    )
+    expect(sendPasswordResetEmailMock).toHaveBeenCalledWith('me@example.com', 'raw-token')
+  })
+})
+
+describe('AuthService.resetPassword (WAS-32)', () => {
+  beforeEach(() => {
+    findOneMock.mockReset()
+    findByIdAndUpdateMock.mockReset()
+  })
+
+  it('rejects an unknown or expired token', async () => {
+    findOneMock.mockResolvedValue(null)
+
+    await expect(AuthService.resetPassword('bad-token', 'newpassword123')).rejects.toThrow(
+      'Invalid or expired token'
+    )
+    expect(findByIdAndUpdateMock).not.toHaveBeenCalled()
+  })
+
+  it('hashes the new password and clears the reset token fields on success', async () => {
+    findOneMock.mockResolvedValue({ _id: 'user-a' })
+    findByIdAndUpdateMock.mockResolvedValue(undefined)
+
+    await AuthService.resetPassword('good-token', 'newpassword123')
+
+    expect(findOneMock).toHaveBeenCalledWith({
+      resetPasswordTokenHash: 'hashed-good-token',
+      resetPasswordExpires: { $gt: expect.any(Date) },
+    })
+    expect(findByIdAndUpdateMock).toHaveBeenCalledWith(
+      'user-a',
+      expect.objectContaining({
+        passwordHash: 'hashed-password',
+        $unset: { resetPasswordTokenHash: 1, resetPasswordExpires: 1 },
+      })
+    )
+  })
+})
+
+describe('AuthService.verifyEmail (WAS-32)', () => {
+  beforeEach(() => {
+    findOneMock.mockReset()
+    findByIdAndUpdateMock.mockReset()
+  })
+
+  it('rejects an unknown or expired token', async () => {
+    findOneMock.mockResolvedValue(null)
+
+    await expect(AuthService.verifyEmail('bad-token')).rejects.toThrow('Invalid or expired token')
+    expect(findByIdAndUpdateMock).not.toHaveBeenCalled()
+  })
+
+  it('marks the user verified and clears the verification token fields on success', async () => {
+    findOneMock.mockResolvedValue({ _id: 'user-a' })
+    findByIdAndUpdateMock.mockResolvedValue(undefined)
+
+    await AuthService.verifyEmail('good-token')
+
+    expect(findOneMock).toHaveBeenCalledWith({
+      emailVerificationTokenHash: 'hashed-good-token',
+      emailVerificationExpires: { $gt: expect.any(Date) },
+    })
+    expect(findByIdAndUpdateMock).toHaveBeenCalledWith(
+      'user-a',
+      expect.objectContaining({
+        emailVerified: true,
+        $unset: { emailVerificationTokenHash: 1, emailVerificationExpires: 1 },
+      })
+    )
+  })
+})
+
+describe('AuthService.signUp also issues a verification token (WAS-32)', () => {
+  beforeEach(() => {
+    findOneMock.mockReset()
+    createMock.mockReset()
+    findByIdAndUpdateMock.mockReset()
+    generateTokenMock.mockReset()
+    sendVerificationEmailMock.mockReset()
+    generateTokenMock.mockReturnValue({ token: 'raw-token', tokenHash: 'hashed-raw-token' })
+  })
+
+  it('stores a verification token and sends the verification email after creating the user', async () => {
+    findOneMock.mockResolvedValue(null)
+    createMock.mockResolvedValue({ _id: 'user-a', email: 'foo@x.com' })
+    findByIdAndUpdateMock.mockResolvedValue(undefined)
+
+    await AuthService.signUp({
+      email: 'foo@x.com',
+      password: 'password123',
+      firstName: 'Foo',
+      lastName: 'Bar',
+      zip_code: '90210',
+      occupationStatus: 'Working Professional',
+    })
+
+    expect(findByIdAndUpdateMock).toHaveBeenCalledWith(
+      'user-a',
+      expect.objectContaining({
+        emailVerificationTokenHash: 'hashed-raw-token',
+        emailVerificationExpires: expect.any(Date),
+      })
+    )
+    expect(sendVerificationEmailMock).toHaveBeenCalledWith('foo@x.com', 'raw-token')
+  })
+})
+
+describe('AuthService.resendVerification (WAS-32)', () => {
+  beforeEach(() => {
+    findOneMock.mockReset()
+    findByIdAndUpdateMock.mockReset()
+    generateTokenMock.mockReset()
+    sendVerificationEmailMock.mockReset()
+    generateTokenMock.mockReturnValue({ token: 'raw-token', tokenHash: 'hashed-raw-token' })
+  })
+
+  it('does nothing when no user matches the normalized email (anti-enumeration)', async () => {
+    findOneMock.mockResolvedValue(null)
+
+    await AuthService.resendVerification('nobody@example.com')
+
+    expect(findByIdAndUpdateMock).not.toHaveBeenCalled()
+    expect(sendVerificationEmailMock).not.toHaveBeenCalled()
+  })
+
+  it('issues a fresh verification token for an existing user', async () => {
+    findOneMock.mockResolvedValue({ _id: 'user-a', email: 'me@example.com' })
+    findByIdAndUpdateMock.mockResolvedValue(undefined)
+
+    await AuthService.resendVerification('me@example.com')
+
+    expect(findByIdAndUpdateMock).toHaveBeenCalledWith(
+      'user-a',
+      expect.objectContaining({ emailVerificationTokenHash: 'hashed-raw-token' })
+    )
+    expect(sendVerificationEmailMock).toHaveBeenCalledWith('me@example.com', 'raw-token')
   })
 })
