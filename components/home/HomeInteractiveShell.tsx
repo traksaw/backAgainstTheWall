@@ -28,7 +28,8 @@ export function HomeInteractiveShell({ supporters, children }: HomeInteractiveSh
     _id: rawUser._id,
     email: rawUser.email,
     first_name: rawUser.first_name || '',
-    last_name: rawUser.last_name || ''
+    last_name: rawUser.last_name || '',
+    emailVerified: rawUser.emailVerified || false
   } : null
 
   const profile: Profile | null = rawProfile ? {
