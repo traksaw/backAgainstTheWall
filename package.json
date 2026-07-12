@@ -46,6 +46,7 @@
     "@sanity/image-url": "^1.0.2",
     "@sanity/ui": "^2.0.11",
     "@sanity/vision": "^3.36.2",
+    "@sentry/nextjs": "^10.65.0",
     "@supabase/supabase-js": "latest",
     "@vercel/blob": "^1.1.1",
     "autoprefixer": "^10.4.21",

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import * as Sentry from "@sentry/nextjs"
 import { getUserIdFromRequest } from "@/lib/jwt"
 import { AuthService } from "@/lib/auth"
 
@@ -29,6 +30,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     const error = err as Error
     console.log('Error in auth route:', error)
+    Sentry.captureException(err)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

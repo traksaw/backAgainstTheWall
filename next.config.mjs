@@ -1,3 +1,5 @@
+import { withSentryConfig } from '@sentry/nextjs'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -28,4 +30,14 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default withSentryConfig(nextConfig, {
+  // WAS-16: errors-only otherwise (no tracing/replay), but source maps are
+  // enabled so stack traces in Sentry show real TypeScript, not minified
+  // bundle code. Upload only runs when SENTRY_AUTH_TOKEN is set (e.g. in CI/
+  // Vercel prod builds) - local dev builds skip it silently without one.
+  org: 'philacon-valley',
+  project: 'back-against-the-wall',
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: true,
+  telemetry: false,
+})
