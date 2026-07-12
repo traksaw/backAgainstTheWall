@@ -45,6 +45,15 @@ describe('middleware (WAS-17: gate the exposed Sanity Studio route)', () => {
     expect(res.status).toBe(401)
   })
 
+  it('returns 401 when the guessed password is a different length than the real one', () => {
+    // Regression check for the timing-safe comparison: a naive `!==` still
+    // works here, but a length-sensitive compare (e.g. raw timingSafeEqual
+    // without hashing first) would throw instead of rejecting cleanly.
+    const res = middleware(requestWithAuth(basicAuthHeader('editor', 'x')))
+
+    expect(res.status).toBe(401)
+  })
+
   it('fails closed (500), not open, if the gate is unconfigured', () => {
     delete process.env.SANITY_STUDIO_USERNAME
     delete process.env.SANITY_STUDIO_PASSWORD
