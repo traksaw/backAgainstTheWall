@@ -14,6 +14,10 @@ interface AuthContextType {
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<IUser>) => Promise<void>
   refreshProfile: () => Promise<void>
+  requestPasswordReset: (email: string) => Promise<void>
+  resetPassword: (token: string, password: string) => Promise<void>
+  verifyEmail: (token: string) => Promise<void>
+  resendVerification: (email: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -184,6 +188,97 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const requestPasswordReset = async (email: string) => {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/auth/request-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+
+      const responseData = await res.json()
+
+      if (!res.ok) {
+        throw new Error(responseData.error || "Failed to request password reset")
+      }
+    } catch (err) {
+      console.error("Request password reset error:", err)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const resetPassword = async (token: string, password: string) => {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password }),
+      })
+
+      const responseData = await res.json()
+
+      if (!res.ok) {
+        throw new Error(responseData.error || "Failed to reset password")
+      }
+    } catch (err) {
+      console.error("Reset password error:", err)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const verifyEmail = async (token: string) => {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      })
+
+      const responseData = await res.json()
+
+      if (!res.ok) {
+        throw new Error(responseData.error || "Failed to verify email")
+      }
+
+      // Refresh so the rest of the app sees the updated emailVerified status
+      await fetchCurrentUser()
+    } catch (err) {
+      console.error("Verify email error:", err)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const resendVerification = async (email: string) => {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+
+      const responseData = await res.json()
+
+      if (!res.ok) {
+        throw new Error(responseData.error || "Failed to resend verification email")
+      }
+    } catch (err) {
+      console.error("Resend verification error:", err)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const value: AuthContextType = {
     user,
     profile,
@@ -194,6 +289,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     updateProfile,
     refreshProfile,
+    requestPasswordReset,
+    resetPassword,
+    verifyEmail,
+    resendVerification,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
