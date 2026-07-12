@@ -73,5 +73,8 @@ describe('POST /api/auth/signin (WAS-8: reject non-string bodies before they rea
 
     expect(signInMock).toHaveBeenCalledWith('me@example.com', 'hunter2')
     expect(res.status).toBe(200)
+    // A passing status with no session cookie is a broken login a client
+    // can't detect - assert the actual side effect that makes sign-in useful.
+    expect(res.cookies.get('token')?.value).toBe('signed-token')
   })
 })
