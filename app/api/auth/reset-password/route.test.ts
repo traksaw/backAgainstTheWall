@@ -66,4 +66,14 @@ describe('POST /api/auth/reset-password (WAS-32)', () => {
     expect(resetPasswordMock).toHaveBeenCalledWith('good-token', 'newpassword123')
     expect(res.status).toBe(200)
   })
+
+  it('returns 500 and a generic message for an unexpected error, without leaking it', async () => {
+    resetPasswordMock.mockRejectedValue(new Error('connection to Mongo lost'))
+
+    const res = await POST(makeRequest({ token: 'good-token', password: 'newpassword123' }))
+    const body = await res.json()
+
+    expect(res.status).toBe(500)
+    expect(body.error).toBe('Something went wrong')
+  })
 })

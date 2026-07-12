@@ -22,7 +22,10 @@ export async function POST(req: Request) {
     await AuthService.resetPassword(parsed.data.token, parsed.data.password)
     return NextResponse.json({ message: "Password updated successfully." })
   } catch (err) {
-    const error = err instanceof Error ? err.message : "Invalid or expired token"
-    return NextResponse.json({ error }, { status: 400 })
+    if (err instanceof Error && err.message === "Invalid or expired token") {
+      return NextResponse.json({ error: err.message }, { status: 400 })
+    }
+    console.error("Unexpected error in reset-password route:", err)
+    return NextResponse.json({ error: "Something went wrong" }, { status: 500 })
   }
 }

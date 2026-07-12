@@ -66,4 +66,14 @@ describe('POST /api/auth/verify-email (WAS-32)', () => {
     expect(verifyEmailMock).toHaveBeenCalledWith('good-token')
     expect(res.status).toBe(200)
   })
+
+  it('returns 500 and a generic message for an unexpected error, without leaking it', async () => {
+    verifyEmailMock.mockRejectedValue(new Error('connection to Mongo lost'))
+
+    const res = await POST(makeRequest({ token: 'good-token' }))
+    const body = await res.json()
+
+    expect(res.status).toBe(500)
+    expect(body.error).toBe('Something went wrong')
+  })
 })

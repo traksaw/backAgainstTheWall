@@ -22,7 +22,10 @@ export async function POST(req: Request) {
     await AuthService.verifyEmail(parsed.data.token)
     return NextResponse.json({ message: "Email verified successfully." })
   } catch (err) {
-    const error = err instanceof Error ? err.message : "Invalid or expired token"
-    return NextResponse.json({ error }, { status: 400 })
+    if (err instanceof Error && err.message === "Invalid or expired token") {
+      return NextResponse.json({ error: err.message }, { status: 400 })
+    }
+    console.error("Unexpected error in verify-email route:", err)
+    return NextResponse.json({ error: "Something went wrong" }, { status: 500 })
   }
 }
