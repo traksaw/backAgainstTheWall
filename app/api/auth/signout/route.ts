@@ -10,9 +10,12 @@ export async function POST() {
     return NextResponse.json({ error: "No token found" }, { status: 401 })
   }
 
-  const decoded = verifyToken(token)
-
-  if (!decoded) {
+  try {
+    verifyToken(token)
+  } catch {
+    // verifyToken throws (rather than returning null) on an invalid or
+    // expired token - without this catch that exception was uncaught,
+    // producing a 500 instead of the 401 this route always intended.
     return NextResponse.json({ error: "Invalid token" }, { status: 401 })
   }
 

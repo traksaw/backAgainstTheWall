@@ -75,5 +75,8 @@ describe('POST /api/auth/signup (WAS-8: reject non-string bodies before they rea
 
     expect(signUpMock).toHaveBeenCalledWith(validPayload)
     expect(res.status).toBe(200)
+    // A passing status with no session cookie is a broken signup a client
+    // can't detect - assert the actual side effect that makes it useful.
+    expect(res.cookies.get('token')?.value).toBe('signed-token')
   })
 })
