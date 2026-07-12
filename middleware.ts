@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 
 // WAS-17: /sanity-studio was reachable by anyone who found the URL, protected
@@ -10,6 +11,15 @@ function unauthorized() {
     status: 401,
     headers: { 'WWW-Authenticate': 'Basic realm="Sanity Studio"' },
   })
+}
+
+// Hashing to a fixed length before comparing means timingSafeEqual never sees
+// mismatched buffer lengths, so a plain !== check on user-supplied credentials
+// can't leak how much of the secret was guessed correctly via response timing.
+function safeEqual(a: string, b: string) {
+  const aHash = createHash('sha256').update(a).digest()
+  const bHash = createHash('sha256').update(b).digest()
+  return timingSafeEqual(aHash, bHash)
 }
 
 export function middleware(req: NextRequest) {
@@ -31,7 +41,7 @@ export function middleware(req: NextRequest) {
   const user = separatorIndex === -1 ? decoded : decoded.slice(0, separatorIndex)
   const pass = separatorIndex === -1 ? '' : decoded.slice(separatorIndex + 1)
 
-  if (user !== username || pass !== password) {
+  if (!safeEqual(user, username) || !safeEqual(pass, password)) {
     return unauthorized()
   }
 
