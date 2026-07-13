@@ -245,29 +245,60 @@ Each step is presentational and pulls `control`/`watch` off
   (obtained via `useFormContext()` inside each step component) — this is the
   standard shadcn pattern and avoids threading `control` down as a prop from
   `SignUpModal`.
-- **Cross-step error leakage from `form.trigger(stepFields)` — found during
-  Task 9 manual browser verification, not caught by any earlier review or by
-  the Task 8 automated tests.** `zodResolver` can't partially validate a
-  single object schema — every call to `form.trigger(...)`, even with a
-  specific field-name array, runs `signUpFormSchema` against the *entire*
-  form's current values, and `@hookform/resolvers/zod` merges the *full*
-  resulting error set into `formState.errors`, not just the requested
-  fields. Since `acceptTerms` defaults to `false`, it fails its
-  `.refine((v) => v === true)` check on every single `trigger()` call
-  regardless of which step's fields were requested — so completing step 2's
-  `goNext()` silently populates `formState.errors.acceptTerms` too, and
-  `TermsStep` renders that error immediately on arrival at step 3, before
-  the user has touched the checkbox. The original hand-rolled
-  `validateStepN()` functions each built a fresh, step-scoped `newErrors`
-  object and fully replaced `errors` state with it — cross-step leakage was
-  structurally impossible. **Fix:** `goNext()` calls
-  `form.clearErrors(fieldsNotInThisStep)` immediately after a successful
-  `trigger()`, and `goBack()` calls `form.clearErrors()` unconditionally
-  (matching the original `handleBack`'s unconditional `setErrors({})`) —
-  see `hooks/useSignUpForm.ts`. This is the reason Task 8's tests didn't
-  catch it: none of the three regression tests ever asserts on error
-  *absence* on a step the user hasn't tried to submit yet, only on the
-  three specific mechanical risks they were scoped to guard.
+- **Premature step-3 error, found during Task 9 manual browser
+  verification — root-caused twice.** `TermsStep` renders "You must accept
+  the terms and conditions to continue" immediately on arrival at step 3,
+  before the user has touched the checkbox. Confirmed reproducible against a
+  genuine dev-mode build (not a stale-bundle artifact).
+  - **First diagnosis (wrong, but shipped and passed review before being
+    caught empirically):** the theory was that `form.trigger(stepFields)`
+    leaks other fields' errors into `formState.errors` because
+    `zodResolver` can't partially validate one object schema. The proposed
+    fix (`form.clearErrors(fieldsNotInThisStep)` after a successful
+    `trigger()`, `form.clearErrors()` on `goBack()`) was implemented and
+    passed an independent task review that traced the code and confirmed
+    the field sets matched — but it did **not** fix the bug when re-tested
+    live. Reading react-hook-form's actual `trigger()` source
+    (`node_modules/react-hook-form/dist/index.cjs.js`) disproved the
+    theory directly: `trigger(names)` only ever *writes* `formState.errors`
+    entries for the fields in `names`, even though the resolver internally
+    validates the whole schema to get there — it does not touch unrelated
+    fields at all. Confirmed empirically too: temporary `console.log`s
+    around `goNext()`'s `trigger()` call showed `formState.errors` staying
+    empty through the entire step-2 `trigger()`/`clearErrors()` sequence.
+  - **Real cause:** logging `TermsStep`'s own renders showed
+    `formState.errors.acceptTerms` was *empty* on `TermsStep`'s first two
+    renders after mounting, then became populated by the third render —
+    i.e., something *after* `TermsStep` first mounts (most likely
+    `Controller` registering the newly-mounted `acceptTerms` field, which
+    prompts react-hook-form to re-derive form-wide validity) triggers a
+    fresh resolver-based validation pass. That fresh pass is not wrong: it
+    finds `acceptTerms` genuinely `false` against the live schema, because
+    it is — the user hasn't checked it yet. No amount of clearing
+    `formState.errors` after `trigger()` can survive a later, legitimate
+    revalidation the app didn't ask for and can't prevent.
+  - **Fix:** stop trying to keep `formState.errors` itself clean, and
+    instead gate error *display* on whether the user has actually attempted
+    the step currently on screen. `useSignUpForm` tracks a `stepAttempted`
+    boolean, reset to `false` on every step change (`goNext` success or
+    `goBack`) and set to `true` only when `goNext`'s `trigger()` fails for
+    the current step, or when `onSubmit`'s `handleSubmit` invalid-callback
+    fires (step 3's submit-with-unchecked-box case). Each step component
+    takes a `showErrors: boolean` prop (`SignUpModal` passes
+    `stepAttempted`) and every `fieldState.error` read — both the
+    `border-red-500` conditional and the message paragraph — becomes
+    `showErrors && fieldState.error`. This matches the original hand-rolled
+    behavior exactly: `validateStepN()` only ever populated `errors` when
+    the user tried to leave/submit that specific step, never on arrival.
+    It also sidesteps the RHF mechanism entirely rather than depending on
+    understanding it fully — the display gate holds regardless of *why* or
+    *when* react-hook-form decides to revalidate in the background.
+  - Neither bug was caught by Task 8's automated tests, because none of
+    the three regression tests asserts on error *absence* on a step the
+    user hasn't tried to submit yet — they're scoped to the three
+    mechanical risks in their own name (`shouldUnregister`, native
+    `<select>`, checkbox coercion), not this class of bug. Worth a 4th test
+    if this component sees more churn (see "Regression tests" section).
 
 ### `lib/password-strength.ts`
 

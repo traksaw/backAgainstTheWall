@@ -162,7 +162,6 @@ const STEP_FIELDS: Record<number, (keyof SignUpFormValues)[]> = {
   2: ["password", "passwordConfirmation", "zip_code", "occupationStatus"],
   3: ["acceptTerms"],
 }
-const ALL_FIELDS = Object.values(STEP_FIELDS).flat()
 
 function mapSignUpError(err: unknown): string {
   let errorMessage = "An unexpected error occurred during signup"
@@ -214,52 +213,61 @@ export function useSignUpForm({ onOpenChange, onSuccess }: UseSignUpFormOptions)
     },
   })
   const [currentStep, setCurrentStep] = useState(1)
+  // True once the user has actually tried to leave/submit the step
+  // currently on screen (Next failed validation, or Create Account was
+  // clicked with an invalid step 3). Error display in each step component
+  // is gated on this, NOT on formState.errors directly — see design doc's
+  // "Premature step-3 error" note for why: react-hook-form revalidates the
+  // whole schema in the background whenever a new field registers (e.g.
+  // TermsStep mounting), which legitimately finds not-yet-visited fields
+  // like acceptTerms invalid. That revalidation can't be prevented or
+  // reliably cleared after the fact, so display is gated at the step level
+  // instead of trying to keep formState.errors itself free of stale data.
+  const [stepAttempted, setStepAttempted] = useState(false)
   const [submitError, setSubmitError] = useState("")
   const [loading, setLoading] = useState(false)
 
   const goNext = async () => {
-    const fields = STEP_FIELDS[currentStep]
-    const valid = await form.trigger(fields)
+    const valid = await form.trigger(STEP_FIELDS[currentStep])
     if (valid) {
-      // zodResolver validates the whole schema on every trigger() call (it
-      // can't partially validate one object schema), so a successful step-2
-      // trigger also silently populates formState.errors for untouched
-      // fields in other steps (e.g. acceptTerms, which defaults to false
-      // and fails its own .refine()). Clear those before advancing so the
-      // next step doesn't render an error the user hasn't earned yet.
-      form.clearErrors(ALL_FIELDS.filter((f) => !fields.includes(f)))
+      setStepAttempted(false)
       setCurrentStep((step) => step + 1)
+    } else {
+      setStepAttempted(true)
     }
   }
 
   const goBack = () => {
-    // Matches the original handleBack's unconditional setErrors({}).
-    form.clearErrors()
+    setStepAttempted(false)
     setCurrentStep((step) => Math.max(1, step - 1))
   }
 
   const resetForm = () => {
     form.reset()
     setCurrentStep(1)
+    setStepAttempted(false)
     setSubmitError("")
   }
 
-  const onSubmit = form.handleSubmit(async (values) => {
-    setSubmitError("")
-    setLoading(true)
-    try {
-      await signUp(values)
-      resetForm()
-      onOpenChange(false)
-      onSuccess()
-    } catch (err) {
-      setSubmitError(mapSignUpError(err))
-    } finally {
-      setLoading(false)
-    }
-  })
+  const onSubmit = form.handleSubmit(
+    async (values) => {
+      setSubmitError("")
+      setLoading(true)
+      try {
+        await signUp(values)
+        resetForm()
+        onOpenChange(false)
+        onSuccess()
+      } catch (err) {
+        setSubmitError(mapSignUpError(err))
+      } finally {
+        setLoading(false)
+      }
+    },
+    () => setStepAttempted(true)
+  )
 
-  return { form, currentStep, goNext, goBack, onSubmit, submitError, loading, resetForm }
+  return { form, currentStep, stepAttempted, goNext, goBack, onSubmit, submitError, loading, resetForm }
 }
 ```
 
@@ -294,7 +302,15 @@ import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/for
 import { Input } from "@/components/ui/input"
 import type { SignUpFormValues } from "@/lib/validation"
 
-export function BasicInfoStep() {
+interface BasicInfoStepProps {
+  // Only render field errors once the user has actually attempted this
+  // step (Next clicked and failed) — see useSignUpForm's stepAttempted
+  // comment. Without this gate, react-hook-form's background revalidation
+  // on field (re)registration can surface stale/premature errors.
+  showErrors: boolean
+}
+
+export function BasicInfoStep({ showErrors }: BasicInfoStepProps) {
   const { control } = useFormContext<SignUpFormValues>()
 
   return (
@@ -315,11 +331,11 @@ export function BasicInfoStep() {
                   type="text"
                   placeholder="John"
                   className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] ${
-                    fieldState.error ? "border-red-500" : ""
+                    showErrors && fieldState.error ? "border-red-500" : ""
                   }`}
                 />
               </FormControl>
-              {fieldState.error && (
+              {showErrors && fieldState.error && (
                 <p className="text-red-500 text-xs flex items-center">
                   <AlertCircle className="w-3 h-3 mr-1" />
                   {fieldState.error.message}
@@ -343,11 +359,11 @@ export function BasicInfoStep() {
                   type="text"
                   placeholder="Doe"
                   className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] ${
-                    fieldState.error ? "border-red-500" : ""
+                    showErrors && fieldState.error ? "border-red-500" : ""
                   }`}
                 />
               </FormControl>
-              {fieldState.error && (
+              {showErrors && fieldState.error && (
                 <p className="text-red-500 text-xs flex items-center">
                   <AlertCircle className="w-3 h-3 mr-1" />
                   {fieldState.error.message}
@@ -373,11 +389,11 @@ export function BasicInfoStep() {
                 type="email"
                 placeholder="john.doe@example.com"
                 className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] ${
-                  fieldState.error ? "border-red-500" : ""
+                  showErrors && fieldState.error ? "border-red-500" : ""
                 }`}
               />
             </FormControl>
-            {fieldState.error && (
+            {showErrors && fieldState.error && (
               <p className="text-red-500 text-xs flex items-center">
                 <AlertCircle className="w-3 h-3 mr-1" />
                 {fieldState.error.message}
@@ -434,7 +450,12 @@ const OCCUPATION_OPTIONS = [
   "Entrepreneur",
 ]
 
-export function SecurityStep() {
+interface SecurityStepProps {
+  // See BasicInfoStepProps.showErrors / useSignUpForm's stepAttempted.
+  showErrors: boolean
+}
+
+export function SecurityStep({ showErrors }: SecurityStepProps) {
   const { control } = useFormContext<SignUpFormValues>()
   const [showPassword, setShowPassword] = useState(false)
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
@@ -460,7 +481,7 @@ export function SecurityStep() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Create a strong password"
                   className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] pr-10 ${
-                    fieldState.error ? "border-red-500" : ""
+                    showErrors && fieldState.error ? "border-red-500" : ""
                   }`}
                 />
               </FormControl>
@@ -472,7 +493,7 @@ export function SecurityStep() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            {field.value && (
+            {password && (
               <div className="flex items-center space-x-2">
                 <div className="flex-1 bg-gray-200 rounded-full h-2">
                   <div
@@ -492,7 +513,7 @@ export function SecurityStep() {
                 </span>
               </div>
             )}
-            {fieldState.error && (
+            {showErrors && fieldState.error && (
               <p className="text-red-500 text-xs flex items-center">
                 <AlertCircle className="w-3 h-3 mr-1" />
                 {fieldState.error.message}
@@ -518,7 +539,7 @@ export function SecurityStep() {
                   type={showPasswordConfirm ? "text" : "password"}
                   placeholder="Confirm your password"
                   className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] pr-10 ${
-                    fieldState.error ? "border-red-500" : ""
+                    showErrors && fieldState.error ? "border-red-500" : ""
                   }`}
                 />
               </FormControl>
@@ -530,7 +551,7 @@ export function SecurityStep() {
                 {showPasswordConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            {fieldState.error && (
+            {showErrors && fieldState.error && (
               <p className="text-red-500 text-xs flex items-center">
                 <AlertCircle className="w-3 h-3 mr-1" />
                 {fieldState.error.message}
@@ -556,11 +577,11 @@ export function SecurityStep() {
                 placeholder="12345"
                 maxLength={10}
                 className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] ${
-                  fieldState.error ? "border-red-500" : ""
+                  showErrors && fieldState.error ? "border-red-500" : ""
                 }`}
               />
             </FormControl>
-            {fieldState.error && (
+            {showErrors && fieldState.error && (
               <p className="text-red-500 text-xs flex items-center">
                 <AlertCircle className="w-3 h-3 mr-1" />
                 {fieldState.error.message}
@@ -586,7 +607,7 @@ export function SecurityStep() {
               <select
                 {...field}
                 className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#B95D38] focus:ring-[#B95D38] bg-white ${
-                  fieldState.error ? "border-red-500" : ""
+                  showErrors && fieldState.error ? "border-red-500" : ""
                 }`}
               >
                 <option value="">Select your current status</option>
@@ -597,7 +618,7 @@ export function SecurityStep() {
                 ))}
               </select>
             </FormControl>
-            {fieldState.error && (
+            {showErrors && fieldState.error && (
               <p className="text-red-500 text-xs flex items-center">
                 <AlertCircle className="w-3 h-3 mr-1" />
                 {fieldState.error.message}
@@ -648,7 +669,12 @@ import { TermsModal } from "@/components/modals/TermsModal"
 import { PrivacyModal } from "@/components/modals/PrivacyModal"
 import type { SignUpFormValues } from "@/lib/validation"
 
-export function TermsStep() {
+interface TermsStepProps {
+  // See BasicInfoStepProps.showErrors / useSignUpForm's stepAttempted.
+  showErrors: boolean
+}
+
+export function TermsStep({ showErrors }: TermsStepProps) {
   const { control } = useFormContext<SignUpFormValues>()
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
@@ -691,7 +717,7 @@ export function TermsStep() {
         control={control}
         name="acceptTerms"
         render={({ field, fieldState }) => (
-          <FormItem>
+          <FormItem className="space-y-4">
             <div className="flex items-start space-x-3">
               <FormControl>
                 <Checkbox
@@ -719,7 +745,7 @@ export function TermsStep() {
                 </button>
               </FormLabel>
             </div>
-            {fieldState.error && (
+            {showErrors && fieldState.error && (
               <p className="text-red-500 text-xs flex items-center">
                 <AlertCircle className="w-3 h-3 mr-1" />
                 {fieldState.error.message}
@@ -787,7 +813,7 @@ interface SignUpModalProps {
 }
 
 export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }: SignUpModalProps) {
-  const { form, currentStep, goNext, goBack, onSubmit, submitError, loading, resetForm } = useSignUpForm({
+  const { form, currentStep, stepAttempted, goNext, goBack, onSubmit, submitError, loading, resetForm } = useSignUpForm({
     onOpenChange,
     onSuccess,
   })
@@ -825,9 +851,9 @@ export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }:
 
         <Form {...form}>
           <form onSubmit={onSubmit} className="space-y-4 mt-6">
-            {currentStep === 1 && <BasicInfoStep />}
-            {currentStep === 2 && <SecurityStep />}
-            {currentStep === 3 && <TermsStep />}
+            {currentStep === 1 && <BasicInfoStep showErrors={stepAttempted} />}
+            {currentStep === 2 && <SecurityStep showErrors={stepAttempted} />}
+            {currentStep === 3 && <TermsStep showErrors={stepAttempted} />}
 
             {submitError && (
               <Alert className="border-red-200 bg-red-50">
