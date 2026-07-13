@@ -2,6 +2,16 @@ import { withSentryConfig } from '@sentry/nextjs'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Pins the workspace root to this checkout. Without this, Next.js finds
+  // both this project's pnpm-lock.yaml and the parent repo's copy (git
+  // worktrees check out tracked files, lockfile included) and warns that it
+  // can't decide which is the root. Harmless outside a worktree - it just
+  // resolves to the same directory Next.js would have picked anyway. The
+  // "root": true in .eslintrc.json (below) is the fix for the actual `next
+  // lint` failure this ambiguity caused (a duplicate @next/next plugin
+  // instance from ESLint's legacy config cascading up into the parent
+  // repo's .eslintrc.json); this setting only silences the related warning.
+  outputFileTracingRoot: process.cwd(),
   eslint: {
     ignoreDuringBuilds: false,
   },
