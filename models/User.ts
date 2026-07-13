@@ -24,7 +24,10 @@ const UserSchema = new Schema<IUser>(
     // the unique index case/whitespace-insensitive even if some other write
     // path ever bypasses lib/auth.ts.
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    passwordHash: { type: String, required: true },
+    // WAS-11: select:false is the schema-level backstop - a plain find()/
+    // findOne() can no longer return the hash by accident. Callers that
+    // legitimately need it (signIn) must opt back in with .select('+passwordHash').
+    passwordHash: { type: String, required: true, select: false },
     first_name: String,
     last_name: String,
     zip_code: String,
@@ -35,12 +38,32 @@ const UserSchema = new Schema<IUser>(
     // token, plus an expiry. Both pairs are cleared on successful use,
     // which is what makes the token single-use.
     emailVerified: { type: Boolean, default: false },
-    resetPasswordTokenHash: String,
+    // WAS-11 follow-up: same select:false backstop as passwordHash. Every
+    // read path (resetPassword/verifyEmail) only filters on these fields
+    // and never reads the value back off the returned document, so unlike
+    // signIn, nothing needs to opt back in with .select('+...').
+    resetPasswordTokenHash: { type: String, select: false },
     resetPasswordExpires: Date,
-    emailVerificationTokenHash: String,
+    emailVerificationTokenHash: { type: String, select: false },
     emailVerificationExpires: Date,
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    // WAS-11 follow-up: second layer behind select:false. If a future code
+    // path re-selects one of these secrets (the way signIn legitimately
+    // does for passwordHash) and then serializes the document straight to
+    // a client - e.g. NextResponse.json(user) - this still strips them.
+    // Doesn't apply to .lean() results, which are plain objects with no
+    // toJSON of their own.
+    toJSON: {
+      transform(_doc, ret) {
+        Reflect.deleteProperty(ret, "passwordHash")
+        Reflect.deleteProperty(ret, "resetPasswordTokenHash")
+        Reflect.deleteProperty(ret, "emailVerificationTokenHash")
+        return ret
+      },
+    },
+  }
 )
 
 const UserModel: Model<IUser> =

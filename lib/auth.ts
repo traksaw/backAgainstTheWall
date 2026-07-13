@@ -89,7 +89,9 @@ export class AuthService {
   static async signIn(email: string, password: string) {
     await connectDB()
 
-    const user = await User.findOne({ email: normalizeEmail(email) })
+    // WAS-11: passwordHash is select:false on the schema, so this is the
+    // one place that legitimately needs it and must opt back in.
+    const user = await User.findOne({ email: normalizeEmail(email) }).select("+passwordHash")
     if (!user) throw new Error("Invalid email or password")
 
     const isMatch = await bcrypt.compare(password, user.passwordHash)
