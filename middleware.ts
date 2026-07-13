@@ -22,7 +22,7 @@ function safeEqual(a: string, b: string) {
   return timingSafeEqual(aHash, bHash)
 }
 
-export function middleware(req: NextRequest) {
+function studioAuthCheck(req: NextRequest): NextResponse | null {
   const username = process.env.SANITY_STUDIO_USERNAME
   const password = process.env.SANITY_STUDIO_PASSWORD
 
@@ -45,9 +45,37 @@ export function middleware(req: NextRequest) {
     return unauthorized()
   }
 
-  return NextResponse.next()
+  return null
+}
+
+export function middleware(req: NextRequest) {
+  if (req.nextUrl.pathname.startsWith('/sanity-studio')) {
+    const denied = studioAuthCheck(req)
+    if (denied) return denied
+    // Studio's own CSP (next.config.mjs, already 'unsafe-inline'/'unsafe-eval')
+    // already tolerates Next's inline bootstrap scripts - no nonce needed here.
+    return NextResponse.next()
+  }
+
+  // WAS-33: script-src 'self' alone blocks Next.js App Router's own inline
+  // hydration <script> tags (confirmed live: blank page on every route,
+  // self.__next_f never populated). A per-request nonce plus 'strict-dynamic'
+  // (Next's own documented CSP pattern) keeps script-src genuinely strict -
+  // an attacker's injected inline script still lacks the correct nonce and
+  // is blocked - while letting Next's own scripts (and the chunks they
+  // dynamically load) run. app/layout.tsx reads this same nonce via
+  // headers() to opt the render into using it for Next's own inline scripts.
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
+  const csp = `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'strict-dynamic'; style-src 'self' 'unsafe-inline'; img-src 'self' data: cdn.sanity.io *.public.blob.vercel-storage.com; media-src 'self' *.public.blob.vercel-storage.com; font-src 'self'; connect-src 'self' https://formspree.io https://o4511723969904640.ingest.us.sentry.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none';`
+
+  const requestHeaders = new Headers(req.headers)
+  requestHeaders.set('x-nonce', nonce)
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } })
+  response.headers.set('Content-Security-Policy', csp)
+  return response
 }
 
 export const config = {
-  matcher: ['/sanity-studio', '/sanity-studio/:path*'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
