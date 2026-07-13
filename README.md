@@ -103,6 +103,15 @@ The quiz identifies one of four financial personality types:
    BLOB_READ_WRITE_TOKEN=your_blob_token
    ```
 
+   **Optional — `scripts/upload-video.mjs`:** this script uploads
+   `public/videos/Ambitious_compatible.mp4` via `POST /api/upload`. By
+   default it targets `http://localhost:3000` (or the production domain
+   when `NODE_ENV=production`). Set `UPLOAD_TARGET_URL` to point it at a
+   different deployment (e.g. a preview URL) instead:
+   ```bash
+   UPLOAD_TARGET_URL=https://your-preview-url.vercel.app node scripts/upload-video.mjs
+   ```
+
    **Going to production (email):** the `EMAIL_FROM`/`RESEND_API_KEY`
    values above work as-is in dev against Resend's `onboarding@resend.dev`
    sandbox address, which only delivers to the Resend account owner's own

@@ -7,9 +7,14 @@ const filename = 'Ambitious_compatible.mp4';
 
 // Make sure to set your VERCEL_PROJECT_ID and VERCEL_API_TOKEN environment variables
 // Or run `vercel login` and `vercel link` first.
-const UPLOAD_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://back-against-the-wall-git-last-36d7bb-waskar-paulinos-projects.vercel.app/api/upload'
-  : 'http://localhost:3000/api/upload';
+//
+// UPLOAD_TARGET_URL overrides which deployment to upload against (e.g. a
+// preview URL) and takes precedence over the NODE_ENV-based default below.
+const PRODUCTION_URL = 'https://backagainstthewall.vercel.app';
+const BASE_URL =
+  process.env.UPLOAD_TARGET_URL ??
+  (process.env.NODE_ENV === 'production' ? PRODUCTION_URL : 'http://localhost:3000');
+const UPLOAD_URL = `${BASE_URL}/api/upload`;
 
 async function uploadVideo() {
   console.log(`Uploading ${filename}...`);
