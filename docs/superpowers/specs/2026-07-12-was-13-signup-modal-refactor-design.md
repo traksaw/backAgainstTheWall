@@ -58,9 +58,11 @@ repo but nothing uses it yet.
   UI-only concerns — they must stay in the client schema/form state but are
   harmless extra fields on the wire (server already ignores unknown fields;
   no change needed there).
-- No existing test or e2e spec covers `SignUpModal`'s UI (only
+- No existing test or e2e spec covers `SignUpModal`'s UI today (only
   `app/api/auth/signup/route.test.ts`, which tests the API route and is
-  untouched by this ticket). Verification is manual-in-browser per the DoD.
+  untouched by this ticket) — the DoD's stated verification is manual-in-
+  browser. This design adds a first, narrowly-scoped `SignUpModal.test.tsx`
+  anyway; see "Regression tests" below for why.
 - `TermsModal`/`PrivacyModal` are pre-existing, self-contained modals; step 3
   just toggles their `open` state.
 
@@ -246,6 +248,47 @@ calls `resetForm()` on close, same as today.
 | `components/auth/signup-steps/SecurityStep.tsx` (new) | Step 2 fields + password meter + visibility toggles. |
 | `components/auth/signup-steps/TermsStep.tsx` (new) | Step 3 field + Terms/Privacy modal toggles. |
 | `components/auth/SignUpModal.tsx` | Rewritten to compose the hook + step components; drops all inline `useState`/`validateStepN`/`getPasswordStrength*`. |
+| `components/auth/SignUpModal.test.tsx` (new) | Three regression tests: Back-navigation data persistence, native `<select>` for `occupationStatus`, checkbox boolean coercion. |
+
+### Regression tests (closes the three implementation-risk gaps)
+
+`shouldUnregister`, the native-`<select>` decision, and the checkbox
+coercion are only actually exercised when real DOM fields mount/unmount as
+steps swap — a hook-only test wouldn't touch any of that, since `FormField`/
+`Controller` (where fields actually register) live in the step components,
+not in `useSignUpForm` itself. So the regression guard has to be a full
+component render, not an isolated hook test. The repo already has
+`vitest` + `@testing-library/react` + `@testing-library/jest-dom` installed
+(pattern: `components/home/HomeInteractiveShell.test.tsx`) — no new
+dependency needed. `@testing-library/user-event` is **not** installed, so
+this uses `fireEvent` (already available), matching what's actually in the
+repo rather than adding a package for one test file.
+
+**`components/auth/SignUpModal.test.tsx`** (new), mocking `useAuth` the same
+way `HomeInteractiveShell.test.tsx` does:
+
+1. Render the modal open, fill step 1 (`firstName`, `lastName`, `email`) via
+   `fireEvent.change`, click "Next" → assert a step-2-only field (e.g. the
+   password label) is now visible.
+2. Click "Back" → assert the `firstName` input's value is still `"..."` as
+   typed. **This is the direct regression guard for `shouldUnregister`** —
+   if it were ever left at RHF's implicit default and that default changed,
+   or someone dropped the option "as unnecessary," this test fails instead
+   of the bug shipping silently.
+3. `screen.getByLabelText(/current status/i).tagName === 'SELECT'` —
+   **direct regression guard for the native-`<select>` decision.** If someone
+   swaps in the styled Radix `Select`, this assertion fails immediately
+   (Radix renders a `<button>` + listbox, not a `<select>`).
+4. Fill steps 1–2 with valid data, advance to step 3, check the terms
+   checkbox via `fireEvent.click`, submit, and assert the mocked `signUp` was
+   called once. **Regression guard for the checkbox coercion** — if
+   `onCheckedChange` passed through Radix's raw `boolean | "indeterminate"`
+   instead of coercing to a plain `boolean`, `acceptTerms` would fail the
+   schema's `.refine((v) => v === true)` and `signUp` would never be called.
+
+This directly closes gap #4 for the three implementation details this
+review pass surfaced, rather than just documenting them as tradeoffs it
+hopes an implementer gets right.
 
 ### Out of scope
 
@@ -256,20 +299,21 @@ calls `resetForm()` on close, same as today.
   form.tsx` infra later, but converting them isn't in scope here.
 - Adding new validation rules beyond what already exists (e.g. no new
   password complexity requirements) — purely a structural refactor.
-- **Automated UI test coverage for the sign-up flow.** The ticket's DoD only
-  requires manual browser verification, and no test file exists today to
-  extend. This is a deliberate, called-out tradeoff, not an oversight: an
-  auth-adjacent flow with zero regression coverage is a real gap, but adding
-  a first component/e2e test for it is materially more scope than "refactor
-  onto existing infra." Flagged here so it's a conscious choice rather than
-  something that quietly fell out of scope — worth a follow-up ticket if
-  `SignUpModal` sees more churn.
+- **Broader automated coverage beyond the three regression guards above**
+  (e.g. testing every validation message, the password-strength meter's
+  scoring, or `mapSignUpError`'s substring-matching branches). The ticket's
+  DoD only requires manual browser verification; the three tests above exist
+  specifically because they're the only ones that would silently reintroduce
+  a bug this review pass already found and fixed. A fuller suite is a
+  reasonable follow-up if `SignUpModal` sees more churn, but isn't needed to
+  make this refactor itself safe.
 
 ## Verification plan
 
-- `pnpm lint:fix && pnpm typecheck`
-- `pnpm test:unit` (no existing SignUpModal-specific suite; confirms nothing
-  else broke)
+- `pnpm lint && pnpm type-check`
+- `pnpm test` — runs the new `SignUpModal.test.tsx` regression tests plus the
+  full existing suite (confirms nothing else broke; note this repo's actual
+  script is `test`, not `test:unit`/`test:e2e`)
 - Manual run through `pnpm dev`: open sign-up, verify step 1→2→3 validation
   (required fields, email format, password rules, zip format, occupation
   required, terms required), back navigation preserves entered data, password
