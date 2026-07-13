@@ -54,7 +54,7 @@ export function SecurityStep() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            {field.value && (
+            {password && (
               <div className="flex items-center space-x-2">
                 <div className="flex-1 bg-gray-200 rounded-full h-2">
                   <div
