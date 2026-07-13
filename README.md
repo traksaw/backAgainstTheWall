@@ -103,13 +103,16 @@ The quiz identifies one of four financial personality types:
    BLOB_READ_WRITE_TOKEN=your_blob_token
    ```
 
-   **Optional — `scripts/upload-video.mjs`:** this script uploads
-   `public/videos/Ambitious_compatible.mp4` via `POST /api/upload`. By
-   default it targets `http://localhost:3000` (or the production domain
-   when `NODE_ENV=production`). Set `UPLOAD_TARGET_URL` to point it at a
-   different deployment (e.g. a preview URL) instead:
+   **Optional — `scripts/upload-video.mjs`:** re-uploads
+   `public/videos/Ambitious_compatible.mp4` to Vercel Blob (the URL
+   `VideoPlayer` reads is hardcoded to that Blob store's fixed pathname, so
+   this overwrites the live asset in place). It calls the `@vercel/blob`
+   SDK directly with `BLOB_READ_WRITE_TOKEN` rather than going through an
+   API route — a Vercel serverless function's request body is capped at
+   4.5MB, far under this video's size, so a server-upload endpoint could
+   never carry the file:
    ```bash
-   UPLOAD_TARGET_URL=https://your-preview-url.vercel.app node scripts/upload-video.mjs
+   node scripts/upload-video.mjs
    ```
 
    **Going to production (email):** the `EMAIL_FROM`/`RESEND_API_KEY`
