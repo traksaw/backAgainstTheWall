@@ -299,6 +299,32 @@ Each step is presentational and pulls `control`/`watch` off
     mechanical risks in their own name (`shouldUnregister`, native
     `<select>`, checkbox coercion), not this class of bug. Worth a 4th test
     if this component sees more churn (see "Regression tests" section).
+- **Phantom native form submission on the step-2→3 transition — found
+  while live-verifying the `stepAttempted` fix above, and more serious than
+  the display bug it was found alongside.** With the `stepAttempted` fix
+  correctly implemented, "You must accept the terms" could still appear
+  immediately on arrival at step 3 under a REAL (focused) click on "Next" —
+  a scripted, unfocused `.click()` never reproduced it, a real click did,
+  2/2. Cause: `SignUpModal.tsx`'s nav-button JSX renders either a
+  `type="button"` (Next, steps 1–2) or `type="submit"` (Create Account,
+  step 3) `<Button>` at the *same* position, with no `key` distinguishing
+  them. React reconciles this as "the same element, changed props" and
+  mutates the existing DOM node's `type` attribute in place rather than
+  removing and replacing it. Because that DOM node was the actual target of
+  the user's click and is still focused, and React's state update
+  (`currentStep` advancing) commits synchronously within the same click's
+  event handling, the node's `type` flips from `button` to `submit` *before*
+  the browser evaluates the click's default action — so the browser submits
+  the form the user never clicked submit on. `handleSubmit`'s
+  invalid-callback then legitimately fires (step 3 is genuinely incomplete)
+  and sets `stepAttempted = true`, reintroducing the exact symptom the
+  display-gating fix exists to prevent — but this time because a real
+  submit attempt happened, not because of stale background validation.
+  **Fix:** give the two buttons distinct `key`s (e.g. `key="next"` /
+  `key="submit"`) so React unmounts the old node and mounts a fresh one on
+  the type change, instead of mutating an existing, still-focused node's
+  `type` attribute in place — the standard fix for this class of "ghost
+  submit" bug. See `components/auth/SignUpModal.tsx`.
 
 ### `lib/password-strength.ts`
 

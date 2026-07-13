@@ -878,6 +878,7 @@ export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }:
 
               {currentStep < 3 ? (
                 <Button
+                  key="next"
                   type="button"
                   onClick={goNext}
                   className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-6"
@@ -886,6 +887,7 @@ export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }:
                 </Button>
               ) : (
                 <Button
+                  key="submit"
                   type="submit"
                   disabled={loading}
                   className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-6"
