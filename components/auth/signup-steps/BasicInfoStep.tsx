@@ -7,7 +7,15 @@ import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/for
 import { Input } from "@/components/ui/input"
 import type { SignUpFormValues } from "@/lib/validation"
 
-export function BasicInfoStep() {
+interface BasicInfoStepProps {
+  // Only render field errors once the user has actually attempted this
+  // step (Next clicked and failed) — see useSignUpForm's stepAttempted
+  // comment. Without this gate, react-hook-form's background revalidation
+  // on field (re)registration can surface stale/premature errors.
+  showErrors: boolean
+}
+
+export function BasicInfoStep({ showErrors }: BasicInfoStepProps) {
   const { control } = useFormContext<SignUpFormValues>()
 
   return (
@@ -28,11 +36,11 @@ export function BasicInfoStep() {
                   type="text"
                   placeholder="John"
                   className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] ${
-                    fieldState.error ? "border-red-500" : ""
+                    showErrors && fieldState.error ? "border-red-500" : ""
                   }`}
                 />
               </FormControl>
-              {fieldState.error && (
+              {showErrors && fieldState.error && (
                 <p className="text-red-500 text-xs flex items-center">
                   <AlertCircle className="w-3 h-3 mr-1" />
                   {fieldState.error.message}
@@ -56,11 +64,11 @@ export function BasicInfoStep() {
                   type="text"
                   placeholder="Doe"
                   className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] ${
-                    fieldState.error ? "border-red-500" : ""
+                    showErrors && fieldState.error ? "border-red-500" : ""
                   }`}
                 />
               </FormControl>
-              {fieldState.error && (
+              {showErrors && fieldState.error && (
                 <p className="text-red-500 text-xs flex items-center">
                   <AlertCircle className="w-3 h-3 mr-1" />
                   {fieldState.error.message}
@@ -86,11 +94,11 @@ export function BasicInfoStep() {
                 type="email"
                 placeholder="john.doe@example.com"
                 className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] ${
-                  fieldState.error ? "border-red-500" : ""
+                  showErrors && fieldState.error ? "border-red-500" : ""
                 }`}
               />
             </FormControl>
-            {fieldState.error && (
+            {showErrors && fieldState.error && (
               <p className="text-red-500 text-xs flex items-center">
                 <AlertCircle className="w-3 h-3 mr-1" />
                 {fieldState.error.message}

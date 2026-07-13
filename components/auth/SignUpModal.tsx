@@ -19,7 +19,7 @@ interface SignUpModalProps {
 }
 
 export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }: SignUpModalProps) {
-  const { form, currentStep, goNext, goBack, onSubmit, submitError, loading, resetForm } = useSignUpForm({
+  const { form, currentStep, stepAttempted, goNext, goBack, onSubmit, submitError, loading, resetForm } = useSignUpForm({
     onOpenChange,
     onSuccess,
   })
@@ -57,9 +57,9 @@ export function SignUpModal({ open, onOpenChange, onSwitchToSignIn, onSuccess }:
 
         <Form {...form}>
           <form onSubmit={onSubmit} className="space-y-4 mt-6">
-            {currentStep === 1 && <BasicInfoStep />}
-            {currentStep === 2 && <SecurityStep />}
-            {currentStep === 3 && <TermsStep />}
+            {currentStep === 1 && <BasicInfoStep showErrors={stepAttempted} />}
+            {currentStep === 2 && <SecurityStep showErrors={stepAttempted} />}
+            {currentStep === 3 && <TermsStep showErrors={stepAttempted} />}
 
             {submitError && (
               <Alert className="border-red-200 bg-red-50">

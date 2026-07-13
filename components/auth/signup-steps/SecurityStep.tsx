@@ -1,3 +1,4 @@
+// components/auth/signup-steps/SecurityStep.tsx
 "use client"
 
 import { useState } from "react"
@@ -16,7 +17,12 @@ const OCCUPATION_OPTIONS = [
   "Entrepreneur",
 ]
 
-export function SecurityStep() {
+interface SecurityStepProps {
+  // See BasicInfoStepProps.showErrors / useSignUpForm's stepAttempted.
+  showErrors: boolean
+}
+
+export function SecurityStep({ showErrors }: SecurityStepProps) {
   const { control } = useFormContext<SignUpFormValues>()
   const [showPassword, setShowPassword] = useState(false)
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
@@ -42,7 +48,7 @@ export function SecurityStep() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Create a strong password"
                   className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] pr-10 ${
-                    fieldState.error ? "border-red-500" : ""
+                    showErrors && fieldState.error ? "border-red-500" : ""
                   }`}
                 />
               </FormControl>
@@ -74,7 +80,7 @@ export function SecurityStep() {
                 </span>
               </div>
             )}
-            {fieldState.error && (
+            {showErrors && fieldState.error && (
               <p className="text-red-500 text-xs flex items-center">
                 <AlertCircle className="w-3 h-3 mr-1" />
                 {fieldState.error.message}
@@ -100,7 +106,7 @@ export function SecurityStep() {
                   type={showPasswordConfirm ? "text" : "password"}
                   placeholder="Confirm your password"
                   className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] pr-10 ${
-                    fieldState.error ? "border-red-500" : ""
+                    showErrors && fieldState.error ? "border-red-500" : ""
                   }`}
                 />
               </FormControl>
@@ -112,7 +118,7 @@ export function SecurityStep() {
                 {showPasswordConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            {fieldState.error && (
+            {showErrors && fieldState.error && (
               <p className="text-red-500 text-xs flex items-center">
                 <AlertCircle className="w-3 h-3 mr-1" />
                 {fieldState.error.message}
@@ -138,11 +144,11 @@ export function SecurityStep() {
                 placeholder="12345"
                 maxLength={10}
                 className={`border-gray-300 focus:border-[#B95D38] focus:ring-[#B95D38] ${
-                  fieldState.error ? "border-red-500" : ""
+                  showErrors && fieldState.error ? "border-red-500" : ""
                 }`}
               />
             </FormControl>
-            {fieldState.error && (
+            {showErrors && fieldState.error && (
               <p className="text-red-500 text-xs flex items-center">
                 <AlertCircle className="w-3 h-3 mr-1" />
                 {fieldState.error.message}
@@ -168,7 +174,7 @@ export function SecurityStep() {
               <select
                 {...field}
                 className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#B95D38] focus:ring-[#B95D38] bg-white ${
-                  fieldState.error ? "border-red-500" : ""
+                  showErrors && fieldState.error ? "border-red-500" : ""
                 }`}
               >
                 <option value="">Select your current status</option>
@@ -179,7 +185,7 @@ export function SecurityStep() {
                 ))}
               </select>
             </FormControl>
-            {fieldState.error && (
+            {showErrors && fieldState.error && (
               <p className="text-red-500 text-xs flex items-center">
                 <AlertCircle className="w-3 h-3 mr-1" />
                 {fieldState.error.message}

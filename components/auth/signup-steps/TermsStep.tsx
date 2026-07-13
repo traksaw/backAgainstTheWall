@@ -1,3 +1,4 @@
+// components/auth/signup-steps/TermsStep.tsx
 "use client"
 
 import { useState } from "react"
@@ -10,7 +11,12 @@ import { TermsModal } from "@/components/modals/TermsModal"
 import { PrivacyModal } from "@/components/modals/PrivacyModal"
 import type { SignUpFormValues } from "@/lib/validation"
 
-export function TermsStep() {
+interface TermsStepProps {
+  // See BasicInfoStepProps.showErrors / useSignUpForm's stepAttempted.
+  showErrors: boolean
+}
+
+export function TermsStep({ showErrors }: TermsStepProps) {
   const { control } = useFormContext<SignUpFormValues>()
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
@@ -81,7 +87,7 @@ export function TermsStep() {
                 </button>
               </FormLabel>
             </div>
-            {fieldState.error && (
+            {showErrors && fieldState.error && (
               <p className="text-red-500 text-xs flex items-center">
                 <AlertCircle className="w-3 h-3 mr-1" />
                 {fieldState.error.message}
