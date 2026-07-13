@@ -43,7 +43,7 @@ function makeRawRequest(rawBody: string) {
 
 const validPayload = {
   email: 'me@example.com',
-  password: 'hunter2',
+  password: 'hunter22',
   firstName: 'A',
   lastName: 'B',
   zip_code: '90210',
@@ -75,6 +75,20 @@ describe('POST /api/auth/signup (WAS-8: reject non-string bodies before they rea
 
   it('rejects a payload missing required fields', async () => {
     const res = await POST(makeRequest({ email: 'me@example.com', password: 'hunter2' }))
+
+    expect(res.status).toBe(400)
+    expect(signUpMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects a password shorter than 8 characters', async () => {
+    const res = await POST(makeRequest({ ...validPayload, password: 'abc123' }))
+
+    expect(res.status).toBe(400)
+    expect(signUpMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects a password without a digit', async () => {
+    const res = await POST(makeRequest({ ...validPayload, password: 'nodigits' }))
 
     expect(res.status).toBe(400)
     expect(signUpMock).not.toHaveBeenCalled()
