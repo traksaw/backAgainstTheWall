@@ -3,14 +3,15 @@
 import type React from "react"
 import { useState, useEffect, createContext, useContext } from "react"
 import type { IUser } from "@/models/User"
-import type { SignUpFormValues, SignInFormValues } from "@/lib/validation"
+import type { SignUpData } from "@/lib/auth"
+import type { SignInFormValues } from "@/lib/validation"
 
 interface AuthContextType {
   user: IUser | null
   profile: IUser | null
   session: null
   loading: boolean
-  signUp: (data: SignUpFormValues) => Promise<void>
+  signUp: (data: SignUpData) => Promise<void>
   signIn: (data: SignInFormValues) => Promise<void>
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<IUser>) => Promise<void>
@@ -78,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signUp = async (data: SignUpFormValues) => {
+  const signUp = async (data: SignUpData) => {
     setLoading(true)
     try {
       const res = await fetch("/api/auth/signup", {

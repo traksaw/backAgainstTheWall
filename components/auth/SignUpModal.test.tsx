@@ -80,5 +80,18 @@ describe("SignUpModal", () => {
     fireEvent.click(screen.getByRole("button", { name: /create account/i }))
 
     await waitFor(() => expect(signUp).toHaveBeenCalledTimes(1))
+
+    // WAS-28 shape regression guard: useAuth.signUp is typed against
+    // lib/auth.ts's SignUpData - assert the real submitted payload still
+    // contains every field that contract requires, not just that signUp fired.
+    const [submitted] = signUp.mock.calls[0]
+    expect(submitted).toMatchObject({
+      email: "jane@example.com",
+      firstName: "Jane",
+      lastName: "Doe",
+      zip_code: "12345",
+      occupationStatus: "Entrepreneur",
+      password: "password1",
+    })
   })
 })
