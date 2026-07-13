@@ -80,7 +80,14 @@ describe('POST /api/auth/signup (WAS-8: reject non-string bodies before they rea
     expect(signUpMock).not.toHaveBeenCalled()
   })
 
-  it('rejects a password that is too short or missing a digit', async () => {
+  it('rejects a password shorter than 8 characters', async () => {
+    const res = await POST(makeRequest({ ...validPayload, password: 'abc123' }))
+
+    expect(res.status).toBe(400)
+    expect(signUpMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects a password without a digit', async () => {
     const res = await POST(makeRequest({ ...validPayload, password: 'nodigits' }))
 
     expect(res.status).toBe(400)

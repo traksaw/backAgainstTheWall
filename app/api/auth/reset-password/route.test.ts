@@ -43,7 +43,14 @@ describe('POST /api/auth/reset-password (WAS-32)', () => {
     expect(resetPasswordMock).not.toHaveBeenCalled()
   })
 
-  it('rejects a password that is too short or missing a digit', async () => {
+  it('rejects a password shorter than 8 characters', async () => {
+    const res = await POST(makeRequest({ token: 'good-token', password: 'abc123' }))
+
+    expect(res.status).toBe(400)
+    expect(resetPasswordMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects a password without a digit', async () => {
     const res = await POST(makeRequest({ token: 'good-token', password: 'nodigits' }))
 
     expect(res.status).toBe(400)

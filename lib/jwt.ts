@@ -50,8 +50,14 @@ export async function getUserIdFromRequest(
   // what happens to the account in the meantime. Reject it if the account's
   // password was changed after this token was issued - the reset is what
   // actually invalidates any other still-live session.
-  await connectDB();
-  const user = await User.findById(decoded.userId).select("passwordChangedAt").lean();
+  let user: { passwordChangedAt?: Date } | null;
+  try {
+    await connectDB();
+    user = await User.findById(decoded.userId).select("passwordChangedAt").lean();
+  } catch (error) {
+    console.error("Failed to look up user for token validation:", error);
+    return null;
+  }
   if (!user) return null;
 
   if (
