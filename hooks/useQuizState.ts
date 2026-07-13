@@ -66,10 +66,10 @@ export function useQuizState() {
 
     // Rollback archetype distribution if previous answer exists
     const prev = quizAnswers[lastIndex];
-    if (prev && prev.archetype && (archetypeDistribution as any)[prev.archetype] !== undefined) {
+    if (prev && prev.archetype && archetypeDistribution[prev.archetype] !== undefined) {
       setArchetypeDistribution({
         ...archetypeDistribution,
-        [prev.archetype as keyof typeof archetypeDistribution]: Math.max(0, (archetypeDistribution as any)[prev.archetype] - 1)
+        [prev.archetype]: Math.max(0, archetypeDistribution[prev.archetype] - 1)
       });
     }
 

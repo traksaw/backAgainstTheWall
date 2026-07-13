@@ -15,6 +15,8 @@ export const signInSchema = z.object({
   password: z.string().min(1),
 })
 
+export type SignInFormValues = z.infer<typeof signInSchema>
+
 export const signUpSchema = z.object({
   email: z.string().email(),
   // WAS-88: this used to only be enforced client-side (signUpFormSchema
