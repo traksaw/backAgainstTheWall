@@ -1,10 +1,11 @@
 // hooks/useFilmModal.ts
 import { useState, useCallback } from 'react'
 import type { QuizResult } from '@/types/quiz'
+import type { IUser } from '@/models/User'
 
 interface UseFilmModalProps {
   latestResult?: QuizResult | null
-  user?: any
+  user?: IUser | null
   onFilmComplete?: (result: QuizResult) => void
 }
 
