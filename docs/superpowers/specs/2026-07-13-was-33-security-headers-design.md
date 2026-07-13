@@ -57,6 +57,69 @@ production, not just a lint warning:
   to the *global* `connect-src`, not just Studio's, and separately raises a
   client-side-token-leak question outside this ticket's scope.
 
+## Post-deploy finding: `script-src 'self'` broke every page
+
+Discovered during Task 2's real-preview browser verification (not caught by
+Task 1's local `curl`-only header check, which only proves headers are
+*present*, not that the page still renders): the strict global CSP's
+`script-src 'self'` (no `'unsafe-inline'`, no nonce) blocked Next.js App
+Router's own inline bootstrap `<script>` tags - the ones that stream RSC
+payload data and drive hydration via `self.__next_f.push(...)`. Confirmed
+directly in a real browser against the deployed preview: the DOM contained
+13 inline `<script>` tags, but `self.__next_f.length` was `0` (none of
+their `push()` calls ran) and the page rendered completely blank on every
+route, not just something cosmetic.
+
+**Fix: nonce-based CSP for `script-src`, generated per-request in
+`middleware.ts`**, following Next.js's own documented CSP pattern, rather
+than adding `'unsafe-inline'` to `script-src`. This keeps `script-src`
+genuinely strict (an attacker's injected inline script still lacks the
+correct per-request nonce and is blocked) instead of falling back to the
+"one global permissive policy" shape this design explicitly rejected
+above - `'unsafe-inline'` in `script-src` would have been a much larger
+regression than "the Studio route is a bit more permissive," since it
+would apply to every route, all the time, not just the already-gated
+Studio path.
+
+- Only the *global* CSP's `script-src` changes. The Sanity Studio
+  route's CSP (already `'unsafe-inline' 'unsafe-eval'` in `script-src`,
+  see below) already tolerates Next's own inline bootstrap scripts with no
+  further change needed - Studio's CSP stays a static entry in
+  `next.config.mjs`, untouched.
+- `middleware.ts` (previously scoped only to `/sanity-studio` for the
+  WAS-17 Basic Auth gate) now runs on every route. It generates a random
+  per-request nonce, sets `script-src 'self' 'nonce-<value>'
+  'strict-dynamic'` (Next.js's own documented pairing - `strict-dynamic`
+  lets scripts *dynamically* injected by an already-trusted nonced script,
+  e.g. webpack chunk loading, also run without each needing their own
+  nonce, which a bare nonce alone does not cover), and sets that same
+  value on both the CSP response header and an `x-nonce` request header.
+  The existing Basic Auth logic for `/sanity-studio` is unchanged, just
+  now reached via a broader middleware matcher instead of a
+  Studio-specific one.
+- The global `Content-Security-Policy` entry is removed from
+  `next.config.mjs`'s `headers()` function (middleware now owns it for
+  non-Studio routes); the other five static headers there
+  (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, HSTS,
+  `Permissions-Policy`) are untouched, since those don't need per-request
+  values.
+- `app/layout.tsx` reads the nonce via `headers()` (Next's documented
+  mechanism for propagating the request's nonce to the framework's own
+  inline scripts) - required, not optional, per Next's own CSP guide;
+  omitting this read reproduces the exact blank-page bug even with the
+  middleware changes in place.
+- **This is a real scope increase from the ticket's original 2-point
+  estimate** - exactly the risk the ticket itself flagged ("CSP tuning can
+  surface a round of breakage to fix"), just larger than a missing-domain
+  tweak. Confirmed with the user before implementing, given the
+  alternative (`'unsafe-inline'` in `script-src`, staying at the original
+  scope) was a real, simpler option.
+- **Lesson for next time:** local verification of a CSP change must
+  include an actual browser page load (does content render? does
+  `self.__next_f` populate? are there console CSP violations?), not just
+  `curl -I` header-presence checks - a header can be perfectly correct and
+  still break the entire app.
+
 ## Decisions
 
 - **CSP is scoped per-route, not one global permissive policy.** A
