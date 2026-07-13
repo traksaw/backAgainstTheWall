@@ -37,10 +37,16 @@ const nextConfig = {
         ],
       },
       {
-        // WAS-33: baseline security headers for every route. CSP here is
-        // the strict policy - /sanity-studio below fully overrides just
-        // the Content-Security-Policy value for its own routes, since
-        // Next.js applies the last-matching source's value per header key.
+        // WAS-33: baseline security headers for every route. These five are
+        // static and safe to set here because they don't vary per request.
+        // Content-Security-Policy is deliberately NOT set in this entry -
+        // it's generated per-request in middleware.ts instead, because it
+        // needs a fresh nonce on every request and a static config value
+        // here can't provide one. Do not add a static script-src here to
+        // "fill the gap": that already broke every route once by blocking
+        // Next's own inline hydration scripts (blank page). The only CSP
+        // still set as a static value in this file is on /sanity-studio
+        // below, since Studio's policy has no nonce to keep fresh.
         source: '/:path*',
         headers: [
           { key: 'X-Frame-Options', value: 'DENY' },

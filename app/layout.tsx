@@ -24,6 +24,17 @@ export default async function RootLayout({
   // code could use the nonce, it's required for the framework's own scripts
   // to get nonced. Skipping this reproduces the pre-fix blank-page bug even
   // with the middleware changes in place.
+  //
+  // Calling headers() also has a required side effect: it forces this layout
+  // (and everything under it) into dynamic, per-request rendering. That's not
+  // incidental - middleware.ts mints a brand-new nonce on every request, so
+  // this render must happen fresh each time too, or the HTML and the CSP
+  // header fall out of sync. If a later page under this layout adds
+  // `export const dynamic = 'force-static'` or a `revalidate` value without
+  // accounting for this, that page gets cached with a stale nonce baked into
+  // its HTML that no longer matches the fresh nonce in the next request's CSP
+  // header - every inline script on that page fails its nonce check, which is
+  // the same blank-page failure mode this branch fixed.
   const nonce = (await headers()).get("x-nonce")
 
   return (
