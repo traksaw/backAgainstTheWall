@@ -24,7 +24,10 @@ const UserSchema = new Schema<IUser>(
     // the unique index case/whitespace-insensitive even if some other write
     // path ever bypasses lib/auth.ts.
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    passwordHash: { type: String, required: true },
+    // WAS-11: select:false is the schema-level backstop - a plain find()/
+    // findOne() can no longer return the hash by accident. Callers that
+    // legitimately need it (signIn) must opt back in with .select('+passwordHash').
+    passwordHash: { type: String, required: true, select: false },
     first_name: String,
     last_name: String,
     zip_code: String,

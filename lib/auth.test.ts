@@ -4,6 +4,7 @@ const findByIdAndUpdateMock = vi.fn()
 const findByIdMock = vi.fn()
 const selectMock = vi.fn()
 const findOneMock = vi.fn()
+const findOneSelectMock = vi.fn()
 const createMock = vi.fn()
 
 vi.mock('@/lib/mongoose', () => ({
@@ -24,7 +25,22 @@ vi.mock('@/models/User', () => ({
       findByIdMock(...args)
       return { select: (...selectArgs: unknown[]) => selectMock(...selectArgs) }
     },
-    findOne: (...args: unknown[]) => findOneMock(...args),
+    // WAS-11: passwordHash is select:false at the schema level now, so
+    // signIn must opt back in with .select('+passwordHash'). The returned
+    // object here is both directly awaitable (mirrors every other findOne
+    // call site, which never calls .select()) and chainable, so this one
+    // mock supports both usages without special-casing signIn's call.
+    findOne: (...args: unknown[]) => {
+      const result = findOneMock(...args)
+      return {
+        select: (...selectArgs: unknown[]) => {
+          findOneSelectMock(...selectArgs)
+          return result
+        },
+        then: (resolve: (v: unknown) => unknown, reject: (e: unknown) => unknown) =>
+          Promise.resolve(result).then(resolve, reject),
+      }
+    },
     create: (...args: unknown[]) => createMock(...args),
   },
 }))
@@ -98,6 +114,21 @@ describe('AuthService email normalization (WAS-19)', () => {
     await AuthService.signIn('  Foo@X.com  ', 'password123')
 
     expect(findOneMock).toHaveBeenCalledWith({ email: 'foo@x.com' })
+  })
+})
+
+describe('AuthService.signIn (WAS-11: passwordHash is select:false at the schema level)', () => {
+  beforeEach(() => {
+    findOneMock.mockReset()
+    findOneSelectMock.mockReset()
+  })
+
+  it('explicitly re-selects passwordHash since the schema excludes it by default', async () => {
+    findOneMock.mockResolvedValue({ _id: 'user-a', email: 'foo@x.com', passwordHash: 'hashed-password' })
+
+    await AuthService.signIn('foo@x.com', 'password123')
+
+    expect(findOneSelectMock).toHaveBeenCalledWith('+passwordHash')
   })
 })
 
