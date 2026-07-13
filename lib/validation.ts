@@ -43,16 +43,20 @@ export const resendVerificationSchema = z.object({
 
 const archetypeSchema = z.enum(["Avoider", "Gambler", "Realist", "Architect"])
 
+// WAS-89: every quiz option is worth 1-5 points (see validateQuizIntegrity in
+// lib/quiz/questions.ts) - bound `points` to that range so a client can't
+// forge an answer worth more than any real option to inflate its score.
 const quizAnswerSchema = z.object({
   archetype: archetypeSchema,
-  points: z.number(),
+  points: z.number().int().min(1).max(5),
 })
 
+// WAS-89: archetype/score are recomputed server-side from `answers` in
+// app/api/quiz/submit/route.ts - they are intentionally NOT accepted here so
+// a client can never write an arbitrary result to the database.
 export const quizSubmitSchema = z.object({
   answers: z.record(quizAnswerSchema),
   sessionId: z.string().optional(),
-  archetype: archetypeSchema,
-  score: z.number(),
 })
 
 export const quizUpdateSchema = z.object({

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { POST } from './route'
+import { quizQuestions } from '@/lib/quiz/questions'
 
 const createMock = vi.fn()
 
@@ -60,20 +61,6 @@ describe('POST /api/quiz/submit (WAS-8: reject malformed bodies before they reac
     expect(createMock).not.toHaveBeenCalled()
   })
 
-  it('rejects a payload with a bad archetype instead of writing to the database', async () => {
-    const res = await POST(makeRequest({ ...validPayload, archetype: { $ne: null } }))
-
-    expect(res.status).toBe(400)
-    expect(createMock).not.toHaveBeenCalled()
-  })
-
-  it('rejects a payload with a non-numeric score', async () => {
-    const res = await POST(makeRequest({ ...validPayload, score: 'not-a-number' }))
-
-    expect(res.status).toBe(400)
-    expect(createMock).not.toHaveBeenCalled()
-  })
-
   it('rejects a payload missing answers', async () => {
     const { sessionId, archetype, score } = validPayload
     const res = await POST(makeRequest({ sessionId, archetype, score }))
@@ -99,5 +86,67 @@ describe('POST /api/quiz/submit (WAS-8: reject malformed bodies before they reac
     const [data] = createMock.mock.calls[0]
     expect(data.archetype).toBe('Architect')
     expect(data.score).toBe(3)
+  })
+})
+
+describe('POST /api/quiz/submit (WAS-89: recompute archetype/score server-side, never trust the client)', () => {
+  beforeEach(() => {
+    createMock.mockReset()
+    getUserIdFromRequestMock.mockReset()
+    getUserIdFromRequestMock.mockResolvedValue('507f1f77bcf86cd799439011')
+  })
+
+  it('ignores a client-supplied archetype/score that contradicts the answers and persists the recomputed result', async () => {
+    createMock.mockResolvedValue({ _id: 'result-b' })
+
+    const res = await POST(
+      makeRequest({
+        answers: {
+          0: { archetype: 'Avoider', points: 5 },
+        },
+        sessionId: 'session-b',
+        archetype: 'Architect',
+        score: 999999,
+      })
+    )
+
+    expect(res.status).toBe(200)
+    expect(createMock).toHaveBeenCalledTimes(1)
+    const [data] = createMock.mock.calls[0]
+    expect(data.archetype).toBe('Avoider')
+    expect(data.score).toBe(5)
+  })
+
+  it('rejects an answer with points outside the real quiz options range (1-5) instead of letting it inflate a score', async () => {
+    const res = await POST(
+      makeRequest({
+        answers: {
+          0: { archetype: 'Architect', points: 999999 },
+        },
+        sessionId: 'session-c',
+      })
+    )
+
+    expect(res.status).toBe(400)
+    expect(createMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects more answers than the quiz actually has questions instead of letting a flood inflate a score', async () => {
+    const answers: Record<number, { archetype: string; points: number }> = {}
+    for (let i = 0; i <= quizQuestions.length; i++) {
+      answers[i] = { archetype: 'Architect', points: 4 }
+    }
+
+    const res = await POST(makeRequest({ answers, sessionId: 'session-d' }))
+
+    expect(res.status).toBe(400)
+    expect(createMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects an empty answers object with a 400 instead of a 500 from the scoring guard', async () => {
+    const res = await POST(makeRequest({ answers: {}, sessionId: 'session-e' }))
+
+    expect(res.status).toBe(400)
+    expect(createMock).not.toHaveBeenCalled()
   })
 })
