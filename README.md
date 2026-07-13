@@ -103,6 +103,20 @@ The quiz identifies one of four financial personality types:
    BLOB_READ_WRITE_TOKEN=your_blob_token
    ```
 
+   **Going to production (email):** the `EMAIL_FROM`/`RESEND_API_KEY`
+   values above work as-is in dev against Resend's `onboarding@resend.dev`
+   sandbox address, which only delivers to the Resend account owner's own
+   inbox. Before real users hit the password-reset/email-verification
+   flows:
+   1. In the Resend dashboard, add your production sending domain.
+   2. Add the SPF and DKIM DNS records Resend provides, at your domain's
+      DNS provider.
+   3. Wait for DNS propagation, then click verify in Resend.
+   4. Update `EMAIL_FROM` in the production environment (e.g.
+      `noreply@yourdomain.com`) - no code change, this is an env var flip.
+   5. Send a real test reset/verification email to a non-Resend-owner
+      address to confirm delivery.
+
    **Never commit `.env.local` (or any `.env*` file).** It holds live
    credentials. This repo previously leaked a full `.env.local` into git
    history (WAS-5) because it was committed before `.gitignore` excluded
