@@ -7,10 +7,34 @@ import { ClientProviders } from "@/components/providers/ClientProviders"
 
 const inter = Inter({ subsets: ["latin"] })
 
+const title = "Back Against the Wall"
+const description =
+  "When financial pressure mounts, who do you become? Discover your financial archetype and watch this powerful short film."
+const posterPath = "/assets/desktop-movie-poster.png"
+
 export const metadata: Metadata = {
-  title: "Back Against the Wall",
-  description:
-    "When financial pressure mounts, who do you become? Discover your financial archetype and watch this powerful short film.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    type: "website",
+    images: [
+      {
+        url: posterPath,
+        width: 1114,
+        height: 626,
+        alt: "Back Against the Wall movie poster",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: [posterPath],
+  },
 }
 
 export default async function RootLayout({
