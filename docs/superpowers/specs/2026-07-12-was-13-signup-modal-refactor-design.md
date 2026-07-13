@@ -169,36 +169,51 @@ function useSignUpForm({ onOpenChange, onSuccess }: {
     defaultValues: { email: "", password: "", passwordConfirmation: "", firstName: "", lastName: "", zip_code: "", occupationStatus: "", acceptTerms: false },
   })
   const [currentStep, setCurrentStep] = useState(1)
+  // Gates error DISPLAY per step — see "Premature step-3 error" below for
+  // why this can't just be formState.errors itself.
+  const [stepAttempted, setStepAttempted] = useState(false)
   const [submitError, setSubmitError] = useState("")
   const [loading, setLoading] = useState(false)
 
   const goNext = async () => {
-    if (await form.trigger(STEP_FIELDS[currentStep])) setCurrentStep((s) => s + 1)
+    if (await form.trigger(STEP_FIELDS[currentStep])) {
+      setStepAttempted(false)
+      setCurrentStep((s) => s + 1)
+    } else {
+      setStepAttempted(true)
+    }
   }
-  const goBack = () => setCurrentStep((s) => Math.max(1, s - 1))
+  const goBack = () => {
+    setStepAttempted(false)
+    setCurrentStep((s) => Math.max(1, s - 1))
+  }
 
   const resetForm = () => {
     form.reset()
     setCurrentStep(1)
+    setStepAttempted(false)
     setSubmitError("")
   }
 
-  const onSubmit = form.handleSubmit(async (values) => {
-    setSubmitError("")
-    setLoading(true)
-    try {
-      await signUp(values)
-      resetForm()
-      onOpenChange(false)
-      onSuccess()
-    } catch (err) {
-      setSubmitError(mapSignUpError(err)) // same message-mapping logic as today, moved verbatim
-    } finally {
-      setLoading(false)
-    }
-  })
+  const onSubmit = form.handleSubmit(
+    async (values) => {
+      setSubmitError("")
+      setLoading(true)
+      try {
+        await signUp(values)
+        resetForm()
+        onOpenChange(false)
+        onSuccess()
+      } catch (err) {
+        setSubmitError(mapSignUpError(err)) // same message-mapping logic as today, moved verbatim
+      } finally {
+        setLoading(false)
+      }
+    },
+    () => setStepAttempted(true)
+  )
 
-  return { form, currentStep, goNext, goBack, onSubmit, submitError, loading, resetForm }
+  return { form, currentStep, stepAttempted, goNext, goBack, onSubmit, submitError, loading, resetForm }
 }
 ```
 
