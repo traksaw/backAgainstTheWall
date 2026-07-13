@@ -48,6 +48,8 @@
     "@sanity/vision": "^3.36.2",
     "@sentry/nextjs": "^10.65.0",
     "@supabase/supabase-js": "latest",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
     "@vercel/blob": "^1.1.1",
     "autoprefixer": "^10.4.21",
     "bcryptjs": "^3.0.2",
