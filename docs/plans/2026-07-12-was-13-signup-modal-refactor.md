@@ -162,6 +162,7 @@ const STEP_FIELDS: Record<number, (keyof SignUpFormValues)[]> = {
   2: ["password", "passwordConfirmation", "zip_code", "occupationStatus"],
   3: ["acceptTerms"],
 }
+const ALL_FIELDS = Object.values(STEP_FIELDS).flat()
 
 function mapSignUpError(err: unknown): string {
   let errorMessage = "An unexpected error occurred during signup"
@@ -217,11 +218,25 @@ export function useSignUpForm({ onOpenChange, onSuccess }: UseSignUpFormOptions)
   const [loading, setLoading] = useState(false)
 
   const goNext = async () => {
-    const valid = await form.trigger(STEP_FIELDS[currentStep])
-    if (valid) setCurrentStep((step) => step + 1)
+    const fields = STEP_FIELDS[currentStep]
+    const valid = await form.trigger(fields)
+    if (valid) {
+      // zodResolver validates the whole schema on every trigger() call (it
+      // can't partially validate one object schema), so a successful step-2
+      // trigger also silently populates formState.errors for untouched
+      // fields in other steps (e.g. acceptTerms, which defaults to false
+      // and fails its own .refine()). Clear those before advancing so the
+      // next step doesn't render an error the user hasn't earned yet.
+      form.clearErrors(ALL_FIELDS.filter((f) => !fields.includes(f)))
+      setCurrentStep((step) => step + 1)
+    }
   }
 
-  const goBack = () => setCurrentStep((step) => Math.max(1, step - 1))
+  const goBack = () => {
+    // Matches the original handleBack's unconditional setErrors({}).
+    form.clearErrors()
+    setCurrentStep((step) => Math.max(1, step - 1))
+  }
 
   const resetForm = () => {
     form.reset()

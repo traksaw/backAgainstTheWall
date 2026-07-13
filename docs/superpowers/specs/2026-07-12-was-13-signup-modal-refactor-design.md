@@ -245,6 +245,29 @@ Each step is presentational and pulls `control`/`watch` off
   (obtained via `useFormContext()` inside each step component) — this is the
   standard shadcn pattern and avoids threading `control` down as a prop from
   `SignUpModal`.
+- **Cross-step error leakage from `form.trigger(stepFields)` — found during
+  Task 9 manual browser verification, not caught by any earlier review or by
+  the Task 8 automated tests.** `zodResolver` can't partially validate a
+  single object schema — every call to `form.trigger(...)`, even with a
+  specific field-name array, runs `signUpFormSchema` against the *entire*
+  form's current values, and `@hookform/resolvers/zod` merges the *full*
+  resulting error set into `formState.errors`, not just the requested
+  fields. Since `acceptTerms` defaults to `false`, it fails its
+  `.refine((v) => v === true)` check on every single `trigger()` call
+  regardless of which step's fields were requested — so completing step 2's
+  `goNext()` silently populates `formState.errors.acceptTerms` too, and
+  `TermsStep` renders that error immediately on arrival at step 3, before
+  the user has touched the checkbox. The original hand-rolled
+  `validateStepN()` functions each built a fresh, step-scoped `newErrors`
+  object and fully replaced `errors` state with it — cross-step leakage was
+  structurally impossible. **Fix:** `goNext()` calls
+  `form.clearErrors(fieldsNotInThisStep)` immediately after a successful
+  `trigger()`, and `goBack()` calls `form.clearErrors()` unconditionally
+  (matching the original `handleBack`'s unconditional `setErrors({})`) —
+  see `hooks/useSignUpForm.ts`. This is the reason Task 8's tests didn't
+  catch it: none of the three regression tests ever asserts on error
+  *absence* on a step the user hasn't tried to submit yet, only on the
+  three specific mechanical risks they were scoped to guard.
 
 ### `lib/password-strength.ts`
 
