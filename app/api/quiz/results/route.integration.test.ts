@@ -13,6 +13,10 @@ const findMock = vi.fn()
 const sortMock = vi.fn()
 const leanMock = vi.fn()
 
+const findByIdMock = vi.fn()
+const selectMock = vi.fn()
+const userLeanMock = vi.fn()
+
 vi.mock('@/lib/mongoose', () => ({
   default: vi.fn().mockResolvedValue(undefined),
 }))
@@ -31,6 +35,26 @@ vi.mock('@/models/QuizResult', () => ({
   },
 }))
 
+// WAS-88: getUserIdFromRequest (exercised for real in this file, unlike
+// every other route test) now reads passwordChangedAt off the user before
+// trusting the session - mirrors the mock chain in lib/jwt.test.ts. Every
+// test here that reaches this call is a real user who's never reset their
+// password, so the default keeps their session valid and lets the existing
+// ownership-scoping assertions pass unchanged.
+vi.mock('@/models/User', () => ({
+  default: {
+    findById: (...args: unknown[]) => {
+      findByIdMock(...args)
+      return {
+        select: (...selectArgs: unknown[]) => {
+          selectMock(...selectArgs)
+          return { lean: () => userLeanMock() }
+        },
+      }
+    },
+  },
+}))
+
 const ORIGINAL_JWT_SECRET = process.env.JWT_SECRET
 const USER_A = '507f1f77bcf86cd799439011'
 const USER_B = '507f191e810c19729de860ea'
@@ -40,6 +64,10 @@ beforeEach(() => {
   findMock.mockClear()
   sortMock.mockClear()
   leanMock.mockReset()
+  findByIdMock.mockReset()
+  selectMock.mockReset()
+  userLeanMock.mockReset()
+  userLeanMock.mockResolvedValue({ passwordChangedAt: undefined })
 })
 
 afterEach(() => {
