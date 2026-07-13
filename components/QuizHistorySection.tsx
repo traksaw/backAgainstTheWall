@@ -13,13 +13,11 @@ import {
   ChevronRight,
   Clock,
   BarChart3,
-  Shield,
-  TrendingUp,
-  Target,
   CheckCircle,
   X,
 } from "lucide-react"
 import type { QuizResult } from "@/lib/quiz"
+import { getArchetypeIcon, getArchetypeColor } from "@/lib/quiz/archetypes"
 
 interface QuizHistorySectionProps {
   open: boolean
@@ -34,36 +32,6 @@ export function QuizHistorySection({ open, onOpenChange }: QuizHistorySectionPro
   const viewResultDetails = (result: QuizResult) => {
     setSelectedResult(result)
     setShowDetailModal(true)
-  }
-
-  const getArchetypeIcon = (archetype: string) => {
-    switch (archetype) {
-      case "Avoider":
-        return Shield
-      case "Gambler":
-        return TrendingUp
-      case "Realist":
-        return Target
-      case "Architect":
-        return Eye
-      default:
-        return Award
-    }
-  }
-
-  const getArchetypeColor = (archetype: string) => {
-    switch (archetype) {
-      case "Avoider":
-        return "bg-blue-100 text-blue-800 border-blue-200"
-      case "Gambler":
-        return "bg-red-100 text-red-800 border-red-200"
-      case "Realist":
-        return "bg-green-100 text-green-800 border-green-200"
-      case "Architect":
-        return "bg-purple-100 text-purple-800 border-purple-200"
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
-    }
   }
 
   const formatDate = (dateString: string | Date | undefined) => {

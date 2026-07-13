@@ -1,5 +1,76 @@
 // lib/quiz/archetypes.ts
+//
+// Canonical source of truth for archetype display (icon/color). Do not
+// re-copy these maps into components — import getArchetypeIcon /
+// getArchetypeColor / getArchetypeSolidColor from here instead (WAS-24).
+import { Shield, TrendingUp, Target, Eye, Award, LucideIcon } from 'lucide-react';
 import { ArchetypeResult, Archetype } from '@/types/quiz';
+
+export const ARCHETYPE_ICONS: Record<Archetype, LucideIcon> = {
+  Avoider: Shield,
+  Gambler: TrendingUp,
+  Realist: Target,
+  Architect: Eye,
+};
+
+export function getArchetypeIcon(archetype: string): LucideIcon {
+  return ARCHETYPE_ICONS[archetype as Archetype] ?? Award;
+}
+
+interface ArchetypeColorClasses {
+  /** bg-x-100 text-x-800 border-x-200 — list/detail badges */
+  badge: string;
+  /** bg-x-500 — solid avatar/dot fills */
+  solid: string;
+  /** text-x-600 — icon accent text */
+  text: string;
+  /** bg-x-100 — icon chip background */
+  bg: string;
+}
+
+// Tailwind's class scanner needs full literal strings per archetype — these
+// can't be built from a single hue name via template interpolation.
+export const ARCHETYPE_COLORS: Record<Archetype, ArchetypeColorClasses> = {
+  Avoider: {
+    badge: 'bg-blue-100 text-blue-800 border-blue-200',
+    solid: 'bg-blue-500',
+    text: 'text-blue-600',
+    bg: 'bg-blue-100',
+  },
+  Gambler: {
+    badge: 'bg-red-100 text-red-800 border-red-200',
+    solid: 'bg-red-500',
+    text: 'text-red-600',
+    bg: 'bg-red-100',
+  },
+  Realist: {
+    badge: 'bg-green-100 text-green-800 border-green-200',
+    solid: 'bg-green-500',
+    text: 'text-green-600',
+    bg: 'bg-green-100',
+  },
+  Architect: {
+    badge: 'bg-purple-100 text-purple-800 border-purple-200',
+    solid: 'bg-purple-500',
+    text: 'text-purple-600',
+    bg: 'bg-purple-100',
+  },
+};
+
+const DEFAULT_COLORS: ArchetypeColorClasses = {
+  badge: 'bg-gray-100 text-gray-800 border-gray-200',
+  solid: 'bg-gray-400',
+  text: 'text-gray-600',
+  bg: 'bg-gray-100',
+};
+
+export function getArchetypeColor(archetype: string): string {
+  return (ARCHETYPE_COLORS[archetype as Archetype] ?? DEFAULT_COLORS).badge;
+}
+
+export function getArchetypeSolidColor(archetype: string): string {
+  return (ARCHETYPE_COLORS[archetype as Archetype] ?? DEFAULT_COLORS).solid;
+}
 
 export const archetypeResults: Record<Archetype, ArchetypeResult> = {
   Avoider: {
