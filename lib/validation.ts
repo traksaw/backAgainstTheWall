@@ -17,7 +17,10 @@ export const signInSchema = z.object({
 
 export const signUpSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(1),
+  // WAS-88: this used to only be enforced client-side (signUpFormSchema
+  // below) - a request that skips the UI could set an arbitrarily weak
+  // password. Same rule, now also enforced at the API boundary.
+  password: z.string().min(8).regex(/(?=.*[a-zA-Z])(?=.*\d)/),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   zip_code: z.string().min(1),
@@ -58,7 +61,9 @@ export const requestResetSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   token: z.string().min(1),
-  password: z.string().min(1),
+  // WAS-88: matches signUpSchema's password rule - a reset shouldn't be able
+  // to set a weaker password than signup would have allowed.
+  password: z.string().min(8).regex(/(?=.*[a-zA-Z])(?=.*\d)/),
 })
 
 export const verifyEmailSchema = z.object({
