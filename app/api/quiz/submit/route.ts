@@ -34,13 +34,15 @@ export async function POST(req: NextRequest) {
       )
     }
     const { answers: quizAnswers, sessionId } = parsed.data
+    const answerCount = Object.keys(quizAnswers).length
 
-    // WAS-89: a real quiz attempt answers at most one question per real
-    // question - reject anything else instead of letting a client flood
-    // fabricated answers to inflate an archetype's total.
-    if (Object.keys(quizAnswers).length > quizQuestions.length) {
+    // WAS-89: a real quiz attempt answers at least one and at most one
+    // question per real question - reject anything outside that range
+    // instead of letting a client flood fabricated answers to inflate an
+    // archetype's total, or hit getWinningArchetype's all-zero-scores throw.
+    if (answerCount < 1 || answerCount > quizQuestions.length) {
       return NextResponse.json(
-        { error: "Invalid request body", details: "Too many answers submitted" },
+        { error: "Invalid request body", details: "answers must contain between 1 and " + quizQuestions.length + " entries" },
         { status: 400 }
       )
     }

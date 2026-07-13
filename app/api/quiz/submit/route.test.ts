@@ -142,4 +142,11 @@ describe('POST /api/quiz/submit (WAS-89: recompute archetype/score server-side, 
     expect(res.status).toBe(400)
     expect(createMock).not.toHaveBeenCalled()
   })
+
+  it('rejects an empty answers object with a 400 instead of a 500 from the scoring guard', async () => {
+    const res = await POST(makeRequest({ answers: {}, sessionId: 'session-e' }))
+
+    expect(res.status).toBe(400)
+    expect(createMock).not.toHaveBeenCalled()
+  })
 })
