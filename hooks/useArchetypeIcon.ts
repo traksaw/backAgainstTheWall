@@ -1,29 +1,23 @@
 // hooks/useArchetypeIcon.ts
 import { useMemo } from 'react'
-import { Shield, TrendingUp, Target, Eye, Award } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import type { Archetype } from '@/types/quiz'
+import {
+  getArchetypeIcon as getIcon,
+  ARCHETYPE_COLORS,
+} from '@/lib/quiz/archetypes'
+
+const ARCHETYPE_DESCRIPTIONS: Record<Archetype, string> = {
+  Avoider: "Security-focused financial approach",
+  Gambler: "Risk-taking financial approach",
+  Realist: "Balanced financial approach",
+  Architect: "Systematic financial approach",
+}
 
 export function useArchetypeIcon() {
   /**
    * Get the appropriate icon component for an archetype
    */
-  const getArchetypeIcon = useMemo(() => {
-    return (archetype: string): LucideIcon => {
-      switch (archetype) {
-        case "Avoider":
-          return Shield
-        case "Gambler":
-          return TrendingUp
-        case "Realist":
-          return Target
-        case "Architect":
-          return Eye
-        default:
-          return Award
-      }
-    }
-  }, [])
+  const getArchetypeIcon = useMemo(() => getIcon, [])
 
   /**
    * Get icon with additional metadata
@@ -31,35 +25,13 @@ export function useArchetypeIcon() {
   const getArchetypeIconWithMeta = useMemo(() => {
     return (archetype: string) => {
       const IconComponent = getArchetypeIcon(archetype)
-      
-      const metadata = {
-        Avoider: {
-          color: "text-blue-600",
-          bgColor: "bg-blue-100",
-          description: "Security-focused financial approach"
-        },
-        Gambler: {
-          color: "text-red-600", 
-          bgColor: "bg-red-100",
-          description: "Risk-taking financial approach"
-        },
-        Realist: {
-          color: "text-green-600",
-          bgColor: "bg-green-100", 
-          description: "Balanced financial approach"
-        },
-        Architect: {
-          color: "text-purple-600",
-          bgColor: "bg-purple-100",
-          description: "Systematic financial approach"
-        }
-      }
+      const colors = ARCHETYPE_COLORS[archetype as Archetype]
 
       return {
         icon: IconComponent,
-        color: metadata[archetype as keyof typeof metadata]?.color || "text-gray-600",
-        bgColor: metadata[archetype as keyof typeof metadata]?.bgColor || "bg-gray-100",
-        description: metadata[archetype as keyof typeof metadata]?.description || "Financial approach"
+        color: colors?.text || "text-gray-600",
+        bgColor: colors?.bg || "bg-gray-100",
+        description: ARCHETYPE_DESCRIPTIONS[archetype as Archetype] || "Financial approach"
       }
     }
   }, [getArchetypeIcon])

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { middleware } from './middleware'
 
@@ -69,5 +69,35 @@ describe('middleware (WAS-17: gate the exposed Sanity Studio route)', () => {
     // NextResponse.next() carries no explicit status override - 200 is the
     // "let it through" signal from this middleware.
     expect(res.status).toBe(200)
+  })
+})
+
+describe('middleware CSP script-src (WAS-33/WAS-24: dev-mode eval carve-out)', () => {
+  const ORIGINAL_NODE_ENV = process.env.NODE_ENV
+
+  afterEach(() => {
+    vi.stubEnv('NODE_ENV', ORIGINAL_NODE_ENV ?? 'test')
+  })
+
+  function cspFor(nodeEnv: string) {
+    vi.stubEnv('NODE_ENV', nodeEnv)
+    const res = middleware(new NextRequest('http://localhost/'))
+    return res.headers.get('Content-Security-Policy') ?? ''
+  }
+
+  it('omits unsafe-eval in a production build, so the deployed policy stays strict', () => {
+    expect(cspFor('production')).not.toContain('unsafe-eval')
+  })
+
+  it('adds unsafe-eval outside production, so next dev\'s React Refresh runtime can hydrate', () => {
+    expect(cspFor('development')).toContain('unsafe-eval')
+  })
+
+  it('keeps nonce and strict-dynamic in both modes', () => {
+    for (const env of ['production', 'development']) {
+      const csp = cspFor(env)
+      expect(csp).toMatch(/'nonce-[^']+'/)
+      expect(csp).toContain('strict-dynamic')
+    }
   })
 })

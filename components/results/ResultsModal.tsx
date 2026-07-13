@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { QuizResult, Archetype } from "@/types/quiz"
 import { useState, useRef, useEffect } from "react"
 import { FadeIn, FadeInUp, FadeInScale } from "@/components/ui/fade-in"
-import { archetypeResults } from "@/lib/quiz/archetypes"
+import { archetypeResults, getArchetypeSolidColor } from "@/lib/quiz/archetypes"
 import type { ArchetypeResult } from "@/types/quiz"
 
 interface ResultsModalProps {
@@ -93,17 +93,7 @@ export function ResultsModal({
             <FadeIn duration={800}>
               <div className="text-center space-y-4">
                 <div className="relative mx-auto w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center">
-                  {(() => {
-                    const colorMap: Record<Archetype, string> = {
-                      Avoider: 'bg-blue-500',
-                      Gambler: 'bg-red-500',
-                      Realist: 'bg-green-500',
-                      Architect: 'bg-yellow-400',
-                    }
-                    return (
-                      <div className={`w-12 h-12 rounded-full ${colorMap[latestResult.archetype]}`} />
-                    )
-                  })()}
+                  <div className={`w-12 h-12 rounded-full ${getArchetypeSolidColor(latestResult.archetype)}`} />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-800">

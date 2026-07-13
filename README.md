@@ -103,6 +103,18 @@ The quiz identifies one of four financial personality types:
    BLOB_READ_WRITE_TOKEN=your_blob_token
    ```
 
+   **Optional — `scripts/upload-video.mjs`:** re-uploads
+   `public/videos/Ambitious_compatible.mp4` to Vercel Blob (the URL
+   `VideoPlayer` reads is hardcoded to that Blob store's fixed pathname, so
+   this overwrites the live asset in place). It calls the `@vercel/blob`
+   SDK directly with `BLOB_READ_WRITE_TOKEN` rather than going through an
+   API route — a Vercel serverless function's request body is capped at
+   4.5MB, far under this video's size, so a server-upload endpoint could
+   never carry the file:
+   ```bash
+   node scripts/upload-video.mjs
+   ```
+
    **Going to production (email):** the `EMAIL_FROM`/`RESEND_API_KEY`
    values above work as-is in dev against Resend's `onboarding@resend.dev`
    sandbox address, which only delivers to the Resend account owner's own
