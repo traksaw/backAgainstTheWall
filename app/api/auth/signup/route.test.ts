@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { NextResponse } from 'next/server'
 import { POST } from './route'
 
 const signUpMock = vi.fn()
@@ -10,6 +11,18 @@ vi.mock('@/lib/auth', () => ({
 
 vi.mock('@/lib/jwt', () => ({
   signToken: vi.fn().mockReturnValue('signed-token'),
+}))
+
+const checkRateLimitMock = vi.fn()
+vi.mock('@/lib/rate-limit', () => ({
+  authLimiter: {},
+  checkRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
+  getClientIp: () => '127.0.0.1',
+  tooManyRequests: (retryAfterSeconds: number) =>
+    NextResponse.json(
+      { error: `Too many attempts. Try again in ${retryAfterSeconds} seconds.` },
+      { status: 429, headers: { 'Retry-After': String(retryAfterSeconds) } }
+    ),
 }))
 
 function makeRequest(body: unknown) {
@@ -40,6 +53,17 @@ const validPayload = {
 describe('POST /api/auth/signup (WAS-8: reject non-string bodies before they reach Mongoose)', () => {
   beforeEach(() => {
     signUpMock.mockReset()
+    checkRateLimitMock.mockReset().mockResolvedValue({ allowed: true })
+  })
+
+  it('returns 429 with Retry-After when rate limited, without calling signUp', async () => {
+    checkRateLimitMock.mockResolvedValueOnce({ allowed: false, retryAfterSeconds: 42 })
+
+    const res = await POST(makeRequest(validPayload))
+
+    expect(res.status).toBe(429)
+    expect(res.headers.get('Retry-After')).toBe('42')
+    expect(signUpMock).not.toHaveBeenCalled()
   })
 
   it('rejects a NoSQL-operator email payload with 400 instead of querying the database', async () => {

@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server"
 import { AuthService } from "@/lib/auth"
 import { requestResetSchema } from "@/lib/validation"
+import { checkRateLimit, emailLimiter, getClientIp, tooManyRequests } from "@/lib/rate-limit"
 
 export async function POST(req: Request) {
+  const ipCheck = await checkRateLimit(emailLimiter, [`ip:${getClientIp(req)}`])
+  if (!ipCheck.allowed) {
+    return tooManyRequests(ipCheck.retryAfterSeconds)
+  }
+
   let body: unknown
   try {
     body = await req.json()
@@ -16,6 +22,11 @@ export async function POST(req: Request) {
       { error: "Invalid request body", details: parsed.error.flatten() },
       { status: 400 }
     )
+  }
+
+  const emailCheck = await checkRateLimit(emailLimiter, [`email:${parsed.data.email}`])
+  if (!emailCheck.allowed) {
+    return tooManyRequests(emailCheck.retryAfterSeconds)
   }
 
   // WAS-32: always return the same generic response whether or not the

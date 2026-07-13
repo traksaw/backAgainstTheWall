@@ -3,8 +3,14 @@ import * as Sentry from "@sentry/nextjs"
 import { AuthService } from "@/lib/auth"
 import { signToken } from "@/lib/jwt"
 import { signInSchema } from "@/lib/validation"
+import { authLimiter, checkRateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit"
 
 export async function POST(req: Request) {
+  const ipCheck = await checkRateLimit(authLimiter, [`ip:${getClientIp(req)}`])
+  if (!ipCheck.allowed) {
+    return tooManyRequests(ipCheck.retryAfterSeconds)
+  }
+
   let body: unknown
   try {
     body = await req.json()
@@ -21,6 +27,11 @@ export async function POST(req: Request) {
       )
     }
     const { email, password } = parsed.data
+
+    const emailCheck = await checkRateLimit(authLimiter, [`email:${email}`])
+    if (!emailCheck.allowed) {
+      return tooManyRequests(emailCheck.retryAfterSeconds)
+    }
 
     const user = await AuthService.signIn(email, password)
     
