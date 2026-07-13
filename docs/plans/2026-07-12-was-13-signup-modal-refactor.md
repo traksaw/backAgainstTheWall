@@ -87,14 +87,17 @@ Open `lib/validation.ts` and insert this immediately after the `signUpSchema` bl
 export const signUpFormSchema = signUpSchema
   .omit({ password: true })
   .extend({
-    firstName: signUpSchema.shape.firstName.min(2, "First name must be at least 2 characters"),
-    lastName: signUpSchema.shape.lastName.min(2, "Last name must be at least 2 characters"),
-    zip_code: signUpSchema.shape.zip_code.regex(
-      /^\d{5}(-\d{4})?$/,
-      "Please enter a valid zip code (e.g., 12345 or 12345-6789)"
-    ),
+    firstName: z.string().min(1, "First name is required").min(2, "First name must be at least 2 characters"),
+    lastName: z.string().min(1, "Last name is required").min(2, "Last name must be at least 2 characters"),
+    email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
+    zip_code: z
+      .string()
+      .min(1, "Zip code is required")
+      .regex(/^\d{5}(-\d{4})?$/, "Please enter a valid zip code (e.g., 12345 or 12345-6789)"),
+    occupationStatus: z.string().min(1, "Please select your current status"),
     password: z
       .string()
+      .min(1, "Password is required")
       .min(8, "Password must be at least 8 characters")
       .regex(/(?=.*[a-zA-Z])(?=.*\d)/, "Password must contain at least one letter and one number"),
     passwordConfirmation: z.string().min(1, "Please confirm your password"),
@@ -110,7 +113,18 @@ export const signUpFormSchema = signUpSchema
 export type SignUpFormValues = z.infer<typeof signUpFormSchema>
 ```
 
-`email` and `occupationStatus` deliberately reuse `signUpSchema.shape` unchanged (no `.extend()` override) — they already match today's client-side rules (`.email()` / `min(1)`).
+Every field is defined fresh in `.extend()` — do NOT chain new checks onto
+`signUpSchema.shape.X` (e.g. `signUpSchema.shape.firstName.min(2, ...)`).
+`signUpSchema`'s fields already carry an earlier, unlabeled `min(1)` (or
+bare `.email()`); a later chained check fires *after* that inherited one, so
+for the exact empty/invalid case the new message exists to handle, the
+inherited check fails first and its generic Zod message wins instead — the
+intended message never surfaces (`@hookform/resolvers/zod` only shows the
+first issue per field). `.omit({password: true})` still ties this schema's
+keys to `signUpSchema` (a compile error if a key ever goes missing), which
+is the reuse that matters here — it's just not reuse of the validators
+themselves. See the design doc's "Why not chain onto `signUpSchema.shape.X`"
+note for the full empirical trace.
 
 **Step 2: Typecheck**
 

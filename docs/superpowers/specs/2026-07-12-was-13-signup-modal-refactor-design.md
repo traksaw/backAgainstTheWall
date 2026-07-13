@@ -91,22 +91,28 @@ SignUpModal (client)
 
 ### Zod schema (`lib/validation.ts`, next to `signUpSchema`)
 
-Reuses `signUpSchema`'s field validators (not a parallel hand-typed copy) via
-`.shape`, overrides the fields that need client-only strictness, adds the two
-UI-only fields, and cross-validates password match:
+**Revised during implementation (Task 2 review caught a real bug in the
+original version of this section — see below).** `.omit({password: true})`
+keeps this structurally tied to `signUpSchema` (TypeScript errors if
+`signUpSchema` ever drops one of these keys), but every field is defined
+fresh in `.extend()` rather than chaining extra checks onto
+`signUpSchema.shape.X`:
 
 ```ts
 export const signUpFormSchema = signUpSchema
   .omit({ password: true })
   .extend({
-    firstName: signUpSchema.shape.firstName.min(2, "First name must be at least 2 characters"),
-    lastName: signUpSchema.shape.lastName.min(2, "Last name must be at least 2 characters"),
-    zip_code: signUpSchema.shape.zip_code.regex(
-      /^\d{5}(-\d{4})?$/,
-      "Please enter a valid zip code (e.g., 12345 or 12345-6789)"
-    ),
+    firstName: z.string().min(1, "First name is required").min(2, "First name must be at least 2 characters"),
+    lastName: z.string().min(1, "Last name is required").min(2, "Last name must be at least 2 characters"),
+    email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
+    zip_code: z
+      .string()
+      .min(1, "Zip code is required")
+      .regex(/^\d{5}(-\d{4})?$/, "Please enter a valid zip code (e.g., 12345 or 12345-6789)"),
+    occupationStatus: z.string().min(1, "Please select your current status"),
     password: z
       .string()
+      .min(1, "Password is required")
       .min(8, "Password must be at least 8 characters")
       .regex(/(?=.*[a-zA-Z])(?=.*\d)/, "Password must contain at least one letter and one number"),
     passwordConfirmation: z.string().min(1, "Please confirm your password"),
@@ -122,8 +128,26 @@ export const signUpFormSchema = signUpSchema
 export type SignUpFormValues = z.infer<typeof signUpFormSchema>
 ```
 
-`occupationStatus` and `email` reuse `signUpSchema.shape` unchanged (already
-`min(1)` / `.email()`, matching current client behavior exactly).
+**Why not chain onto `signUpSchema.shape.X`** (the original version of this
+schema did, for `firstName`/`lastName`/`zip_code`, and left `email`/
+`occupationStatus` fully inherited unchanged): `signUpSchema`'s fields
+already carry an earlier, unlabeled `.min(1)` (or, for `email`, a bare
+`.email()`). Zod evaluates a chain's checks in the order they were added and
+collects every failing issue for a field; `@hookform/resolvers/zod` then
+surfaces only the *first* issue per field path. Chaining a new, better
+message onto an inherited field adds it as a *later* check — so for the
+exact case that message exists to handle (an empty/invalid input), the
+earlier inherited check fails first and its generic, unlabeled Zod message
+("String must contain at least 1 character(s)") wins instead, silently
+burying the intended copy. `occupationStatus` was worse: reused with zero
+override, so its hand-rolled message ("Please select your current status")
+was never wired in at all. Defining every field fresh in `.extend()` avoids
+inheriting any earlier check, so chained `.min()`/`.regex()`/`.email()`
+calls fire in the intended order and their messages are reachable. This was
+caught empirically (by executing the schema against `zod@3.25.76`) during
+Task 2's review, not by inspection — a reminder that message-ordering bugs
+in a validation chain don't show up from reading the chain, only from
+running it against the failure case each check exists for.
 
 ### `hooks/useSignUpForm.ts`
 
