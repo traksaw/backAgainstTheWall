@@ -92,6 +92,13 @@ production, not just a lint warning:
   iframe by another site. Included because the ticket is explicitly titled
   "baseline HTTP security headers," and these are the conventional
   baseline beyond the four named header types.
+- **`Permissions-Policy` is included, resolving an inconsistency in the
+  ticket itself:** the Summary lists it as a missing header, but the
+  numbered Implementation Steps and DoD checklist omit it. Added
+  `Permissions-Policy: camera=(), microphone=(), geolocation=()` globally -
+  the domain inventory above confirmed the app uses none of these
+  browser APIs, so disabling them is zero-risk and closes the exact gap
+  the Summary called out.
 - **`frame-ancestors 'none'` (CSP) is included alongside `X-Frame-Options:
   DENY`**, not instead of it. `frame-ancestors` supersedes
   `X-Frame-Options` in modern browsers, but the ticket explicitly asks for
@@ -121,6 +128,7 @@ existing `/videos/:path*` one, which is untouched):
    X-Content-Type-Options: nosniff
    Referrer-Policy: strict-origin-when-cross-origin
    Strict-Transport-Security: max-age=63072000; includeSubDomains
+   Permissions-Policy: camera=(), microphone=(), geolocation=()
    Content-Security-Policy:
      default-src 'self';
      script-src 'self';
@@ -162,10 +170,10 @@ No unit-testable surface here (this is server-config, not application
 code) - verification is manual, per the ticket's own DoD:
 
 1. Deploy to a Vercel preview.
-2. `curl -I` the preview URL and confirm all five headers
+2. `curl -I` the preview URL and confirm all six headers
    (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`,
-   `Strict-Transport-Security`, `Content-Security-Policy`) are present with
-   the exact values above.
+   `Strict-Transport-Security`, `Permissions-Policy`,
+   `Content-Security-Policy`) are present with the exact values above.
 3. `curl -I` `/sanity-studio` on the same preview and confirm its
    `Content-Security-Policy` differs from the root path's (Studio's
    permissive one), while the other four headers are unchanged.
