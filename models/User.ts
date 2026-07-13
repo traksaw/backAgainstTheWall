@@ -14,6 +14,7 @@ export interface IUser extends Document {
   resetPasswordExpires?: Date
   emailVerificationTokenHash?: string
   emailVerificationExpires?: Date
+  passwordChangedAt?: Date
   createdAt: Date
   updatedAt: Date
 }
@@ -46,6 +47,11 @@ const UserSchema = new Schema<IUser>(
     resetPasswordExpires: Date,
     emailVerificationTokenHash: { type: String, select: false },
     emailVerificationExpires: Date,
+    // WAS-88: unlike the token-hash fields above, this isn't a secret - it's
+    // read on every authenticated request (lib/jwt.ts getUserIdFromRequest)
+    // to invalidate JWTs issued before the last password reset, so it stays
+    // selected by default rather than requiring every caller to opt back in.
+    passwordChangedAt: Date,
   },
   {
     timestamps: true,

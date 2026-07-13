@@ -154,6 +154,10 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(newPassword, 10)
     await User.findByIdAndUpdate(user._id, {
       passwordHash,
+      // WAS-88: any JWT issued before this moment must stop being accepted -
+      // see getUserIdFromRequest in lib/jwt.ts, which checks a token's iat
+      // against this field.
+      passwordChangedAt: new Date(),
       $unset: { resetPasswordTokenHash: 1, resetPasswordExpires: 1 },
     })
   }

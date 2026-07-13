@@ -243,7 +243,7 @@ describe('AuthService.resetPassword (WAS-32)', () => {
     expect(findByIdAndUpdateMock).not.toHaveBeenCalled()
   })
 
-  it('hashes the new password and clears the reset token fields on success', async () => {
+  it('hashes the new password, sets passwordChangedAt, and clears the reset token fields on success', async () => {
     findOneMock.mockResolvedValue({ _id: 'user-a' })
     findByIdAndUpdateMock.mockResolvedValue(undefined)
 
@@ -257,6 +257,7 @@ describe('AuthService.resetPassword (WAS-32)', () => {
       'user-a',
       expect.objectContaining({
         passwordHash: 'hashed-password',
+        passwordChangedAt: expect.any(Date),
         $unset: { resetPasswordTokenHash: 1, resetPasswordExpires: 1 },
       })
     )
