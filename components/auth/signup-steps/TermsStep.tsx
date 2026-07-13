@@ -53,7 +53,7 @@ export function TermsStep() {
         control={control}
         name="acceptTerms"
         render={({ field, fieldState }) => (
-          <FormItem>
+          <FormItem className="space-y-4">
             <div className="flex items-start space-x-3">
               <FormControl>
                 <Checkbox
