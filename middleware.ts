@@ -65,8 +65,19 @@ export function middleware(req: NextRequest) {
   // is blocked - while letting Next's own scripts (and the chunks they
   // dynamically load) run. app/layout.tsx reads this same nonce via
   // headers() to opt the render into using it for Next's own inline scripts.
+  //
+  // `next dev`'s webpack HMR/React Refresh runtime calls eval() to apply
+  // updates - confirmed live: with no carve-out, every route hydrated to a
+  // blank page (`EvalError: ... violates ... 'unsafe-eval' is not an
+  // allowed source`). 'unsafe-eval' only loosens script-src, and only when
+  // NODE_ENV isn't 'production' (next build/start), so the deployed CSP is
+  // unchanged from the strict policy above.
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
-  const csp = `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'strict-dynamic'; style-src 'self' 'unsafe-inline'; img-src 'self' data: cdn.sanity.io *.public.blob.vercel-storage.com; media-src 'self' *.public.blob.vercel-storage.com; font-src 'self'; connect-src 'self' https://formspree.io https://o4511723969904640.ingest.us.sentry.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none';`
+  const isProdBuild = process.env.NODE_ENV === 'production'
+  const scriptSrc = isProdBuild
+    ? `'self' 'nonce-${nonce}' 'strict-dynamic'`
+    : `'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'`
+  const csp = `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline'; img-src 'self' data: cdn.sanity.io *.public.blob.vercel-storage.com; media-src 'self' *.public.blob.vercel-storage.com; font-src 'self'; connect-src 'self' https://formspree.io https://o4511723969904640.ingest.us.sentry.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none';`
 
   const requestHeaders = new Headers(req.headers)
   requestHeaders.set('x-nonce', nonce)
