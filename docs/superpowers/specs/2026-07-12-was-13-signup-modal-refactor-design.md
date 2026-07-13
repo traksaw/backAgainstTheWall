@@ -139,6 +139,7 @@ function useSignUpForm({ onOpenChange, onSuccess }: {
   const { signUp } = useAuth()
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpFormSchema),
+    shouldUnregister: false, // step components unmount on step change; values must survive that (see "RHF gotchas" below)
     defaultValues: { email: "", password: "", passwordConfirmation: "", firstName: "", lastName: "", zip_code: "", occupationStatus: "", acceptTerms: false },
   })
   const [currentStep, setCurrentStep] = useState(1)
@@ -192,10 +193,32 @@ Each step is presentational and pulls `control`/`watch` off
   occupationStatus `FormField`s. Owns local `showPassword`/
   `showPasswordConfirm` toggle state (pure UI, not form data) and the
   strength meter, computed via `useWatch({ name: "password" })` +
-  `lib/password-strength.ts`.
+  `lib/password-strength.ts`. `occupationStatus` stays a **native `<select>`**
+  (not the styled `components/ui/select.tsx` Radix component) — wired as
+  `<select value={field.value} onChange={field.onChange}>`, matching today's
+  markup exactly. Swapping to the Radix `Select` would change the rendered
+  markup/visuals and is out of scope.
 - **`TermsStep.tsx`** — `acceptTerms` `FormField` (checkbox), owns local
   `showTermsModal`/`showPrivacyModal` state and renders `TermsModal`/
-  `PrivacyModal`, same terms copy block as today.
+  `PrivacyModal`, same terms copy block as today. `components/ui/checkbox`'s
+  `onCheckedChange` is Radix-typed (`boolean | "indeterminate"`), but the
+  schema field is a plain `boolean` — wire it as
+  `onCheckedChange={(checked) => field.onChange(checked === true)}` to coerce.
+
+### RHF gotchas this design depends on
+
+- **`shouldUnregister: false`** (set explicitly in `useForm()`, not left to
+  the default) — step components conditionally unmount
+  (`{currentStep === 1 && <BasicInfoStep />}`), and RHF drops a field's value
+  when it unmounts if `shouldUnregister` is `true`. Without this pinned
+  explicitly, Back navigation would silently lose step 1/2 data the moment
+  RHF's default changes or someone "cleans up" the config — a direct
+  regression against the "identical from a user's perspective" goal, so it's
+  pinned rather than relied on implicitly.
+- `FormField`'s `Controller` is passed `control={form.control}` explicitly
+  (obtained via `useFormContext()` inside each step component) — this is the
+  standard shadcn pattern and avoids threading `control` down as a prop from
+  `SignUpModal`.
 
 ### `lib/password-strength.ts`
 
@@ -233,6 +256,14 @@ calls `resetForm()` on close, same as today.
   form.tsx` infra later, but converting them isn't in scope here.
 - Adding new validation rules beyond what already exists (e.g. no new
   password complexity requirements) — purely a structural refactor.
+- **Automated UI test coverage for the sign-up flow.** The ticket's DoD only
+  requires manual browser verification, and no test file exists today to
+  extend. This is a deliberate, called-out tradeoff, not an oversight: an
+  auth-adjacent flow with zero regression coverage is a real gap, but adding
+  a first component/e2e test for it is materially more scope than "refactor
+  onto existing infra." Flagged here so it's a conscious choice rather than
+  something that quietly fell out of scope — worth a follow-up ticket if
+  `SignUpModal` sees more churn.
 
 ## Verification plan
 
