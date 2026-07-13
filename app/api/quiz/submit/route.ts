@@ -6,6 +6,9 @@ import connectDB from "@/lib/mongoose"
 import mongoose from "mongoose"
 import { getUserIdFromRequest } from "@/lib/jwt"
 import { quizSubmitSchema } from "@/lib/validation"
+import { calculateQuizScores, getWinningArchetype } from "@/lib/quiz/utils"
+import { quizQuestions } from "@/lib/quiz/questions"
+import type { QuizAnswer } from "@/types/quiz"
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,36 +33,44 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
-    const { answers: quizAnswers, sessionId, archetype, score } = parsed.data
+    const { answers: quizAnswers, sessionId } = parsed.data
+
+    // WAS-89: a real quiz attempt answers at most one question per real
+    // question - reject anything else instead of letting a client flood
+    // fabricated answers to inflate an archetype's total.
+    if (Object.keys(quizAnswers).length > quizQuestions.length) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: "Too many answers submitted" },
+        { status: 400 }
+      )
+    }
+
+    // quizAnswerSchema only validates the fields scoring needs (archetype,
+    // points); QuizAnswer also carries display-only fields (text, etc.) that
+    // calculateQuizScores/getWinningArchetype never read.
+    const scorableAnswers = quizAnswers as unknown as Record<number, QuizAnswer>
+
+    // Recompute archetype/score server-side (WAS-89) - never trust client-supplied values
+    const scores = calculateQuizScores(scorableAnswers)
+    const archetype = getWinningArchetype(scores, scorableAnswers)
+    const score = scores[archetype]
 
     // Calculate structured answers for the database
     const answerStructure = {
       responses: quizAnswers,
-      scores: {
-        Avoider: 0,
-        Gambler: 0, 
-        Realist: 0,
-        Architect: 0
-      },
+      scores,
       totalQuestions: Object.keys(quizAnswers).length,
       completedAt: new Date().toISOString()
     }
 
-    // Calculate scores from answers
-    Object.values(quizAnswers).forEach((answer) => {
-      if (answer.archetype && answer.points) {
-        answerStructure.scores[answer.archetype as keyof typeof answerStructure.scores] += answer.points
-      }
-    })
-
     console.log("Calculated archetype scores:", answerStructure.scores)
-    
+
     const quizResultData = {
       userId: new mongoose.Types.ObjectId(userId),
       answers: answerStructure,
       sessionId: sessionId || undefined,
-      archetype: archetype,
-      score: Number(score),
+      archetype,
+      score,
     }
 
     console.log("Creating quiz result with data:", {
