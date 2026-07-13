@@ -15,12 +15,19 @@ export interface SignUpData {
   occupationStatus: string
 }
 
-// WAS-6: never spread caller-supplied updates directly into a Mongo update -
-// same mass-assignment bug as the quiz-result endpoint
+// WAS-6/WAS-35: never spread caller-supplied updates directly into a Mongo
+// update - same mass-assignment bug as the quiz-result endpoint
 // (app/api/quiz/[id]/update). A generic profile update must never be able to
 // touch passwordHash or email: password changes need their own
 // current-password-verified flow, and email changes need their own
 // verification flow. Neither exists yet, so neither belongs here.
+//
+// Lesson (WAS-35): whitelist the updatable fields here, at the method's
+// definition, not at each call site. A mass-update method with no whitelist
+// is an account-takeover bug waiting for a route to wire it up - it doesn't
+// matter that nothing calls it today. Any future bulk/generic update method
+// (profile, settings, admin edits, etc.) must define its field whitelist up
+// front, before it has any caller, on the same principle.
 const ALLOWED_PROFILE_UPDATE_FIELDS = [
   "first_name",
   "last_name",
