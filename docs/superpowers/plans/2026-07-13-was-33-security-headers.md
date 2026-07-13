@@ -14,8 +14,9 @@
 - HSTS: `max-age=63072000; includeSubDomains` — no `preload` directive.
 - CSP is scoped per-route: one strict global policy, one separate full-replacement policy for `/sanity-studio/:path*` only. Do not merge them into a single permissive global policy.
 - Ship the CSP enforcing (`Content-Security-Policy` header) directly — no `Content-Security-Policy-Report-Only` rollout phase.
-- Exact global CSP value (single-line, `; `-separated):
+- Exact global CSP value as first implemented in Task 1 (single-line, `; `-separated) - **superseded by Task 3's nonce-based `script-src`, see below; Task 1's version is what actually shipped in that commit and is kept here for the historical record**:
   `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: cdn.sanity.io *.public.blob.vercel-storage.com; media-src 'self' *.public.blob.vercel-storage.com; font-src 'self'; connect-src 'self' https://formspree.io https://o4511723969904640.ingest.us.sentry.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none';`
+- Task 3 real (working) global CSP shape - `script-src` becomes `'self' 'nonce-<per-request-value>' 'strict-dynamic'`, generated in `middleware.ts`, not a static string in `next.config.mjs` - every other directive is unchanged from Task 1's value above.
 - Exact `/sanity-studio/:path*` CSP value:
   `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: cdn.sanity.io *.public.blob.vercel-storage.com; font-src 'self' data:; connect-src 'self' https://*.api.sanity.io wss://*.api.sanity.io https://cdn.sanity.io https://apicdn.sanity.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none';`
 - Other exact header values for the global entry: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=63072000; includeSubDomains`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`.
@@ -196,16 +197,249 @@ With browser devtools console open, against the preview URL:
 
 If any of these fail with a CSP violation in the console, note the exact blocked domain/directive from the violation report, update the relevant `next.config.mjs` CSP value (global or Studio-specific, whichever route failed), commit the fix, and re-verify from Step 3.
 
+**Real outcome:** this step found the app renders completely blank on every non-Studio route - `script-src 'self'` blocks Next.js App Router's own inline hydration `<script>` tags. This isn't a missing-domain tweak; it needed Task 3 below (a nonce-based CSP, decided with the user rather than silently patched). After Task 3 lands, re-run this Step 3 and Step 4 in full against the new preview build before continuing to Step 5.
+
 - [ ] **Step 5: Confirm the DoD's "lesson saved" item**
 
-Confirm `docs/superpowers/specs/2026-07-13-was-33-security-headers-design.md`'s "Current state" and "Decisions" sections already document which domains were allowlisted and why (they do, from the brainstorming phase) - no further action needed. If Step 4 required a CSP fix, add a short note to the spec's "Decisions" section recording what was actually missing and why, so the lesson reflects reality rather than just the pre-deploy guess.
+Confirm `docs/superpowers/specs/2026-07-13-was-33-security-headers-design.md`'s "Current state", "Post-deploy finding", and "Decisions" sections already document which domains were allowlisted and why, and the nonce-based `script-src` fix and its cause (they do, from the brainstorming phase and the Task 2/3 finding) - no further action needed.
+
+---
+
+### Task 3: Fix `script-src` to a nonce-based CSP via `middleware.ts`
+
+**Files:**
+- Modify: `middleware.ts`
+- Modify: `next.config.mjs`
+- Modify: `app/layout.tsx`
+
+**Interfaces:**
+- Consumes: nothing from earlier tasks beyond the CSP shape from Task 1.
+- Produces: no exported interface changes. `middleware.ts`'s `matcher` broadens from Studio-only to all routes; its existing Basic Auth behavior for `/sanity-studio` must be provably unchanged (same 401/500 responses in the same cases).
+
+Read the spec's new "Post-deploy finding" section first - it has the full root-cause explanation and the exact reasoning for choosing nonce+`strict-dynamic` over `'unsafe-inline'`.
+
+- [ ] **Step 1: Remove the global CSP entry from `next.config.mjs`**
+
+In `next.config.mjs`, remove just the `Content-Security-Policy` header object from the `/:path*` entry added in Task 1 (keep the other five headers there - `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Strict-Transport-Security`, `Permissions-Policy` - untouched). The `/sanity-studio/:path*` entry (its own separate `Content-Security-Policy`) is untouched - Studio's existing `'unsafe-inline'`/`'unsafe-eval'` already tolerates Next's inline bootstrap scripts, so it doesn't need a nonce.
+
+The `/:path*` entry's `headers` array should end up as:
+
+```js
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+```
+
+- [ ] **Step 2: Rewrite `middleware.ts` to generate a per-request nonce and set the CSP for non-Studio routes**
+
+Replace the full contents of `middleware.ts` with:
+
+```ts
+import { createHash, timingSafeEqual } from 'crypto'
+import { NextRequest, NextResponse } from 'next/server'
+
+// WAS-17: /sanity-studio was reachable by anyone who found the URL, protected
+// only by Sanity's own login on a route with no app-level gate. This app has
+// no admin/role concept of its own (single-operator content editor), so a
+// full session-auth integration would be overkill for what's really needed
+// here - a basic access gate before the route is even served.
+function unauthorized() {
+  return new NextResponse('Authentication required', {
+    status: 401,
+    headers: { 'WWW-Authenticate': 'Basic realm="Sanity Studio"' },
+  })
+}
+
+// Hashing to a fixed length before comparing means timingSafeEqual never sees
+// mismatched buffer lengths, so a plain !== check on user-supplied credentials
+// can't leak how much of the secret was guessed correctly via response timing.
+function safeEqual(a: string, b: string) {
+  const aHash = createHash('sha256').update(a).digest()
+  const bHash = createHash('sha256').update(b).digest()
+  return timingSafeEqual(aHash, bHash)
+}
+
+function studioAuthCheck(req: NextRequest): NextResponse | null {
+  const username = process.env.SANITY_STUDIO_USERNAME
+  const password = process.env.SANITY_STUDIO_PASSWORD
+
+  if (!username || !password) {
+    // Fail closed: an unconfigured gate must not mean "no gate."
+    return new NextResponse('Sanity Studio access is not configured', { status: 500 })
+  }
+
+  const authHeader = req.headers.get('authorization')
+  if (!authHeader?.startsWith('Basic ')) {
+    return unauthorized()
+  }
+
+  const decoded = Buffer.from(authHeader.slice('Basic '.length), 'base64').toString('utf-8')
+  const separatorIndex = decoded.indexOf(':')
+  const user = separatorIndex === -1 ? decoded : decoded.slice(0, separatorIndex)
+  const pass = separatorIndex === -1 ? '' : decoded.slice(separatorIndex + 1)
+
+  if (!safeEqual(user, username) || !safeEqual(pass, password)) {
+    return unauthorized()
+  }
+
+  return null
+}
+
+export function middleware(req: NextRequest) {
+  if (req.nextUrl.pathname.startsWith('/sanity-studio')) {
+    const denied = studioAuthCheck(req)
+    if (denied) return denied
+    // Studio's own CSP (next.config.mjs, already 'unsafe-inline'/'unsafe-eval')
+    // already tolerates Next's inline bootstrap scripts - no nonce needed here.
+    return NextResponse.next()
+  }
+
+  // WAS-33: script-src 'self' alone blocks Next.js App Router's own inline
+  // hydration <script> tags (confirmed live: blank page on every route,
+  // self.__next_f never populated). A per-request nonce plus 'strict-dynamic'
+  // (Next's own documented CSP pattern) keeps script-src genuinely strict -
+  // an attacker's injected inline script still lacks the correct nonce and
+  // is blocked - while letting Next's own scripts (and the chunks they
+  // dynamically load) run. app/layout.tsx reads this same nonce via
+  // headers() to opt the render into using it for Next's own inline scripts.
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
+  const csp = `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'strict-dynamic'; style-src 'self' 'unsafe-inline'; img-src 'self' data: cdn.sanity.io *.public.blob.vercel-storage.com; media-src 'self' *.public.blob.vercel-storage.com; font-src 'self'; connect-src 'self' https://formspree.io https://o4511723969904640.ingest.us.sentry.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none';`
+
+  const requestHeaders = new Headers(req.headers)
+  requestHeaders.set('x-nonce', nonce)
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } })
+  response.headers.set('Content-Security-Policy', csp)
+  return response
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+}
+```
+
+- [ ] **Step 3: Read the nonce in the root layout**
+
+In `app/layout.tsx`, change:
+
+```tsx
+import type React from "react"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { ClientProviders } from "@/components/providers/ClientProviders"
+
+const inter = Inter({ subsets: ["latin"] })
+
+export const metadata: Metadata = {
+  title: "Back Against the Wall",
+  description:
+    "When financial pressure mounts, who do you become? Discover your financial archetype and watch this powerful short film.",
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className={inter.className} suppressHydrationWarning={true}>
+        <ClientProviders>
+          {children}
+        </ClientProviders>
+      </body>
+    </html>
+  )
+}
+```
+
+to:
+
+```tsx
+import type React from "react"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import { headers } from "next/headers"
+import "./globals.css"
+import { ClientProviders } from "@/components/providers/ClientProviders"
+
+const inter = Inter({ subsets: ["latin"] })
+
+export const metadata: Metadata = {
+  title: "Back Against the Wall",
+  description:
+    "When financial pressure mounts, who do you become? Discover your financial archetype and watch this powerful short film.",
+}
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  // WAS-33: reading the nonce here (set by middleware.ts) is what actually
+  // opts this render into using it for Next's own inline bootstrap scripts -
+  // per Next's documented CSP pattern, this isn't just an example of how app
+  // code could use the nonce, it's required for the framework's own scripts
+  // to get nonced. Skipping this reproduces the pre-fix blank-page bug even
+  // with the middleware changes in place.
+  const nonce = (await headers()).get("x-nonce")
+
+  return (
+    <html lang="en">
+      <body className={inter.className} suppressHydrationWarning={true} data-csp-nonce={nonce ?? undefined}>
+        <ClientProviders>
+          {children}
+        </ClientProviders>
+      </body>
+    </html>
+  )
+}
+```
+
+(The `data-csp-nonce` attribute is a debugging aid only, harmless in prod - it lets you visually confirm in devtools that a nonce actually reached the render, without changing behavior.)
+
+- [ ] **Step 4: Lint, typecheck, build**
+
+Run: `pnpm lint && pnpm type-check && pnpm build`
+Expected: all clean. Note the pre-existing `middleware.ts` build warning about the Node `crypto` module not being supported in the Edge Runtime is unrelated to this change (it predates WAS-33, from WAS-17) - don't try to fix it as part of this task.
+
+- [ ] **Step 5: Real browser verification locally - not just curl**
+
+This is the step that catches what Task 1's curl-only check missed. Start the dev server (`pnpm dev`), then in an actual browser (not curl):
+
+1. Load `http://localhost:PORT/` (whatever port `pnpm dev` binds - it may not be 3000 if something else is already listening).
+2. Confirm the page actually renders visible content (not a blank white page).
+3. Open devtools console - confirm no CSP violation errors ("Refused to execute inline script...", "Refused to load the script...", etc.).
+4. As an extra concrete check (open devtools console and run): `document.body.innerText.length > 0` should be `true`, and if you want to directly confirm hydration ran: `window.__NEXT_DATA__ !== undefined` or checking that interactive elements (buttons, the sign-in modal trigger, etc.) actually respond to clicks.
+
+If the page is still blank: re-check that `middleware.ts`'s matcher actually covers the route you're testing, that `app/layout.tsx`'s `headers()` read is in the actual render path (not skipped by some caching/static-generation behavior - note this route may now be forced dynamic, which is expected and fine), and that the nonce value in the CSP response header (check via Network tab) matches what's rendered into the page's script tags (each Next-emitted inline `<script nonce="...">` should carry the exact nonce value from this request's CSP header, not a stale/different one). Iterate rather than reporting success on a hunch - this exact "looks right but isn't" failure mode is what caused the original bug to ship past Task 1.
+
+- [ ] **Step 6: Confirm `/sanity-studio`'s Basic Auth behavior is unchanged**
+
+```bash
+curl -sI http://localhost:PORT/sanity-studio
+```
+
+Expected: same `401` (or `500` if `SANITY_STUDIO_USERNAME`/`PASSWORD` aren't set locally, per the pre-existing fail-closed design) as before this task - the matcher broadening must not have altered Studio's own gating logic. Also confirm via curl that Studio's `Content-Security-Policy` header is unchanged from Task 1 (still the static `'unsafe-inline' 'unsafe-eval'` policy, no nonce).
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add middleware.ts next.config.mjs app/layout.tsx
+git commit -m "fix(infra): use nonce-based CSP for script-src to fix broken hydration"
+```
 
 ---
 
 ## Definition of Done mapping
 
-- Headers verified present via browser devtools/curl on a deployed preview → Task 2 Steps 3-4.
-- No functionality broken by the new CSP → Task 2 Step 4.
-- Tests/lint/typecheck pass → Task 1 Steps 2-3 (no unit tests exist for a config file; `pnpm build` is the closest equivalent).
+- Headers verified present via browser devtools/curl on a deployed preview → Task 2 Steps 3-4 (re-run after Task 3).
+- No functionality broken by the new CSP → Task 2 Step 4 (re-run after Task 3); Task 3 Step 5 catches the hydration-breaking regression Task 2 first surfaced.
+- Tests/lint/typecheck pass → Task 1 Steps 2-3, Task 3 Step 4 (no unit tests exist for config files; `pnpm build` is the closest equivalent).
 - PR body says `Closes WAS-33` → Task 2 Step 2.
-- Lesson saved → already satisfied by the committed design spec (Task 2 Step 5 confirms it, updates it if reality diverged from the pre-deploy guess).
+- Lesson saved → satisfied by the committed design spec's "Post-deploy finding" section (Task 2 Step 5 / Task 3 confirm it).
