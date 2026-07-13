@@ -1,8 +1,6 @@
 // lib/quiz/utils.ts - Enhanced shuffling with robust anti-pattern detection
 
 import { QuizQuestion, QuizAnswer, Archetype, QuizScores, QuizOption } from '@/types/quiz';
-import { Shield, TrendingUp, Target, Eye, Award } from 'lucide-react';
-import { LucideIcon } from 'lucide-react';
 
 export const ARCHETYPES: Archetype[] = ['Avoider', 'Gambler', 'Realist', 'Architect']
 export const EMPTY_SCORES: QuizScores = ARCHETYPES.reduce((acc, a) => {
@@ -290,24 +288,6 @@ export function getWinningArchetype(
     if (weightedWinners.includes(a)) return a
   }
   throw new Error('[getWinningArchetype] unreachable: no weighted winner found')
-}
-
-/**
- * Gets the appropriate icon for an archetype
- */
-export function getArchetypeIcon(archetype: string): LucideIcon {
-  switch (archetype) {
-    case "Avoider":
-      return Shield;
-    case "Gambler":
-      return TrendingUp;
-    case "Realist":
-      return Target;
-    case "Architect":
-      return Eye;
-    default:
-      return Award;
-  }
 }
 
 /**

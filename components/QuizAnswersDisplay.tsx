@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MessageSquare, EyeOff, Eye, List } from "lucide-react"
+import { getArchetypeColor } from "@/lib/quiz/archetypes"
 
 interface QuizAnswer {
   id: number
@@ -32,21 +33,6 @@ interface QuizResult {
 
 interface QuizAnswersDisplayProps {
   latestResult: QuizResult | null
-}
-
-function getArchetypeColor(archetype: string): string {
-  switch (archetype) {
-    case "Avoider":
-      return "bg-blue-100 text-blue-800 border-blue-200"
-    case "Gambler":
-      return "bg-red-100 text-red-800 border-red-200"
-    case "Realist":
-      return "bg-green-100 text-green-800 border-green-200"
-    case "Architect":
-      return "bg-purple-100 text-purple-800 border-purple-200"
-    default:
-      return "bg-gray-100 text-gray-800 border-gray-200"
-  }
 }
 
 function QuizAnswersDisplay({ latestResult }: QuizAnswersDisplayProps) {
