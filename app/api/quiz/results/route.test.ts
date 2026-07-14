@@ -88,3 +88,23 @@ describe('GET /api/quiz/results (IDOR: a user must only ever see their own resul
     expect(await res.json()).toEqual([{ _id: 'result-a', archetype: 'Architect' }])
   })
 })
+
+describe('GET /api/quiz/results (WAS-21: no internal error detail in the response)', () => {
+  beforeEach(() => {
+    findMock.mockClear()
+    sortMock.mockClear()
+    leanMock.mockReset()
+    getUserIdFromRequestMock.mockReset()
+    getUserIdFromRequestMock.mockResolvedValue(USER_A)
+  })
+
+  it('returns a generic error instead of the raw error message on a DB failure', async () => {
+    leanMock.mockRejectedValue(new Error('connection timed out to mongodb+srv://user:pass@cluster/db'))
+
+    const res = await GET(makeRequest())
+    const json = await res.json()
+
+    expect(res.status).toBe(500)
+    expect(json).toEqual({ error: 'Failed to fetch quiz results' })
+  })
+})

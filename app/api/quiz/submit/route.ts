@@ -1,6 +1,4 @@
-// Update your app/api/quiz/submit/route.ts
 import { NextResponse, NextRequest } from "next/server"
-import * as Sentry from "@sentry/nextjs"
 import QuizResultModel from "@/models/QuizResult"
 import connectDB from "@/lib/mongoose"
 import mongoose from "mongoose"
@@ -8,6 +6,7 @@ import { getUserIdFromRequest } from "@/lib/jwt"
 import { quizSubmitSchema } from "@/lib/validation"
 import { calculateQuizScores, getWinningArchetype } from "@/lib/quiz/utils"
 import { quizQuestions } from "@/lib/quiz/questions"
+import { isProductionEnvironment, reportServerError } from "@/lib/server-error"
 import type { QuizAnswer } from "@/types/quiz"
 
 export async function POST(req: NextRequest) {
@@ -65,8 +64,6 @@ export async function POST(req: NextRequest) {
       completedAt: new Date().toISOString()
     }
 
-    console.log("Calculated archetype scores:", answerStructure.scores)
-
     const quizResultData = {
       userId: new mongoose.Types.ObjectId(userId),
       answers: answerStructure,
@@ -75,44 +72,19 @@ export async function POST(req: NextRequest) {
       score,
     }
 
-    console.log("Creating quiz result with data:", {
-      userId,
-      archetype,
-      score,
-      totalQuestions: answerStructure.totalQuestions
-    })
-
     const newResult = await QuizResultModel.create(quizResultData)
-    console.log("Quiz result created successfully:", newResult._id)
 
-    return NextResponse.json(newResult)
-    
-  } catch (err) {
-    console.error("=== QUIZ SUBMIT ERROR ===")
-    Sentry.captureException(err)
-    if (err instanceof Error) {
-      console.error("Error name:", err.name)
-      console.error("Error message:", err.message)
-      console.error("Error stack:", err.stack)
-      
-      if (err.name === 'ValidationError' && 'errors' in err) {
-        console.error("Validation errors:", (err as { errors: unknown }).errors)
-        return NextResponse.json({ 
-          error: "Failed to submit quiz", 
-          details: err.message,
-          validation: (err as { errors: unknown }).errors
-        }, { status: 500 })
-      }
-
-      return NextResponse.json({ 
-        error: "Failed to submit quiz", 
-        details: err.message
-      }, { status: 500 })
+    if (!isProductionEnvironment()) {
+      console.log("Quiz result created:", newResult._id)
     }
 
-    return NextResponse.json({ 
-      error: "Failed to submit quiz", 
-      details: "Unknown error occurred"
+    return NextResponse.json(newResult)
+
+  } catch (err) {
+    reportServerError("Quiz submit error:", err)
+
+    return NextResponse.json({
+      error: "Failed to submit quiz"
     }, { status: 500 })
   }
 }
