@@ -48,7 +48,7 @@
     "@sanity/ui": "^2.0.11",
     "@sanity/vision": "^3.36.2",
     "@sentry/nextjs": "^10.65.0",
-    "@supabase/supabase-js": "latest",
+    "@supabase/supabase-js": "2.58.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
     "@vercel/blob": "^1.1.1",
