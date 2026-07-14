@@ -38,10 +38,16 @@ export function useQuizState() {
     return () => { cancelled = true };
   }, []);
 
-  // Initialize shuffled questions whenever baseQuestions changes
-  useEffect(() => {
+  // Initialize shuffled questions whenever baseQuestions changes. Adjusted
+  // during render per https://react.dev/learn/you-might-not-need-an-effect
+  // rather than in an Effect, since shuffledQuestions is also mutated
+  // independently afterward (mid-quiz anti-pattern reshuffling, resets),
+  // so it can't be a plain derived useMemo of baseQuestions.
+  const [prevBaseQuestions, setPrevBaseQuestions] = useState(baseQuestions);
+  if (baseQuestions !== prevBaseQuestions) {
+    setPrevBaseQuestions(baseQuestions);
     setShuffledQuestions(createAdvancedRandomizedQuestions(baseQuestions));
-  }, [baseQuestions]);
+  }
 
   // Start quiz function
   const startQuiz = () => {

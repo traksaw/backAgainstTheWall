@@ -2,7 +2,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { QuizService, type QuizResult } from "@/lib/quiz"
 import { useAuth } from "@/hooks/useAuth"
 import type { QuizSubmissionData } from "@/types/quiz"
@@ -12,19 +12,21 @@ export function useQuiz() {
   const [quizResults, setQuizResults] = useState<QuizResult[]>([])
   const [latestResult, setLatestResult] = useState<QuizResult | null>(null)
   const [loading, setLoading] = useState(true)
+  const [prevUserId, setPrevUserId] = useState(user?._id)
 
-  useEffect(() => {
-    if (user?._id) {
-      fetchQuizResults()
-    } else {
-      // Clear results when user logs out
+  // Clear results when the logged-in user changes (e.g. logout), adjusted
+  // during render per https://react.dev/learn/you-might-not-need-an-effect
+  // rather than in an Effect, since it's derived state, not a side effect.
+  if (user?._id !== prevUserId) {
+    setPrevUserId(user?._id)
+    if (!user?._id) {
       setQuizResults([])
       setLatestResult(null)
       setLoading(false)
     }
-  }, [user?._id])
+  }
 
-  const fetchQuizResults = async () => {
+  const fetchQuizResults = useCallback(async () => {
     if (!user?._id) return
 
     setLoading(true)
@@ -39,7 +41,17 @@ export function useQuiz() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?._id])
+
+  useEffect(() => {
+    if (user?._id) {
+      // Legitimate data-fetch Effect; fetchQuizResults sets loading=true
+      // synchronously before its first await so the UI reflects an
+      // in-flight refetch immediately, which trips this heuristic.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchQuizResults()
+    }
+  }, [user?._id, fetchQuizResults])
 
   const submitQuiz = async (quizData: QuizSubmissionData) => {
     if (!user?._id) throw new Error("User not authenticated")

@@ -59,6 +59,11 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
     setIsAnswering(false)
   }
   useEffect(() => {
+    // stopAnswering mutates isAnsweringRef (a real ref) in addition to
+    // setting state, so it can't move to a render-time adjustment - ref
+    // mutation during render is itself unsafe. This resets an imperative
+    // guard (WAS-27 double-click-race fix), not derived state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     stopAnswering()
     // Also depend on showWelcome: hardReset() can return currentQuestion to a value it already
     // held (e.g. 0), which wouldn't otherwise re-trigger this effect and clear a pending guard.
@@ -82,7 +87,9 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
 
   // Auto-reset logic: when modal transitions closed -> open and autoReset is true,
   // perform a hard reset so state is clean and welcome screen is shown.
-  const lastOpenRef = useMemo(() => ({ current: false }), []) as { current: boolean }
+  // A real useRef (not useMemo) so mutating .current is well-defined -
+  // useMemo's return value isn't guaranteed stable/mutable the way a ref is.
+  const lastOpenRef = useRef(false)
   useEffect(() => {
     const wasOpen = lastOpenRef.current
     if (!wasOpen && open && autoReset) {
@@ -90,7 +97,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
       hardReset()
     }
     lastOpenRef.current = open
-  }, [open, autoReset, hardReset, lastOpenRef])
+  }, [open, autoReset, hardReset])
 
   // Option B: progress and live announcements
   const [liveMessage, setLiveMessage] = useState("")
@@ -100,10 +107,14 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
     // Progress shows current question index out of total
     return Math.round(((currentQuestion) / totalQuestions) * 100)
   }, [currentQuestion, totalQuestions])
-  useEffect(() => {
-    // Clear any previous announcement on question change
+  // Clear any previous announcement on question change. Adjusted during
+  // render per https://react.dev/learn/you-might-not-need-an-effect since
+  // liveMessage is also set imperatively elsewhere (answer/back handlers).
+  const [prevQuestionForMessage, setPrevQuestionForMessage] = useState(currentQuestion)
+  if (currentQuestion !== prevQuestionForMessage) {
+    setPrevQuestionForMessage(currentQuestion)
     setLiveMessage("")
-  }, [currentQuestion])
+  }
 
   const handleAnswerClick = async (answer: QuizAnswer, event: React.MouseEvent<HTMLButtonElement>) => {
     if (isAnsweringRef.current) return
