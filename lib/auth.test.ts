@@ -58,7 +58,7 @@ vi.mock('@/lib/email', () => ({
   sendVerificationEmail: (...args: unknown[]) => sendVerificationEmailMock(...args),
 }))
 
-import { AuthService } from './auth'
+import { AuthService, DuplicateAccountError } from './auth'
 
 describe('AuthService email normalization (WAS-19)', () => {
   beforeEach(() => {
@@ -102,10 +102,25 @@ describe('AuthService email normalization (WAS-19)', () => {
         zip_code: '90210',
         occupationStatus: 'Working Professional',
       })
-    ).rejects.toThrow('User already exists')
+    ).rejects.toThrow(DuplicateAccountError)
 
     expect(findOneMock).toHaveBeenCalledWith({ email: 'foo@x.com' })
     expect(createMock).not.toHaveBeenCalled()
+  })
+
+  it('signUp (WAS-20) never reveals account existence in the client-facing message', async () => {
+    findOneMock.mockResolvedValue({ _id: 'existing-user', email: 'foo@x.com' })
+
+    await expect(
+      AuthService.signUp({
+        email: 'foo@x.com',
+        password: 'password123',
+        firstName: 'Foo',
+        lastName: 'Bar',
+        zip_code: '90210',
+        occupationStatus: 'Working Professional',
+      })
+    ).rejects.toThrow(/^(?!.*already exists).*$/)
   })
 
   it('signIn lowercases and trims the email before querying', async () => {
