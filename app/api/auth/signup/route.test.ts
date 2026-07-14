@@ -3,11 +3,27 @@ import { NextResponse } from 'next/server'
 import { POST } from './route'
 
 const signUpMock = vi.fn()
-vi.mock('@/lib/auth', () => ({
-  AuthService: {
-    signUp: (...args: unknown[]) => signUpMock(...args),
-  },
+vi.mock('@/lib/auth', () => {
+  class DuplicateAccountError extends Error {
+    constructor() {
+      super('Unable to complete sign up. Please try again.')
+      this.name = 'DuplicateAccountError'
+    }
+  }
+  return {
+    AuthService: {
+      signUp: (...args: unknown[]) => signUpMock(...args),
+    },
+    DuplicateAccountError,
+  }
+})
+
+const captureExceptionMock = vi.fn()
+vi.mock('@sentry/nextjs', () => ({
+  captureException: (...args: unknown[]) => captureExceptionMock(...args),
 }))
+
+import { DuplicateAccountError } from '@/lib/auth'
 
 vi.mock('@/lib/jwt', () => ({
   signToken: vi.fn().mockReturnValue('signed-token'),
@@ -54,6 +70,7 @@ describe('POST /api/auth/signup (WAS-8: reject non-string bodies before they rea
   beforeEach(() => {
     signUpMock.mockReset()
     checkRateLimitMock.mockReset().mockResolvedValue({ allowed: true })
+    captureExceptionMock.mockReset()
   })
 
   it('returns 429 with Retry-After when rate limited, without calling signUp', async () => {
@@ -116,5 +133,33 @@ describe('POST /api/auth/signup (WAS-8: reject non-string bodies before they rea
     // A passing status with no session cookie is a broken signup a client
     // can't detect - assert the actual side effect that makes it useful.
     expect(res.cookies.get('token')?.value).toBe('signed-token')
+  })
+})
+
+describe('POST /api/auth/signup (WAS-20: never reveal account existence)', () => {
+  beforeEach(() => {
+    signUpMock.mockReset()
+    checkRateLimitMock.mockReset().mockResolvedValue({ allowed: true })
+    captureExceptionMock.mockReset()
+  })
+
+  it('returns the same generic message for a duplicate email as any other signup failure, and skips Sentry', async () => {
+    signUpMock.mockRejectedValue(new DuplicateAccountError())
+
+    const res = await POST(makeRequest(validPayload))
+    const body = await res.json()
+
+    expect(res.status).toBe(400)
+    expect(body.error).not.toMatch(/already exists/i)
+    expect(captureExceptionMock).not.toHaveBeenCalled()
+  })
+
+  it('still reports genuine failures (e.g. DB errors) to Sentry', async () => {
+    signUpMock.mockRejectedValue(new Error('ECONNREFUSED'))
+
+    const res = await POST(makeRequest(validPayload))
+
+    expect(res.status).toBe(400)
+    expect(captureExceptionMock).toHaveBeenCalledTimes(1)
   })
 })
