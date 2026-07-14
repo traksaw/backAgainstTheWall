@@ -5,6 +5,10 @@ updates:
     schedule:
       interval: "weekly"
     groups:
+      # Bundles next/eslint-config-next updates into one PR when both have
+      # releases in the same weekly run. This does NOT force them to stay in
+      # lockstep: if only one package has a new release this week, it still
+      # ships alone. See WAS-109 for a stronger (CI-enforced) guardrail.
       next:
         patterns:
           - "next"
