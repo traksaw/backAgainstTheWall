@@ -74,7 +74,7 @@ export interface QuizResult {
   updatedAt?: string                   // added: was lib/quiz.ts-only
   hasViewedResults?: boolean           // For your UI state tracking
   hasWatchedFilm?: boolean            // For your UI state tracking
-  answers?: Record<number, QuizAnswer> // For QuizAnswersDisplay component
+  answers?: Record<number, QuizAnswer> // Rendered by QuizHistorySection
   sessionId?: string                   // Session tracking
 }
 
