@@ -2,19 +2,27 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useSyncExternalStore } from "react"
 
 interface ClientOnlyProps {
   children: React.ReactNode
   fallback?: React.ReactNode
 }
 
-export function ClientOnly({ children, fallback = null }: ClientOnlyProps) {
-  const [hasMounted, setHasMounted] = useState(false)
+function subscribe() {
+  return () => {}
+}
 
-  useEffect(() => {
-    setHasMounted(true)
-  }, [])
+function getSnapshot() {
+  return true
+}
+
+function getServerSnapshot() {
+  return false
+}
+
+export function ClientOnly({ children, fallback = null }: ClientOnlyProps) {
+  const hasMounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   if (!hasMounted) {
     return <>{fallback}</>

@@ -15,8 +15,10 @@ export function VerifyEmailStatus() {
   const token = searchParams.get("token")
   const { verifyEmail, resendVerification } = useAuth()
 
-  const [status, setStatus] = useState<Status>("verifying")
-  const [errorMessage, setErrorMessage] = useState("")
+  const [status, setStatus] = useState<Status>(token ? "verifying" : "error")
+  const [errorMessage, setErrorMessage] = useState(
+    token ? "" : "This verification link is missing a token."
+  )
   const [resendEmail, setResendEmail] = useState("")
   const [resendSent, setResendSent] = useState(false)
   const [resendError, setResendError] = useState("")
@@ -30,11 +32,7 @@ export function VerifyEmailStatus() {
     if (hasVerified.current) return
     hasVerified.current = true
 
-    if (!token) {
-      setStatus("error")
-      setErrorMessage("This verification link is missing a token.")
-      return
-    }
+    if (!token) return
 
     verifyEmail(token)
       .then(() => setStatus("success"))

@@ -1,15 +1,10 @@
 "use client"
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
 
 export default function TermsPage() {
   const router = useRouter()
-  const [date, setDate] = useState('')
-
-  useEffect(() => {
-    setDate(new Date().toLocaleDateString())
-  }, [])
+  const date = new Date().toLocaleDateString()
 
   const handleClose = () => {
     // Prefer navigating back if possible (no full reload)
@@ -35,7 +30,7 @@ export default function TermsPage() {
           
           <div className="prose max-w-none text-gray-700">
             <p className="text-lg mb-6">
-              <strong>Last updated:</strong> {date}
+              <strong>Last updated:</strong> <span suppressHydrationWarning>{date}</span>
             </p>
 
             <section className="mb-8">

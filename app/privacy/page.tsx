@@ -1,15 +1,10 @@
 "use client"
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
 
 export default function PrivacyPage() {
   const router = useRouter()
-  const [date, setDate] = useState('')
-
-  useEffect(() => {
-    setDate(new Date().toLocaleDateString())
-  }, [])
+  const date = new Date().toLocaleDateString()
 
   const handleClose = () => {
     if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -31,7 +26,7 @@ export default function PrivacyPage() {
           
           <div className="prose max-w-none text-gray-700">
             <p className="text-lg mb-6">
-              <strong>Last updated:</strong> {date}
+              <strong>Last updated:</strong> <span suppressHydrationWarning>{date}</span>
             </p>
 
             <section className="mb-8">
