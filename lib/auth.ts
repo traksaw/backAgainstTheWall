@@ -64,6 +64,18 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+// WAS-20: "User already exists" let an attacker use sign-up as an oracle for
+// which emails are registered. The client-facing message must stay generic;
+// callers that need to distinguish this case (e.g. to skip Sentry reporting
+// for expected duplicate attempts) should check `instanceof
+// DuplicateAccountError`, never the message text.
+export class DuplicateAccountError extends Error {
+  constructor() {
+    super("Unable to complete sign up. Please try again.")
+    this.name = "DuplicateAccountError"
+  }
+}
+
 export class AuthService {
   static async signUp(userData: SignUpData) {
     await connectDB()
@@ -71,7 +83,7 @@ export class AuthService {
     const email = normalizeEmail(userData.email)
 
     const existing = await User.findOne({ email })
-    if (existing) throw new Error("User already exists")
+    if (existing) throw new DuplicateAccountError()
 
     const passwordHash = await bcrypt.hash(userData.password, 10)
 
