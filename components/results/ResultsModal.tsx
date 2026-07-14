@@ -420,7 +420,7 @@ function RecommendationsGrid({ archetype, archetypesMap }: { archetype: string, 
               <p className="text-sm text-gray-600">{category.subtitle}</p>
             </div>
             <div className="ml-auto bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
-              {category.items.length} / {category.items.length}
+              {category.items.length} {category.items.length === 1 ? 'item' : 'items'}
             </div>
           </div>
           
@@ -437,13 +437,6 @@ function RecommendationsGrid({ archetype, archetypesMap }: { archetype: string, 
                 <p className="text-[10px] text-gray-600 leading-relaxed">
                   {item.description.length > 60 ? item.description.substring(0, 60) + '...' : item.description}
                 </p>
-                {/* Progress indicator like Finch */}
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="text-[10px] text-gray-500">
-                    {Math.floor(Math.random() * 50) + 10} / {Math.floor(Math.random() * 30) + 50}
-                  </div>
-                  <div className="w-1.5 h-1.5 bg-gray-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                </div>
               </div>
             ))}
           </div>
