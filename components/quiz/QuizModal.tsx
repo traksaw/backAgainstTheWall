@@ -5,7 +5,7 @@
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useQuizState } from "@/hooks/useQuizState"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import type { QuizAnswer } from "@/types/quiz"
 
 interface UserProfile {
@@ -49,6 +49,37 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
     }
   }, [currentQuestion])
 
+  // Guards the 100ms answer-confirmation delay so a rapid second click can't register a duplicate answer.
+  // The ref is checked/set synchronously so two clicks arriving before a re-render still can't both pass the
+  // guard; the state value only drives the `disabled` prop for the UI.
+  const isAnsweringRef = useRef(false)
+  const [isAnswering, setIsAnswering] = useState(false)
+  const stopAnswering = () => {
+    isAnsweringRef.current = false
+    setIsAnswering(false)
+  }
+  useEffect(() => {
+    stopAnswering()
+    // Also depend on showWelcome: hardReset() can return currentQuestion to a value it already
+    // held (e.g. 0), which wouldn't otherwise re-trigger this effect and clear a pending guard.
+  }, [currentQuestion, showWelcome])
+
+  // Radix unmounts DialogContent's subtree when `open` goes false without unmounting QuizModal
+  // itself, so a pending confirmation must check this ref (not just component-mount state) to
+  // notice the dialog was dismissed mid-delay.
+  const openRef = useRef(open)
+  useEffect(() => {
+    openRef.current = open
+  }, [open])
+
+  const isMountedRef = useRef(true)
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
   // Auto-reset logic: when modal transitions closed -> open and autoReset is true,
   // perform a hard reset so state is clean and welcome screen is shown.
   const lastOpenRef = useMemo(() => ({ current: false }), []) as { current: boolean }
@@ -75,6 +106,10 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
   }, [currentQuestion])
 
   const handleAnswerClick = async (answer: QuizAnswer, event: React.MouseEvent<HTMLButtonElement>) => {
+    if (isAnsweringRef.current) return
+    isAnsweringRef.current = true
+    setIsAnswering(true)
+
     // Immediately blur the button to prevent focus persistence on mobile
     const target = event.currentTarget
     if (target) {
@@ -83,6 +118,14 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
 
     // Add a small delay to allow the button animation to complete
     await new Promise(resolve => setTimeout(resolve, 100))
+
+    // The dialog may have been dismissed (or the component unmounted) while this delay was
+    // pending — don't record an answer or fire completion for a quiz the user already left.
+    if (!isMountedRef.current) return
+    if (!openRef.current) {
+      stopAnswering()
+      return
+    }
 
     // Build final answers BEFORE calling handleQuizAnswer
     const finalAnswers = { ...answers, [currentQuestion]: answer }
@@ -105,6 +148,10 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
         console.error('Error stack:', (error as Error)?.stack)
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
         alert(`Quiz completion failed: ${errorMessage}`)
+      } finally {
+        // Last question never triggers the currentQuestion-change reset above, so without this,
+        // a failed completion would leave the options permanently disabled with no way to retry.
+        stopAnswering()
       }
     }
   }
@@ -185,7 +232,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
                       key={uniqueKey}
                       variant="outline"
                       onClick={(event) => handleAnswerClick(option, event)}
-                      disabled={quizLoading}
+                      disabled={quizLoading || isAnswering}
                       className="w-full text-left justify-start p-4 h-auto border-gray-300 hover:border-gray-300 hover:bg-transparent active:bg-transparent active:border-gray-300 transition-none rounded-lg text-wrap min-h-[56px] focus:outline focus-visible:ring-2 focus-visible:ring-[#B95D38] focus-visible:ring-offset-2"
                     >
                       <span className="text-sm text-gray-700 leading-relaxed">{option.text}</span>
@@ -203,7 +250,8 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
                       goBackOne()
                       setLiveMessage(`Going back to question ${currentQuestion} of ${totalQuestions}.`)
                     }}
-                    className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B95D38] focus-visible:ring-offset-2 min-h-[44px] px-2"
+                    disabled={isAnswering}
+                    className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B95D38] focus-visible:ring-offset-2 min-h-[44px] px-2 disabled:opacity-50 disabled:pointer-events-none"
                   >
                     Back
                   </button>
