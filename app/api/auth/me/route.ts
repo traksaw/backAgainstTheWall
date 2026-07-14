@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import * as Sentry from "@sentry/nextjs"
 import { getUserIdFromRequest } from "@/lib/jwt"
 import { AuthService } from "@/lib/auth"
+import { reportServerError } from "@/lib/server-error"
 
 export async function GET(req: NextRequest) {
 
@@ -28,9 +28,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(user)
   } catch (err) {
-    const error = err as Error
-    console.log('Error in auth route:', error)
-    Sentry.captureException(err)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    reportServerError("Error in auth/me route:", err)
+    return NextResponse.json({ error: "Failed to load user profile" }, { status: 500 })
   }
 }
