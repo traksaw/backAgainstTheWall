@@ -150,3 +150,56 @@ describe('POST /api/quiz/submit (WAS-89: recompute archetype/score server-side, 
     expect(createMock).not.toHaveBeenCalled()
   })
 })
+
+describe('POST /api/quiz/submit (WAS-21: no PII in logs, no internal error detail in the response)', () => {
+  beforeEach(() => {
+    createMock.mockReset()
+    getUserIdFromRequestMock.mockReset()
+    getUserIdFromRequestMock.mockResolvedValue('507f1f77bcf86cd799439011')
+  })
+
+  it('returns a generic error and never leaks a Mongoose ValidationError payload to the client', async () => {
+    const validationError = Object.assign(new Error('QuizResult validation failed: score: Path `score` is required.'), {
+      name: 'ValidationError',
+      errors: { score: { message: 'Path `score` is required.' } },
+    })
+    createMock.mockRejectedValue(validationError)
+
+    const res = await POST(makeRequest(validPayload))
+    const json = await res.json()
+
+    expect(res.status).toBe(500)
+    expect(json).toEqual({ error: 'Failed to submit quiz' })
+    expect(json.details).toBeUndefined()
+    expect(json.validation).toBeUndefined()
+  })
+
+  it('returns a generic error without the raw error message for a plain failure', async () => {
+    createMock.mockRejectedValue(new Error('ECONNREFUSED 127.0.0.1:27017'))
+
+    const res = await POST(makeRequest(validPayload))
+    const json = await res.json()
+
+    expect(res.status).toBe(500)
+    expect(json).toEqual({ error: 'Failed to submit quiz' })
+  })
+
+  it('does not console.log quiz answers or user data when NODE_ENV is production', async () => {
+    const originalEnv = process.env.NODE_ENV
+    vi.stubEnv('NODE_ENV', 'production')
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    createMock.mockResolvedValue({ _id: 'result-f', ...validPayload })
+
+    try {
+      const res = await POST(makeRequest(validPayload))
+      expect(res.status).toBe(200)
+      expect(logSpy).not.toHaveBeenCalled()
+      expect(errorSpy).not.toHaveBeenCalled()
+    } finally {
+      logSpy.mockRestore()
+      errorSpy.mockRestore()
+      vi.stubEnv('NODE_ENV', originalEnv)
+    }
+  })
+})

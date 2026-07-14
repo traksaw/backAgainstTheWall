@@ -1,4 +1,3 @@
-// Update your app/api/quiz/submit/route.ts
 import { NextResponse, NextRequest } from "next/server"
 import * as Sentry from "@sentry/nextjs"
 import QuizResultModel from "@/models/QuizResult"
@@ -65,8 +64,6 @@ export async function POST(req: NextRequest) {
       completedAt: new Date().toISOString()
     }
 
-    console.log("Calculated archetype scores:", answerStructure.scores)
-
     const quizResultData = {
       userId: new mongoose.Types.ObjectId(userId),
       answers: answerStructure,
@@ -75,44 +72,25 @@ export async function POST(req: NextRequest) {
       score,
     }
 
-    console.log("Creating quiz result with data:", {
-      userId,
-      archetype,
-      score,
-      totalQuestions: answerStructure.totalQuestions
-    })
-
     const newResult = await QuizResultModel.create(quizResultData)
-    console.log("Quiz result created successfully:", newResult._id)
 
-    return NextResponse.json(newResult)
-    
-  } catch (err) {
-    console.error("=== QUIZ SUBMIT ERROR ===")
-    Sentry.captureException(err)
-    if (err instanceof Error) {
-      console.error("Error name:", err.name)
-      console.error("Error message:", err.message)
-      console.error("Error stack:", err.stack)
-      
-      if (err.name === 'ValidationError' && 'errors' in err) {
-        console.error("Validation errors:", (err as { errors: unknown }).errors)
-        return NextResponse.json({ 
-          error: "Failed to submit quiz", 
-          details: err.message,
-          validation: (err as { errors: unknown }).errors
-        }, { status: 500 })
-      }
-
-      return NextResponse.json({ 
-        error: "Failed to submit quiz", 
-        details: err.message
-      }, { status: 500 })
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("Quiz result created:", newResult._id)
     }
 
-    return NextResponse.json({ 
-      error: "Failed to submit quiz", 
-      details: "Unknown error occurred"
+    return NextResponse.json(newResult)
+
+  } catch (err) {
+    // Full error (message/stack/Mongoose validation payload) goes only to
+    // Sentry, never to the client response or production console - those
+    // can carry submitted quiz answers or other user-identifying detail.
+    Sentry.captureException(err)
+    if (process.env.NODE_ENV !== 'production') {
+      console.error("Quiz submit error:", err)
+    }
+
+    return NextResponse.json({
+      error: "Failed to submit quiz"
     }, { status: 500 })
   }
 }
