@@ -1,9 +1,9 @@
 import { NextResponse, NextRequest } from "next/server"
-import * as Sentry from "@sentry/nextjs"
 import { getUserIdFromRequest } from "@/lib/jwt"
 import connectDB from "@/lib/mongoose"
 import QuizResultModel from "@/models/QuizResult"
 import mongoose from "mongoose"
+import { reportServerError } from "@/lib/server-error"
 
 export async function GET(req: NextRequest) {
   
@@ -22,9 +22,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(results)
   } catch (err) {
-    const error = err as Error
-    console.error("Failed to fetch quiz results:", error)
-    Sentry.captureException(err)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    reportServerError("Failed to fetch quiz results:", err)
+    return NextResponse.json({ error: "Failed to fetch quiz results" }, { status: 500 })
   }
 }

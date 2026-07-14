@@ -1,5 +1,4 @@
 import { NextResponse, NextRequest } from "next/server"
-import * as Sentry from "@sentry/nextjs"
 import QuizResultModel from "@/models/QuizResult"
 import connectDB from "@/lib/mongoose"
 import mongoose from "mongoose"
@@ -7,6 +6,7 @@ import { getUserIdFromRequest } from "@/lib/jwt"
 import { quizSubmitSchema } from "@/lib/validation"
 import { calculateQuizScores, getWinningArchetype } from "@/lib/quiz/utils"
 import { quizQuestions } from "@/lib/quiz/questions"
+import { isProductionEnvironment, reportServerError } from "@/lib/server-error"
 import type { QuizAnswer } from "@/types/quiz"
 
 export async function POST(req: NextRequest) {
@@ -74,20 +74,14 @@ export async function POST(req: NextRequest) {
 
     const newResult = await QuizResultModel.create(quizResultData)
 
-    if (process.env.NODE_ENV !== 'production') {
+    if (!isProductionEnvironment()) {
       console.log("Quiz result created:", newResult._id)
     }
 
     return NextResponse.json(newResult)
 
   } catch (err) {
-    // Full error (message/stack/Mongoose validation payload) goes only to
-    // Sentry, never to the client response or production console - those
-    // can carry submitted quiz answers or other user-identifying detail.
-    Sentry.captureException(err)
-    if (process.env.NODE_ENV !== 'production') {
-      console.error("Quiz submit error:", err)
-    }
+    reportServerError("Quiz submit error:", err)
 
     return NextResponse.json({
       error: "Failed to submit quiz"

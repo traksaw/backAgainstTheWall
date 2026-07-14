@@ -57,3 +57,21 @@ describe('GET /api/auth/me (identity must come from the session, IDOR)', () => {
     expect(await resB.json()).toEqual({ _id: 'user-b-id', email: 'b@example.com' })
   })
 })
+
+describe('GET /api/auth/me (WAS-21: no internal error detail in the response)', () => {
+  beforeEach(() => {
+    getUserProfileMock.mockReset()
+    getUserIdFromRequestMock.mockReset()
+    getUserIdFromRequestMock.mockResolvedValue('507f1f77bcf86cd799439011')
+  })
+
+  it('returns a generic error instead of the raw error message when the profile lookup fails', async () => {
+    getUserProfileMock.mockRejectedValue(new Error('ECONNREFUSED 127.0.0.1:27017'))
+
+    const res = await GET(makeRequest())
+    const json = await res.json()
+
+    expect(res.status).toBe(500)
+    expect(json).toEqual({ error: 'Failed to load user profile' })
+  })
+})

@@ -202,4 +202,23 @@ describe('POST /api/quiz/submit (WAS-21: no PII in logs, no internal error detai
       vi.stubEnv('NODE_ENV', originalEnv)
     }
   })
+
+  it('does not console.error the raw error when a failure happens in production', async () => {
+    const originalEnv = process.env.NODE_ENV
+    vi.stubEnv('NODE_ENV', 'production')
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    createMock.mockRejectedValue(new Error('QuizResult validation failed: score is required.'))
+
+    try {
+      const res = await POST(makeRequest(validPayload))
+      const json = await res.json()
+
+      expect(res.status).toBe(500)
+      expect(json).toEqual({ error: 'Failed to submit quiz' })
+      expect(errorSpy).not.toHaveBeenCalled()
+    } finally {
+      errorSpy.mockRestore()
+      vi.stubEnv('NODE_ENV', originalEnv)
+    }
+  })
 })
