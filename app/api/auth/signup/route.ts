@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server"
 import * as Sentry from "@sentry/nextjs"
-import { AuthService } from "@/lib/auth"
+import { AuthService, DuplicateAccountError } from "@/lib/auth"
 import { signToken } from "@/lib/jwt"
 import { signUpSchema } from "@/lib/validation"
 import { authLimiter, checkRateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit"
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
   } catch (err) {
     // A duplicate signup attempt is expected user behavior, not a bug - only
     // report anything else (DB errors, token signing failures, etc).
-    if (!(err instanceof Error && err.message === 'User already exists')) {
+    if (!(err instanceof DuplicateAccountError)) {
       Sentry.captureException(err)
     }
     const error = err instanceof Error ? err.message : 'Failed to create user'
