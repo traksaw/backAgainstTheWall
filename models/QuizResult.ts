@@ -35,12 +35,14 @@ const QuizResultSchema = new Schema<IQuizResult>(
       totalQuestions: Number,
       completedAt: String,
     },
-    sessionId: { type: String },
+    sessionId: { type: String, index: true, sparse: true },
     hasViewedResults: { type: Boolean, default: false },
     hasWatchedFilm: { type: Boolean, default: false },
   },
   { timestamps: true }
 )
+
+QuizResultSchema.index({ userId: 1, createdAt: -1 })
 
 const QuizResultModel: Model<IQuizResult> =
   mongoose.models?.QuizResult || mongoose.model<IQuizResult>("QuizResult", QuizResultSchema)
