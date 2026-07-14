@@ -117,7 +117,7 @@ importers:
         specifier: ^10.65.0
         version: 10.65.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))(next@15.5.20(@babel/core@7.28.4)(@opentelemetry/api@1.9.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(webpack@5.108.4(esbuild@0.25.10)(postcss@8.5.6))
       '@supabase/supabase-js':
-        specifier: latest
+        specifier: ^2.58.0
         version: 2.58.0
       '@upstash/ratelimit':
         specifier: ^2.0.8
@@ -8164,10 +8164,6 @@ packages:
     resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
     engines: {node: '>=12'}
 
-  webidl-conversions@8.0.0:
-    resolution: {integrity: sha512-n4W4YFyz5JzOfQeA8oN7dUYpR+MBP3PIUsn2jLjWXwK5ASUzt0Jc/A5sAUZoCYFJRGF0FBKJ+1JjN43rNdsQzA==}
-    engines: {node: '>=20'}
-
   webidl-conversions@8.0.1:
     resolution: {integrity: sha512-BMhLD/Sw+GbJC21C/UgyaZX41nPt8bUTg+jWyDeg7e7YN4xOM05YPSIXceACnXVtqyEw/LMClUQMtMZ+PGGpqQ==}
     engines: {node: '>=20'}
@@ -14741,7 +14737,7 @@ snapshots:
       symbol-tree: 3.2.4
       tough-cookie: 6.0.0
       w3c-xmlserializer: 5.0.0
-      webidl-conversions: 8.0.0
+      webidl-conversions: 8.0.1
       whatwg-encoding: 3.1.1
       whatwg-mimetype: 4.0.0
       whatwg-url: 15.1.0
@@ -17250,8 +17246,6 @@ snapshots:
 
   webidl-conversions@7.0.0: {}
 
-  webidl-conversions@8.0.0: {}
-
   webidl-conversions@8.0.1: {}
 
   webpack-sources@3.5.1: {}
@@ -17310,7 +17304,7 @@ snapshots:
   whatwg-url@15.1.0:
     dependencies:
       tr46: 6.0.0
-      webidl-conversions: 8.0.0
+      webidl-conversions: 8.0.1
 
   whatwg-url@16.0.1:
     dependencies:
