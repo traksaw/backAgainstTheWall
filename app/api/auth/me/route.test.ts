@@ -29,9 +29,11 @@ describe('GET /api/auth/me (identity must come from the session, IDOR)', () => {
     getUserIdFromRequestMock.mockResolvedValue(null)
 
     const res = await GET(makeRequest())
+    const json = await res.json()
 
     expect(res.status).toBe(401)
     expect(getUserProfileMock).not.toHaveBeenCalled()
+    expect(json).toEqual({ error: 'Unauthorized' })
   })
 
   it('returns 404 when the session references a user that no longer exists', async () => {
