@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const parsed = quizSubmitSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid request body", details: parsed.error.flatten() },
+        { error: "Invalid request body" },
         { status: 400 }
       )
     }
