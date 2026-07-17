@@ -5,7 +5,7 @@ import { AuthService, DuplicateAccountError } from "@/lib/auth"
 import { signToken } from "@/lib/jwt"
 import { signUpSchema } from "@/lib/validation"
 import { authLimiter, checkRateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit"
-import { reportServerError } from "@/lib/server-error"
+import { logger } from "@/lib/logger"
 
 export async function POST(req: Request) {
   const ipCheck = await checkRateLimit(authLimiter, [`ip:${getClientIp(req)}`])
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     }
 
     const user = await AuthService.signUp(parsed.data)
-    
+
     // Auto-sign in the user after successful signup
     const token = signToken({ userId: user._id.toString() })
 
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     if (err instanceof DuplicateAccountError) {
       return NextResponse.json({ error: err.message }, { status: 400 })
     }
-    reportServerError("Signup failed:", err)
+    logger.error("Signup failed:", err)
     return NextResponse.json({ error: "Failed to create account" }, { status: 400 })
   }
 }

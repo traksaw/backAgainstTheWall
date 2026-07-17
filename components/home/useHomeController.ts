@@ -5,6 +5,7 @@ import { useReducer, useRef, useEffect } from "react"
 import { useQuiz } from "@/hooks/useQuiz"
 import { useQuizLogic } from "@/hooks/useQuizLogic"
 import type { QuizAnswer, QuizResult } from "@/types/quiz"
+import { logger } from "@/lib/logger"
 
 export type ModalKey = 'signup' | 'signin' | 'forgotPassword' | 'quiz' | 'results' | 'film' | 'quizHistory'
 const MODAL_TRANSITION_MS = 250 // safely past DialogContent's 200ms CSS exit animation
@@ -134,10 +135,10 @@ export function useHomeController() {
       try {
         await submitQuiz(quizData)
       } catch (error) {
-        console.warn('Backend submission failed, but results are shown optimistically:', error)
+        logger.warn('Backend submission failed, but results are shown optimistically:', error)
       }
     } catch (error) {
-      console.error('Quiz completion error:', error)
+      logger.error('Quiz completion error:', error)
       dispatch({ type: 'CLOSE' })
       alert(`Quiz failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
@@ -149,12 +150,12 @@ export function useHomeController() {
     if (latestResult && !latestResult.hasViewedResults) {
       const resultId = latestResult._id
       if (!resultId) {
-        console.error('No valid ID found in latestResult:', latestResult)
+        logger.error('No valid ID found in latestResult:', latestResult)
       } else {
         try {
           await updateQuizResult(resultId, { hasViewedResults: true })
         } catch (error) {
-          console.warn('Failed to update results viewed:', error)
+          logger.warn('Failed to update results viewed:', error)
         }
       }
     }
@@ -165,12 +166,12 @@ export function useHomeController() {
     if (latestResult && !latestResult.hasWatchedFilm) {
       const resultId = latestResult._id
       if (!resultId) {
-        console.error('No valid ID found in latestResult:', latestResult)
+        logger.error('No valid ID found in latestResult:', latestResult)
       } else {
         try {
           await updateQuizResult(resultId, { hasWatchedFilm: true })
         } catch (error) {
-          console.warn('Failed to update film watched:', error)
+          logger.warn('Failed to update film watched:', error)
         }
       }
     }
@@ -178,7 +179,10 @@ export function useHomeController() {
   }
 
   const handleVideoError = (error: string) => {
-    console.error('Video playback error:', error)
+    // VideoPlayer's own handleError already reports the full diagnostic
+    // object to Sentry - this is just a lower-detail duplicate of the same
+    // failure, so keep it dev-console-only.
+    logger.warn('Video playback error:', error)
   }
 
   return {

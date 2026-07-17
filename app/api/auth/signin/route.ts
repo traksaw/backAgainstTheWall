@@ -3,7 +3,7 @@ import { AuthService } from "@/lib/auth"
 import { signToken } from "@/lib/jwt"
 import { signInSchema } from "@/lib/validation"
 import { authLimiter, checkRateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit"
-import { reportServerError } from "@/lib/server-error"
+import { logger } from "@/lib/logger"
 
 export async function POST(req: Request) {
   const ipCheck = await checkRateLimit(authLimiter, [`ip:${getClientIp(req)}`])
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     }
 
     const user = await AuthService.signIn(email, password)
-    
+
     const token = signToken({ userId: user._id.toString() })
 
     const res = NextResponse.json({
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     if (err instanceof Error && err.message === 'Invalid email or password') {
       return NextResponse.json({ error: err.message }, { status: 401 })
     }
-    reportServerError("Signin failed:", err)
+    logger.error("Signin failed:", err)
     return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
   }
 }

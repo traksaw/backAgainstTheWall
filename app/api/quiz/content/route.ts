@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { fetchQuizContent } from '@/lib/quiz/content'
-import { reportServerError } from '@/lib/server-error'
+import { logger } from '@/lib/logger'
 
 // Force dynamic rendering and disable caching so Sanity updates appear immediately
 export const dynamic = 'force-dynamic'
@@ -11,7 +11,7 @@ export async function GET() {
     const data = await fetchQuizContent()
     return NextResponse.json({ success: true, ...data })
   } catch (e) {
-    reportServerError('Error in /api/quiz/content:', e)
+    logger.error('Error in /api/quiz/content:', e)
     return NextResponse.json({ success: false, error: 'Failed to load quiz content' }, { status: 500 })
   }
 }

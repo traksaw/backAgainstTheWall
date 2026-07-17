@@ -5,7 +5,7 @@ import connectDB from "@/lib/mongoose"
 import QuizResultModel from "@/models/QuizResult"
 import { getUserIdFromRequest } from "@/lib/jwt"
 import { quizUpdateSchema } from "@/lib/validation"
-import { reportServerError } from "@/lib/server-error"
+import { logger } from "@/lib/logger"
 
 // WAS-6: the only fields this endpoint is allowed to touch. Never spread the
 // raw request body into an update - that's mass assignment, and it let any
@@ -66,7 +66,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 
     return NextResponse.json(updated)
   } catch (err) {
-    reportServerError("Update quiz result failed:", err)
+    logger.error("Update quiz result failed:", err)
     return NextResponse.json({ error: "Failed to update quiz result" }, { status: 500 })
   }
 }

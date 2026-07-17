@@ -5,7 +5,7 @@ vi.mock('@sentry/nextjs', () => ({
   captureException: (...args: unknown[]) => captureExceptionMock(...args),
 }))
 
-import { isProductionEnvironment, reportServerError } from './server-error'
+import { isProductionEnvironment, logger } from './logger'
 
 describe('isProductionEnvironment', () => {
   afterEach(() => {
@@ -34,7 +34,7 @@ describe('isProductionEnvironment', () => {
   })
 })
 
-describe('reportServerError', () => {
+describe('logger.error', () => {
   let errorSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
@@ -58,7 +58,7 @@ describe('reportServerError', () => {
       }
     )
 
-    reportServerError('quiz submit failed:', validationError)
+    logger.error('quiz submit failed:', validationError)
 
     expect(captureExceptionMock).toHaveBeenCalledTimes(1)
     const sentToSentry = captureExceptionMock.mock.calls[0][0] as Error
@@ -70,7 +70,7 @@ describe('reportServerError', () => {
   it('sends a plain Error to Sentry unchanged', () => {
     const plainError = new Error('ECONNREFUSED 127.0.0.1:27017')
 
-    reportServerError('quiz submit failed:', plainError)
+    logger.error('quiz submit failed:', plainError)
 
     expect(captureExceptionMock).toHaveBeenCalledWith(plainError)
   })
@@ -79,7 +79,7 @@ describe('reportServerError', () => {
     vi.stubEnv('VERCEL_ENV', undefined)
     vi.stubEnv('NODE_ENV', 'test')
 
-    reportServerError('context:', new Error('boom'))
+    logger.error('context:', new Error('boom'))
 
     expect(errorSpy).toHaveBeenCalledTimes(1)
   })
@@ -87,8 +87,67 @@ describe('reportServerError', () => {
   it('never logs to the console in production', () => {
     vi.stubEnv('VERCEL_ENV', 'production')
 
-    reportServerError('context:', new Error('boom'))
+    logger.error('context:', new Error('boom'))
 
     expect(errorSpy).not.toHaveBeenCalled()
+  })
+
+  it('still reports to Sentry when called with a message only (no err)', () => {
+    logger.error('validation issue: missing field')
+
+    expect(captureExceptionMock).toHaveBeenCalledTimes(1)
+    const sentToSentry = captureExceptionMock.mock.calls[0][0] as Error
+    expect(sentToSentry.message).toBe('validation issue: missing field')
+  })
+})
+
+describe('logger.log/debug/warn', () => {
+  beforeEach(() => {
+    captureExceptionMock.mockReset()
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('logs outside production and stays silent in production', () => {
+    vi.stubEnv('VERCEL_ENV', undefined)
+    vi.stubEnv('NODE_ENV', 'test')
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {})
+
+    logger.log('hello')
+    logger.warn('careful')
+    logger.debug('details')
+
+    expect(logSpy).toHaveBeenCalledWith('hello')
+    expect(warnSpy).toHaveBeenCalledWith('careful')
+    expect(debugSpy).toHaveBeenCalledWith('details')
+
+    vi.stubEnv('VERCEL_ENV', 'production')
+    logSpy.mockClear()
+    warnSpy.mockClear()
+    debugSpy.mockClear()
+
+    logger.log('hello')
+    logger.warn('careful')
+    logger.debug('details')
+
+    expect(logSpy).not.toHaveBeenCalled()
+    expect(warnSpy).not.toHaveBeenCalled()
+    expect(debugSpy).not.toHaveBeenCalled()
+
+    logSpy.mockRestore()
+    warnSpy.mockRestore()
+    debugSpy.mockRestore()
+  })
+
+  it('never call Sentry', () => {
+    logger.log('hello')
+    logger.warn('careful')
+    logger.debug('details')
+
+    expect(captureExceptionMock).not.toHaveBeenCalled()
   })
 })

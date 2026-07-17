@@ -3,7 +3,7 @@ import { getUserIdFromRequest } from "@/lib/jwt"
 import connectDB from "@/lib/mongoose"
 import QuizResultModel from "@/models/QuizResult"
 import mongoose from "mongoose"
-import { reportServerError } from "@/lib/server-error"
+import { logger } from "@/lib/logger"
 
 export async function GET(req: NextRequest) {
   
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(results)
   } catch (err) {
-    reportServerError("Failed to fetch quiz results:", err)
+    logger.error("Failed to fetch quiz results:", err)
     return NextResponse.json({ error: "Failed to fetch quiz results" }, { status: 500 })
   }
 }

@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { logger } from "@/lib/logger"
 
 interface SignInModalProps {
   open: boolean
@@ -45,13 +46,7 @@ export function SignInModal({ open, onOpenChange, onSwitchToSignUp, onSwitchToFo
       })
       setError("")
     } catch (error) {
-      console.error("Signin failed in component:", {
-        error,
-        errorType: typeof error,
-        message: error instanceof Error ? error.message : String(error),
-        name: error instanceof Error ? error.name : 'Unknown',
-        stack: error instanceof Error ? error.stack : undefined,
-      })
+      logger.error("Signin failed in component:", error)
 
       // Set user-friendly error message
       let errorMessage = "An unexpected error occurred during sign in"

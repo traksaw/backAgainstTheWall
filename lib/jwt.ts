@@ -2,6 +2,7 @@ import jwt, { SignOptions } from "jsonwebtoken";
 import type { NextRequest } from "next/server";
 import connectDB from "@/lib/mongoose";
 import User from "@/models/User";
+import { logger } from "@/lib/logger";
 
 const getJwtSecret = (): string => {
   const secret = process.env.JWT_SECRET;
@@ -42,7 +43,9 @@ export async function getUserIdFromRequest(
   try {
     decoded = verifyToken(token);
   } catch (error) {
-    console.error("Invalid token:", error);
+    // An expired/tampered/logged-out token is routine, not a bug - don't
+    // send it to Sentry, just keep it visible outside production.
+    logger.warn("Invalid token:", error);
     return null;
   }
 
@@ -55,7 +58,7 @@ export async function getUserIdFromRequest(
     await connectDB();
     user = await User.findById(decoded.userId).select("passwordChangedAt").lean();
   } catch (error) {
-    console.error("Failed to look up user for token validation:", error);
+    logger.error("Failed to look up user for token validation:", error);
     return null;
   }
   if (!user) return null;

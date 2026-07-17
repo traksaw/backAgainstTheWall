@@ -1,6 +1,7 @@
 // lib/quiz/questions.ts - Optimized version
 import { QuizQuestion } from '@/types/quiz';
 import { validateQuizBalance } from '@/lib/quiz/utils';
+import { logger } from '@/lib/logger';
 
 export const quizQuestions: QuizQuestion[] = [
   {
@@ -551,7 +552,7 @@ export function validateQuizIntegrity() {
   if (issues.length === 0) {
     return { valid: true, issues: [] };
   } else {
-    issues.forEach(issue => console.error(issue));
+    issues.forEach(issue => logger.error(issue));
     return { valid: false, issues };
   }
 }

@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from "react"
 import { QuizService, type QuizResult } from "@/lib/quiz"
 import { useAuth } from "@/hooks/useAuth"
 import type { QuizSubmissionData } from "@/types/quiz"
+import { logger } from "@/lib/logger"
 
 export function useQuiz() {
   const { user } = useAuth()
@@ -35,7 +36,7 @@ export function useQuiz() {
       setQuizResults(results)
       setLatestResult(results[0] || null)
     } catch (error) {
-      console.error("Error loading quiz results:", error)
+      logger.error("Error loading quiz results:", error)
       setQuizResults([])
       setLatestResult(null)
     } finally {
@@ -63,7 +64,8 @@ export function useQuiz() {
       setQuizResults((prev) => [result, ...prev])
       return result
     } catch (error) {
-      console.error("Error submitting quiz:", error)
+      // QuizService.submitQuiz already reports this to Sentry.
+      logger.warn("Error submitting quiz:", error)
       throw error
     } finally {
       setLoading(false)
@@ -95,7 +97,7 @@ export function useQuiz() {
 
       return updatedResult
     } catch (error) {
-      console.error("Error updating quiz result:", error)
+      logger.error("Error updating quiz result:", error)
       throw error
     } finally {
       setLoading(false)

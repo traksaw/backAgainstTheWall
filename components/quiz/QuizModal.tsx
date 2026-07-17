@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useQuizState } from "@/hooks/useQuizState"
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { QuizAnswer } from "@/types/quiz"
+import { logger } from "@/lib/logger"
 
 interface UserProfile {
   _id: string;
@@ -154,9 +155,7 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
       try {
         onQuizComplete(finalAnswers)
       } catch (error) {
-        console.error('=== QUIZ MODAL: COMPLETION ERROR ===')
-        console.error('Error details:', error)
-        console.error('Error stack:', (error as Error)?.stack)
+        logger.error('Quiz completion error in modal:', error)
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
         alert(`Quiz completion failed: ${errorMessage}`)
       } finally {

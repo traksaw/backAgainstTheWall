@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AuthService } from "@/lib/auth"
 import { getUserIdFromRequest } from "@/lib/jwt"
-import { reportServerError } from "@/lib/server-error"
+import { logger } from "@/lib/logger"
 
 export async function POST(req: NextRequest) {
   // WAS-7: identity must come from the session, never a client-supplied
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json(profile)
   } catch (err) {
-    reportServerError("Failed to get user profile:", err)
+    logger.error("Failed to get user profile:", err)
     return NextResponse.json({ error: "Failed to get user profile" }, { status: 400 })
   }
 }

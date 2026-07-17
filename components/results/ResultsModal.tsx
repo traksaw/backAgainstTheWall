@@ -9,6 +9,7 @@ import { useState, useRef, useEffect } from "react"
 import { FadeIn, FadeInUp, FadeInScale } from "@/components/ui/fade-in"
 import { archetypeResults, getArchetypeSolidColor } from "@/lib/quiz/archetypes"
 import type { ArchetypeResult } from "@/types/quiz"
+import { logger } from "@/lib/logger"
 
 interface ResultsModalProps {
   open: boolean
@@ -42,7 +43,7 @@ export function ResultsModal({
           setArchetypesMap(data.archetypes as Record<string, ArchetypeResult>);
         }
       } catch (error) {
-        console.error('Failed to fetch quiz content:', error);
+        logger.error('Failed to fetch quiz content:', error);
         // Fallback uses static import; no state change needed
       }
     })();
