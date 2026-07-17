@@ -1,6 +1,7 @@
 // lib/quiz.ts
 
 import type { Archetype, QuizAnswer, QuizResult } from "@/types/quiz"
+import { logger } from "@/lib/logger"
 export type { Archetype, QuizAnswer, QuizResult }
 
 export interface QuizResultUpdate {
@@ -38,11 +39,13 @@ export class QuizService {
         try {
           errorData = await res.json()
         } catch (jsonError) {
-          console.error('Failed to parse error response as JSON:', jsonError)
+          logger.error('Failed to parse error response as JSON:', jsonError)
           errorData = { error: `HTTP ${res.status}: ${res.statusText}` }
         }
 
-        console.error("Quiz submission HTTP error:", {
+        // Detail only - the throw below re-enters the catch below, which is
+        // the single point that reports this failure to Sentry.
+        logger.warn("Quiz submission HTTP error:", {
           status: res.status,
           statusText: res.statusText,
           errorData
@@ -55,7 +58,7 @@ export class QuizService {
       return responseData
 
     } catch (error) {
-      console.error('Quiz submission fetch error:', error)
+      logger.error('Quiz submission fetch error:', error)
       throw error
     }
   }

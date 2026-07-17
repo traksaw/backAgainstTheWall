@@ -1,6 +1,7 @@
 // lib/quiz/utils.ts - Enhanced shuffling with robust anti-pattern detection
 
 import { QuizQuestion, QuizAnswer, Archetype, QuizScores, QuizOption } from '@/types/quiz';
+import { logger } from '@/lib/logger';
 
 export const ARCHETYPES: Archetype[] = ['Avoider', 'Gambler', 'Realist', 'Architect']
 export const EMPTY_SCORES: QuizScores = ARCHETYPES.reduce((acc, a) => {
@@ -217,7 +218,7 @@ export function calculateQuizScores(answers: Record<number, QuizAnswer>): QuizSc
       continue
     }
     if (Number.isNaN(pts)) {
-      console.warn(`  ⚠️ NaN points for Q${key}:`, ans)
+      logger.warn(`  ⚠️ NaN points for Q${key}:`, ans)
       continue
     }
     // @ts-expect-error narrowing above guarantees key exists
@@ -355,7 +356,7 @@ export function validateQuizBalance(questions: QuizQuestion[]) {
   const questionsBalanced = questionValues.every(count => count === questionValues[0]);
   
   if (!pointsBalanced || !questionsBalanced) {
-    console.warn('🎯 QUIZ IMBALANCE DETECTED!');
+    logger.warn('🎯 QUIZ IMBALANCE DETECTED!');
   } else {
   }
   

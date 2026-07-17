@@ -5,6 +5,7 @@ import User, { IUser } from "@/models/User"
 import connectDB from "@/lib/mongoose"
 import { generateToken, hashToken } from "@/lib/tokens"
 import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/email"
+import { logger } from "@/lib/logger"
 
 export interface SignUpData {
   email: string
@@ -129,7 +130,7 @@ export class AuthService {
     try {
       await sendVerificationEmail(user.email, token)
     } catch (err) {
-      console.error("Failed to send verification email:", err)
+      logger.error("Failed to send verification email:", err)
     }
   }
 
@@ -154,7 +155,7 @@ export class AuthService {
     try {
       await sendPasswordResetEmail(user.email, token)
     } catch (err) {
-      console.error("Failed to send password reset email:", err)
+      logger.error("Failed to send password reset email:", err)
     }
   }
 
@@ -242,7 +243,7 @@ export class AuthService {
       await User.findOne().lean()
       return { isSetup: true, missingTables: [] }
     } catch (error) {
-      console.error('Database setup check failed:', error)
+      logger.error('Database setup check failed:', error)
       return {
         isSetup: false,
         missingTables: ["User"],

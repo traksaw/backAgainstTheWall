@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
+import { logger } from '@/lib/logger'
 
 export interface CastCrewMember {
   name: string
@@ -16,7 +17,7 @@ export function loadCastAndCrew(): CastCrewMember[] {
   
   // Check if directory exists, if not return empty array
   if (!fs.existsSync(castCrewDirectory)) {
-    console.warn('Cast and crew directory not found:', castCrewDirectory)
+    logger.warn('Cast and crew directory not found:', castCrewDirectory)
     return []
   }
 
@@ -54,7 +55,7 @@ export async function loadCastAndCrewAPI(): Promise<CastCrewMember[]> {
     if (!response.ok) throw new Error('Failed to fetch cast and crew')
     return await response.json()
   } catch (error) {
-    console.error('Error loading cast and crew:', error)
+    logger.error('Error loading cast and crew:', error)
     return []
   }
 }

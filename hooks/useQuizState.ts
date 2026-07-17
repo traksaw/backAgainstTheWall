@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { QuizQuestion, QuizAnswer, QuizState, Archetype } from '@/types/quiz';
 import { quizQuestions } from '@/lib/quiz/questions';
 import { createAdvancedRandomizedQuestions, detectRepetitivePattern } from '@/lib/quiz/utils';
+import { logger } from '@/lib/logger';
 
 export function useQuizState() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -31,7 +32,7 @@ export function useQuizState() {
           setBaseQuestions(data.questions as QuizQuestion[]);
         }
       } catch (e) {
-        console.warn('⚠️ Falling back to static quiz questions due to fetch error', e);
+        logger.warn('⚠️ Falling back to static quiz questions due to fetch error', e);
         if (!cancelled) setBaseQuestions(quizQuestions);
       }
     })();

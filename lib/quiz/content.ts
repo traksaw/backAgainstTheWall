@@ -3,6 +3,7 @@ import { ARCHETYPES_QUERY, QUIZ_QUESTIONS_QUERY } from '@/sanity/queries/quiz'
 import type { Archetype, ArchetypeResult, QuizQuestion } from '@/types/quiz'
 import { archetypeResults as staticArchetypeResults } from './archetypes'
 import { quizQuestions as staticQuizQuestions } from './questions'
+import { logger } from '@/lib/logger'
 
 interface ArchetypeDoc {
   key?: Archetype;
@@ -97,7 +98,7 @@ export async function fetchArchetypeResults(): Promise<Record<Archetype, Archety
 
     return record
   } catch (e) {
-    console.error('Failed to fetch archetypes from Sanity, using static fallback', e)
+    logger.error('Failed to fetch archetypes from Sanity, using static fallback', e)
     return staticArchetypeResults as Record<Archetype, ArchetypeResult>
   }
 }
@@ -114,7 +115,7 @@ export async function fetchQuizQuestions(): Promise<QuizQuestion[]> {
 
     return mapped
   } catch (e) {
-    console.error('Failed to fetch quiz questions from Sanity, using static fallback', e)
+    logger.error('Failed to fetch quiz questions from Sanity, using static fallback', e)
     return staticQuizQuestions
   }
 }

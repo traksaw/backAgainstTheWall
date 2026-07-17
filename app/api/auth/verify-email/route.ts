@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import * as Sentry from "@sentry/nextjs"
 import { AuthService } from "@/lib/auth"
+import { logger } from "@/lib/logger"
 import { verifyEmailSchema } from "@/lib/validation"
 
 export async function POST(req: Request) {
@@ -26,8 +26,7 @@ export async function POST(req: Request) {
     if (err instanceof Error && err.message === "Invalid or expired token") {
       return NextResponse.json({ error: err.message }, { status: 400 })
     }
-    console.error("Unexpected error in verify-email route:", err)
-    Sentry.captureException(err)
+    logger.error("Unexpected error in verify-email route:", err)
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 })
   }
 }

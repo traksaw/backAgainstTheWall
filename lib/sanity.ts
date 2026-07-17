@@ -1,6 +1,7 @@
 import { createClient } from '@sanity/client'
 import imageUrlBuilder from '@sanity/image-url'
 import { castAndCrew } from '@/data/cast-and-crew'
+import { logger } from '@/lib/logger'
 // Use hardcoded values for development to ensure consistency
 const config = {
   projectId: 'u6u93177',
@@ -90,12 +91,12 @@ const fallbackSupporters = [
 // on failure) so a network/API error can't crash the page render.
 export async function getCastAndCrew() {
   // For now, always use fallback data to avoid API errors
-  console.log('Using fallback cast data (Sanity temporarily disabled)')
+  logger.log('Using fallback cast data (Sanity temporarily disabled)')
   return castAndCrew
 }
 
 export async function getSupporters() {
   // For now, always use fallback data to avoid API errors
-  console.log('Using fallback supporters data (Sanity temporarily disabled)')
+  logger.log('Using fallback supporters data (Sanity temporarily disabled)')
   return fallbackSupporters
 }

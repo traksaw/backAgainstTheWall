@@ -6,7 +6,7 @@ import { getUserIdFromRequest } from "@/lib/jwt"
 import { quizSubmitSchema } from "@/lib/validation"
 import { calculateQuizScores, getWinningArchetype } from "@/lib/quiz/utils"
 import { quizQuestions } from "@/lib/quiz/questions"
-import { isProductionEnvironment, reportServerError } from "@/lib/server-error"
+import { logger } from "@/lib/logger"
 import type { QuizAnswer } from "@/types/quiz"
 
 export async function POST(req: NextRequest) {
@@ -74,14 +74,12 @@ export async function POST(req: NextRequest) {
 
     const newResult = await QuizResultModel.create(quizResultData)
 
-    if (!isProductionEnvironment()) {
-      console.log("Quiz result created:", newResult._id)
-    }
+    logger.log("Quiz result created:", newResult._id)
 
     return NextResponse.json(newResult)
 
   } catch (err) {
-    reportServerError("Quiz submit error:", err)
+    logger.error("Quiz submit error:", err)
 
     return NextResponse.json({
       error: "Failed to submit quiz"

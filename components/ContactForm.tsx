@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { FadeIn, FadeInLeft } from "@/components/ui/fade-in";
+import { logger } from "@/lib/logger";
 
 // TypeScript interfaces
 interface FormData {
@@ -93,7 +94,7 @@ export default function ContactForm(): JSX.Element {
                 throw new Error('Failed to send message');
             }
         } catch (error) {
-            console.error('Error submitting form:', error);
+            logger.error('Error submitting form:', error);
             alert('Failed to send message. Please try again.');
         } finally {
             setIsSubmitting(false);

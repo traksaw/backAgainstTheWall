@@ -3,6 +3,7 @@
 import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Play, Loader2 } from "lucide-react"
+import { logger } from "@/lib/logger"
 
 interface VideoPlayerProps {
   src: string
@@ -43,7 +44,7 @@ export function VideoPlayer({
   const handleError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
     const video = e.currentTarget
     const error = video.error
-    console.error('Video Error:', {
+    logger.error('Video Error:', {
       errorCode: error?.code,
       errorMessage: error?.message,
       readyState: video.readyState,
@@ -94,7 +95,7 @@ export function VideoPlayer({
       {!isPlaying && !isLoading && !hasError && (
         <div 
           className="absolute inset-0 flex items-center justify-center cursor-pointer"
-          onClick={() => videoRef.current?.play().catch(console.error)}
+          onClick={() => videoRef.current?.play().catch((err) => logger.error('Failed to play video:', err))}
         >
           <div className="bg-white/20 backdrop-blur-sm rounded-full p-6 hover:bg-white/30 transition-all duration-300">
             <Play className="w-12 h-12 text-white ml-1" />

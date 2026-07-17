@@ -1,11 +1,11 @@
 // app/api/quiz/[id]/update/route.ts
 import { NextResponse, NextRequest } from "next/server"
-import * as Sentry from "@sentry/nextjs"
 import mongoose from "mongoose"
 import connectDB from "@/lib/mongoose"
 import QuizResultModel from "@/models/QuizResult"
 import { getUserIdFromRequest } from "@/lib/jwt"
 import { quizUpdateSchema } from "@/lib/validation"
+import { logger } from "@/lib/logger"
 
 // WAS-6: the only fields this endpoint is allowed to touch. Never spread the
 // raw request body into an update - that's mass assignment, and it let any
@@ -66,9 +66,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 
     return NextResponse.json(updated)
   } catch (err) {
-    const error = err instanceof Error ? err.message : 'Unknown error'
-    console.error("Update quiz result failed:", error)
-    Sentry.captureException(err)
+    logger.error("Update quiz result failed:", err)
     return NextResponse.json({ error: "Failed to update quiz result" }, { status: 500 })
   }
 }

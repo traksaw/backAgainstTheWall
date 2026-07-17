@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getUserIdFromRequest } from "@/lib/jwt"
 import { AuthService } from "@/lib/auth"
-import { reportServerError } from "@/lib/server-error"
+import { logger } from "@/lib/logger"
 
 export async function GET(req: NextRequest) {
 
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(user)
   } catch (err) {
-    reportServerError("Error in auth/me route:", err)
+    logger.error("Error in auth/me route:", err)
     return NextResponse.json({ error: "Failed to load user profile" }, { status: 500 })
   }
 }

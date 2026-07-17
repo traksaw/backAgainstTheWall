@@ -5,6 +5,7 @@ import { useState, useEffect, createContext, useContext } from "react"
 import type { IUser } from "@/models/User"
 import type { SignUpData } from "@/lib/auth"
 import type { SignInFormValues } from "@/lib/validation"
+import { logger } from "@/lib/logger"
 
 interface AuthContextType {
   user: IUser | null
@@ -48,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
     } catch (err) {
-      console.error("Failed to fetch current user:", err)
+      logger.error("Failed to fetch current user:", err)
       setUser(null)
       setProfile(null)
       return null
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const profileData = await res.json()
       setProfile(profileData)
     } catch (err) {
-      console.error("Error loading user profile:", err)
+      logger.error("Error loading user profile:", err)
     } finally {
       setLoading(false)
     }
@@ -100,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Failed to authenticate after signup")
       }
     } catch (err) {
-      console.error("Signup error:", err)
+      logger.error("Signup error:", err)
       throw err // Re-throw so the component can handle it
     } finally {
       setLoading(false)
@@ -129,7 +130,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
     } catch (err) {
-      console.error("Signin error:", err)
+      // SignInModal already reports this to Sentry via logger.error once it
+      // catches the rethrow below - logging it again here would double-count
+      // every failed signin, including routine wrong-password attempts.
+      logger.warn("Signin error:", err)
       throw err
     } finally {
       setLoading(false)
@@ -152,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(null)
       setSession(null)
     } catch (error) {
-      console.error("Sign-out failed:", error)
+      logger.error("Sign-out failed:", error)
       throw error
     } finally {
       setLoading(false)
@@ -183,7 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(updatedUser)
       setProfile(updatedUser)
     } catch (error) {
-      console.error("Update profile failed:", error)
+      logger.error("Update profile failed:", error)
       throw error
     } finally {
       setLoading(false)
@@ -205,7 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(responseData.error || "Failed to request password reset")
       }
     } catch (err) {
-      console.error("Request password reset error:", err)
+      logger.error("Request password reset error:", err)
       throw err
     } finally {
       setLoading(false)
@@ -227,7 +231,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(responseData.error || "Failed to reset password")
       }
     } catch (err) {
-      console.error("Reset password error:", err)
+      logger.error("Reset password error:", err)
       throw err
     } finally {
       setLoading(false)
@@ -252,7 +256,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Refresh so the rest of the app sees the updated emailVerified status
       await fetchCurrentUser()
     } catch (err) {
-      console.error("Verify email error:", err)
+      logger.error("Verify email error:", err)
       throw err
     } finally {
       setLoading(false)
@@ -274,7 +278,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(responseData.error || "Failed to resend verification email")
       }
     } catch (err) {
-      console.error("Resend verification error:", err)
+      logger.error("Resend verification error:", err)
       throw err
     } finally {
       setLoading(false)

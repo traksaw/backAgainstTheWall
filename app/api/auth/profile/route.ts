@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import * as Sentry from "@sentry/nextjs"
 import { AuthService } from "@/lib/auth"
 import { getUserIdFromRequest } from "@/lib/jwt"
+import { logger } from "@/lib/logger"
 
 export async function POST(req: NextRequest) {
   // WAS-7: identity must come from the session, never a client-supplied
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json(profile)
   } catch (err) {
-    Sentry.captureException(err)
+    logger.error("Failed to get user profile:", err)
     const error = err instanceof Error ? err.message : 'Failed to get user profile'
     return NextResponse.json({ error }, { status: 400 })
   }

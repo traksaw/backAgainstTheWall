@@ -42,12 +42,19 @@ All three `Sentry.init()` calls read a single `NEXT_PUBLIC_SENTRY_DSN` env var
 and no-op (`enabled: false`) if it's unset — so the app runs fine locally
 without a DSN configured.
 
-**Existing routes that `catch` and `console.error` their own errors are now
-also reported to Sentry** via an explicit `Sentry.captureException(err)` call
-in each catch block — Sentry's auto-instrumentation only sees *unhandled*
-throws, so this is a deliberate interim step (not automatic) until WAS-45
-(replacing ad-hoc console logging with a gated logger) replaces these calls
-with a single logger abstraction.
+**WAS-45: all `catch` blocks that need to report an error now go through
+`lib/logger.ts`'s `logger.error(context, err)`** instead of raw
+`console.error`/`Sentry.captureException` pairs — Sentry's auto-instrumentation
+only sees *unhandled* throws, so this is what makes handled/caught errors
+visible too, on both server and client. `logger.error` sanitizes Mongoose
+`ValidationError`s the same way the old `lib/server-error.ts` did (now
+folded into `logger.ts`), and gates its console echo to non-production via
+`isProductionEnvironment()` (`VERCEL_ENV`/`NEXT_PUBLIC_VERCEL_ENV` server/client,
+falling back to `NODE_ENV`). `logger.log`/`warn`/`debug` are dev/preview-only
+and never reach Sentry — use those for anything that isn't an actual failure,
+or when a lower layer already reports the same failure to Sentry (several
+call sites deliberately downgrade to `warn` to avoid double-reporting one
+failure from two layers — see the comments at each site).
 
 ## Environments (dev vs. preview vs. production)
 
