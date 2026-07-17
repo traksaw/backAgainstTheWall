@@ -14,9 +14,9 @@ export async function POST() {
     verifyToken(token)
   } catch {
     // verifyToken throws (rather than returning null) on an invalid or
-    // expired token - without this catch that exception was uncaught,
-    // producing a 500 instead of the 401 this route always intended.
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    // expired token. That's not an error case here - the caller's goal
+    // (no active session) is already true, so fall through and treat it
+    // as a successful sign-out instead of a 401.
   }
 
   // Clear the token cookie

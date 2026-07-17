@@ -31,7 +31,7 @@ describe('POST /api/auth/signout', () => {
     expect(cookieStoreMock.set).not.toHaveBeenCalled()
   })
 
-  it('returns 401, not a crash, for an invalid/expired token', async () => {
+  it('treats an invalid/expired token as already signed out, not a crash', async () => {
     cookieStoreMock.get.mockReturnValue({ value: 'bad-token' })
     verifyTokenMock.mockImplementation(() => {
       throw new Error('jwt expired')
@@ -39,8 +39,12 @@ describe('POST /api/auth/signout', () => {
 
     const res = await POST()
 
-    expect(res.status).toBe(401)
-    expect(cookieStoreMock.set).not.toHaveBeenCalled()
+    expect(res.status).toBe(200)
+    expect(cookieStoreMock.set).toHaveBeenCalledWith(
+      'token',
+      '',
+      expect.objectContaining({ maxAge: 0 })
+    )
   })
 
   it('clears the token cookie for a valid session', async () => {
