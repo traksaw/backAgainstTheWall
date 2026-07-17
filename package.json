@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
-    "check-sanity": "tsx scripts/check-sanity.ts"
+    "check-sanity": "tsx scripts/check-sanity.ts",
+    "sync-indexes": "DOTENV_CONFIG_PATH=.env.local tsx scripts/sync-indexes.ts"
   },
   "dependencies": {
     "@formspree/react": "^3.0.0",
