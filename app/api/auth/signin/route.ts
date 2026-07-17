@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
-import * as Sentry from "@sentry/nextjs"
 import { AuthService } from "@/lib/auth"
 import { signToken } from "@/lib/jwt"
 import { signInSchema } from "@/lib/validation"
 import { authLimiter, checkRateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit"
+import { reportServerError } from "@/lib/server-error"
 
 export async function POST(req: Request) {
   const ipCheck = await checkRateLimit(authLimiter, [`ip:${getClientIp(req)}`])
@@ -58,10 +58,10 @@ export async function POST(req: Request) {
   } catch (err) {
     // Wrong email/password is expected user behavior, not a bug - only
     // report anything else (DB errors, token signing failures, etc).
-    if (!(err instanceof Error && err.message === 'Invalid email or password')) {
-      Sentry.captureException(err)
+    if (err instanceof Error && err.message === 'Invalid email or password') {
+      return NextResponse.json({ error: err.message }, { status: 401 })
     }
-    const error = err instanceof Error ? err.message : 'Invalid email or password'
-    return NextResponse.json({ error }, { status: 401 })
+    reportServerError("Signin failed:", err)
+    return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
   }
 }

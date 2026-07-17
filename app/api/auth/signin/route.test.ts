@@ -9,6 +9,11 @@ vi.mock('@/lib/auth', () => ({
   },
 }))
 
+const captureExceptionMock = vi.fn()
+vi.mock('@sentry/nextjs', () => ({
+  captureException: (...args: unknown[]) => captureExceptionMock(...args),
+}))
+
 vi.mock('@/lib/jwt', () => ({
   signToken: vi.fn().mockReturnValue('signed-token'),
 }))
@@ -100,5 +105,35 @@ describe('POST /api/auth/signin (WAS-8: reject non-string bodies before they rea
     // A passing status with no session cookie is a broken login a client
     // can't detect - assert the actual side effect that makes sign-in useful.
     expect(res.cookies.get('token')?.value).toBe('signed-token')
+  })
+})
+
+describe('POST /api/auth/signin (WAS-44: no internal error detail in the response)', () => {
+  beforeEach(() => {
+    signInMock.mockReset()
+    checkRateLimitMock.mockReset().mockResolvedValue({ allowed: true })
+    captureExceptionMock.mockReset()
+  })
+
+  it('returns the same generic message for wrong credentials as any other failure', async () => {
+    signInMock.mockRejectedValue(new Error('Invalid email or password'))
+
+    const res = await POST(makeRequest({ email: 'me@example.com', password: 'wrong' }))
+    const body = await res.json()
+
+    expect(res.status).toBe(401)
+    expect(body).toEqual({ error: 'Invalid email or password' })
+    expect(captureExceptionMock).not.toHaveBeenCalled()
+  })
+
+  it('returns a generic error instead of the raw error message on an unexpected failure, and reports it', async () => {
+    signInMock.mockRejectedValue(new Error('connection timed out to mongodb+srv://user:pass@cluster/db'))
+
+    const res = await POST(makeRequest({ email: 'me@example.com', password: 'hunter2' }))
+    const body = await res.json()
+
+    expect(res.status).toBe(401)
+    expect(body).toEqual({ error: 'Invalid email or password' })
+    expect(captureExceptionMock).toHaveBeenCalledTimes(1)
   })
 })
