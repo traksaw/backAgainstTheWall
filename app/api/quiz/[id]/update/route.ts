@@ -43,7 +43,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
   const parsed = quizUpdateSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Invalid request body", details: parsed.error.flatten() },
+      { error: "Invalid request body" },
       { status: 400 }
     )
   }
