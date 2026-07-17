@@ -163,3 +163,21 @@ describe('POST /api/auth/signup (WAS-20: never reveal account existence)', () =>
     expect(captureExceptionMock).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('POST /api/auth/signup (WAS-44: no internal error detail in the response)', () => {
+  beforeEach(() => {
+    signUpMock.mockReset()
+    checkRateLimitMock.mockReset().mockResolvedValue({ allowed: true })
+    captureExceptionMock.mockReset()
+  })
+
+  it('returns a generic error instead of the raw error message on an unexpected failure', async () => {
+    signUpMock.mockRejectedValue(new Error('connection timed out to mongodb+srv://user:pass@cluster/db'))
+
+    const res = await POST(makeRequest(validPayload))
+    const body = await res.json()
+
+    expect(res.status).toBe(400)
+    expect(body).toEqual({ error: 'Failed to create account' })
+  })
+})
