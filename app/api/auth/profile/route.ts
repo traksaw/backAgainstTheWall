@@ -20,7 +20,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(profile)
   } catch (err) {
     logger.error("Failed to get user profile:", err)
-    const error = err instanceof Error ? err.message : 'Failed to get user profile'
-    return NextResponse.json({ error }, { status: 400 })
+    return NextResponse.json({ error: "Failed to get user profile" }, { status: 400 })
   }
 }

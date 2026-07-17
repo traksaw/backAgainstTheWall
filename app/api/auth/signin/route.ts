@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     }
 
     const user = await AuthService.signIn(email, password)
-    
+
     const token = signToken({ userId: user._id.toString() })
 
     const res = NextResponse.json({
@@ -58,10 +58,10 @@ export async function POST(req: Request) {
   } catch (err) {
     // Wrong email/password is expected user behavior, not a bug - only
     // report anything else (DB errors, token signing failures, etc).
-    if (!(err instanceof Error && err.message === 'Invalid email or password')) {
-      logger.error("Signin error:", err)
+    if (err instanceof Error && err.message === 'Invalid email or password') {
+      return NextResponse.json({ error: err.message }, { status: 401 })
     }
-    const error = err instanceof Error ? err.message : 'Invalid email or password'
-    return NextResponse.json({ error }, { status: 401 })
+    logger.error("Signin failed:", err)
+    return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
   }
 }

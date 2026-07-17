@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     }
 
     const user = await AuthService.signUp(parsed.data)
-    
+
     // Auto-sign in the user after successful signup
     const token = signToken({ userId: user._id.toString() })
 
@@ -59,10 +59,10 @@ export async function POST(req: Request) {
   } catch (err) {
     // A duplicate signup attempt is expected user behavior, not a bug - only
     // report anything else (DB errors, token signing failures, etc).
-    if (!(err instanceof DuplicateAccountError)) {
-      logger.error("Signup error:", err)
+    if (err instanceof DuplicateAccountError) {
+      return NextResponse.json({ error: err.message }, { status: 400 })
     }
-    const error = err instanceof Error ? err.message : 'Failed to create user'
-    return NextResponse.json({ error }, { status: 400 })
+    logger.error("Signup failed:", err)
+    return NextResponse.json({ error: "Failed to create account" }, { status: 400 })
   }
 }
