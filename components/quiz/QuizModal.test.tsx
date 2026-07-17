@@ -190,4 +190,65 @@ describe("QuizModal", () => {
     expect(handleQuizAnswer).not.toHaveBeenCalled()
     expect(onQuizComplete).not.toHaveBeenCalled()
   })
+
+  it("exposes the quiz options as a radiogroup of radio buttons", () => {
+    render(
+      <QuizModal
+        open={true}
+        onOpenChange={vi.fn()}
+        onQuizComplete={vi.fn()}
+        profile={profile}
+        quizLoading={false}
+      />
+    )
+
+    const radiogroup = screen.getByRole("radiogroup")
+    const options = screen.getAllByRole("radio")
+    expect(options).toHaveLength(2)
+    expect(radiogroup).toContainElement(options[0])
+    expect(radiogroup).toContainElement(options[1])
+  })
+
+  it("moves roving focus between options with arrow keys instead of relying on Tab order", () => {
+    render(
+      <QuizModal
+        open={true}
+        onOpenChange={vi.fn()}
+        onQuizComplete={vi.fn()}
+        profile={profile}
+        quizLoading={false}
+      />
+    )
+
+    const [first, second] = screen.getAllByRole("radio")
+    expect(first).toHaveAttribute("tabIndex", "0")
+    expect(second).toHaveAttribute("tabIndex", "-1")
+
+    first.focus()
+    fireEvent.keyDown(first, { key: "ArrowDown" })
+
+    expect(document.activeElement).toBe(second)
+    expect(second).toHaveAttribute("tabIndex", "0")
+    expect(first).toHaveAttribute("tabIndex", "-1")
+  })
+
+  it("wraps roving focus from the last option back to the first with ArrowDown", () => {
+    render(
+      <QuizModal
+        open={true}
+        onOpenChange={vi.fn()}
+        onQuizComplete={vi.fn()}
+        profile={profile}
+        quizLoading={false}
+      />
+    )
+
+    const [first, second] = screen.getAllByRole("radio")
+    second.focus()
+    fireEvent.keyDown(second, { key: "ArrowDown" })
+
+    expect(document.activeElement).toBe(first)
+    expect(first).toHaveAttribute("tabIndex", "0")
+    expect(second).toHaveAttribute("tabIndex", "-1")
+  })
 })

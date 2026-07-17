@@ -117,6 +117,32 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
     setLiveMessage("")
   }
 
+  // Roving tabindex for the option radiogroup: only one option is ever
+  // reachable via Tab; arrow keys move both focus and the tab stop.
+  const [focusedOptionIndex, setFocusedOptionIndex] = useState(0)
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([])
+  // Reset the roving tab stop when the question changes, adjusted during render
+  // (see prevQuestionForMessage below) rather than in an effect.
+  const [prevQuestionForFocus, setPrevQuestionForFocus] = useState(currentQuestion)
+  if (currentQuestion !== prevQuestionForFocus) {
+    setPrevQuestionForFocus(currentQuestion)
+    setFocusedOptionIndex(0)
+  }
+
+  const handleOptionKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, optionCount: number) => {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
+    event.preventDefault()
+    // Read the current index from the focused element rather than state: state only tracks
+    // moves made via these arrow-key handlers, so a focus change from elsewhere (e.g. a test
+    // calling .focus() directly, or an option regaining focus after being re-enabled) would
+    // otherwise desync from where focus actually is.
+    const currentIndex = optionRefs.current.indexOf(event.currentTarget)
+    const direction = event.key === 'ArrowDown' ? 1 : -1
+    const nextIndex = (currentIndex + direction + optionCount) % optionCount
+    setFocusedOptionIndex(nextIndex)
+    optionRefs.current[nextIndex]?.focus()
+  }
+
   const handleAnswerClick = async (answer: QuizAnswer, event: React.MouseEvent<HTMLButtonElement>) => {
     if (isAnsweringRef.current) return
     isAnsweringRef.current = true
@@ -229,19 +255,25 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
                 Question {currentQuestion + 1} of {shuffledQuestions.length}
               </div>
               
-              <h3 className="text-lg font-semibold text-center text-gray-800 leading-relaxed">
+              <h3 id="quiz-question-heading" className="text-lg font-semibold text-center text-gray-800 leading-relaxed">
                 {shuffledQuestions[currentQuestion]?.question || shuffledQuestions[currentQuestion]?.text}
               </h3>
-              <div className="space-y-3">
+              <div role="radiogroup" aria-labelledby="quiz-question-heading" className="space-y-3">
                 {shuffledQuestions[currentQuestion]?.options.map((option: QuizAnswer, index: number) => {
                   // Create a unique key that includes the current question to force re-render
                   const uniqueKey = `${currentQuestion}-${option.id || index}-${option.text.slice(0, 10)}`;
-                  
+                  const optionCount = shuffledQuestions[currentQuestion]?.options.length ?? 0;
+
                   return (
                     <Button
                       key={uniqueKey}
+                      ref={(el) => { optionRefs.current[index] = el; }}
+                      role="radio"
+                      aria-checked={false}
+                      tabIndex={index === focusedOptionIndex ? 0 : -1}
                       variant="outline"
                       onClick={(event) => handleAnswerClick(option, event)}
+                      onKeyDown={(event) => handleOptionKeyDown(event, optionCount)}
                       disabled={quizLoading || isAnswering}
                       className="w-full text-left justify-start p-4 h-auto border-gray-300 hover:border-gray-300 hover:bg-transparent active:bg-transparent active:border-gray-300 transition-none rounded-lg text-wrap min-h-[56px] focus:outline focus-visible:ring-2 focus-visible:ring-[#B95D38] focus-visible:ring-offset-2"
                     >
