@@ -4,19 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import { ExternalLink } from "lucide-react";
 import { FadeInUp } from "@/components/ui/fade-in";
 import { cn } from "@/lib/utils";
-
-interface CastMember {
-  name: string
-  role: string
-  description: string
-  image?: string
-  readMoreUrl?: string
-  order?: number
-  imageAlt?: string
-}
+import type { CastCrewMember } from "@/data/cast-and-crew";
 
 interface CastCrewGridProps {
-  castMembers: CastMember[];
+  castMembers: CastCrewMember[];
 }
 
 
