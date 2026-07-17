@@ -1,22 +1,23 @@
 import { cookies } from "next/headers"
 import { verifyToken } from "@/lib/jwt"
+import { logger } from "@/lib/logger"
 import { NextResponse } from "next/server"
 
 export async function POST() {
   const cookieStore = await cookies()
   const token = cookieStore.get("token")?.value
 
-  if (!token) {
-    return NextResponse.json({ error: "No token found" }, { status: 401 })
-  }
-
-  try {
-    verifyToken(token)
-  } catch {
-    // verifyToken throws (rather than returning null) on an invalid or
-    // expired token - without this catch that exception was uncaught,
-    // producing a 500 instead of the 401 this route always intended.
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+  // Sign-out is idempotent: the goal is "no active session", which is
+  // already true whether the cookie is missing or the token on it can't be
+  // verified. verifyToken throws (rather than returning null) on an invalid
+  // or expired token, so that's not an error case here either - log it for
+  // visibility and fall through to clearing the cookie and returning success.
+  if (token) {
+    try {
+      verifyToken(token)
+    } catch (error) {
+      logger.warn("Invalid token on sign-out:", error)
+    }
   }
 
   // Clear the token cookie
