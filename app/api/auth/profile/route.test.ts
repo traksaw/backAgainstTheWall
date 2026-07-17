@@ -13,6 +13,11 @@ vi.mock('@/lib/jwt', () => ({
   getUserIdFromRequest: (...args: unknown[]) => getUserIdFromRequestMock(...args),
 }))
 
+const captureExceptionMock = vi.fn()
+vi.mock('@sentry/nextjs', () => ({
+  captureException: (...args: unknown[]) => captureExceptionMock(...args),
+}))
+
 import { POST } from './route'
 
 function makeRequest(body: unknown) {
@@ -27,6 +32,7 @@ describe('POST /api/auth/profile (WAS-7: identity must come from the session, no
   beforeEach(() => {
     getUserProfileMock.mockReset()
     getUserIdFromRequestMock.mockReset()
+    captureExceptionMock.mockReset()
   })
 
   it('returns 401 when there is no authenticated session', async () => {
@@ -59,5 +65,17 @@ describe('POST /api/auth/profile (WAS-7: identity must come from the session, no
     const res = await POST(makeRequest({}))
 
     expect(res.status).toBe(404)
+  })
+
+  it('returns a generic error instead of the raw error message on a lookup failure', async () => {
+    getUserIdFromRequestMock.mockResolvedValue('507f1f77bcf86cd799439011')
+    getUserProfileMock.mockRejectedValue(new Error('connection timed out to mongodb+srv://user:pass@cluster/db'))
+
+    const res = await POST(makeRequest({}))
+    const body = await res.json()
+
+    expect(res.status).toBe(400)
+    expect(body).toEqual({ error: 'Failed to get user profile' })
+    expect(captureExceptionMock).toHaveBeenCalledTimes(1)
   })
 })

@@ -139,3 +139,23 @@ describe('PUT /api/quiz/[id]/update (WAS-8: reject malformed bodies before they 
     expect(findOneAndUpdateMock).not.toHaveBeenCalled()
   })
 })
+
+describe('PUT /api/quiz/[id]/update (WAS-44: no internal error detail in the response)', () => {
+  beforeEach(() => {
+    findOneAndUpdateMock.mockClear()
+    findByIdAndUpdateMock.mockClear()
+    leanMock.mockReset()
+    getUserIdFromRequestMock.mockReset()
+    getUserIdFromRequestMock.mockResolvedValue('507f1f77bcf86cd799439011')
+  })
+
+  it('returns a generic error instead of the raw error message on a DB failure', async () => {
+    leanMock.mockRejectedValue(new Error('connection timed out to mongodb+srv://user:pass@cluster/db'))
+
+    const res = await PUT(makeRequest({ hasViewedResults: true }), makeParams('result-id'))
+    const body = await res.json()
+
+    expect(res.status).toBe(500)
+    expect(body).toEqual({ error: 'Failed to update quiz result' })
+  })
+})

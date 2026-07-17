@@ -1,11 +1,11 @@
 // app/api/auth/signup/route.ts
 
 import { NextResponse } from "next/server"
-import * as Sentry from "@sentry/nextjs"
 import { AuthService, DuplicateAccountError } from "@/lib/auth"
 import { signToken } from "@/lib/jwt"
 import { signUpSchema } from "@/lib/validation"
 import { authLimiter, checkRateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit"
+import { reportServerError } from "@/lib/server-error"
 
 export async function POST(req: Request) {
   const ipCheck = await checkRateLimit(authLimiter, [`ip:${getClientIp(req)}`])
@@ -59,10 +59,10 @@ export async function POST(req: Request) {
   } catch (err) {
     // A duplicate signup attempt is expected user behavior, not a bug - only
     // report anything else (DB errors, token signing failures, etc).
-    if (!(err instanceof DuplicateAccountError)) {
-      Sentry.captureException(err)
+    if (err instanceof DuplicateAccountError) {
+      return NextResponse.json({ error: err.message }, { status: 400 })
     }
-    const error = err instanceof Error ? err.message : 'Failed to create user'
-    return NextResponse.json({ error }, { status: 400 })
+    reportServerError("Signup failed:", err)
+    return NextResponse.json({ error: "Failed to create account" }, { status: 400 })
   }
 }
