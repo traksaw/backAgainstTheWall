@@ -4,19 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { ExternalLink } from "lucide-react";
 import { FadeIn, FadeInUp } from "@/components/ui/fade-in";
-
-interface CastMember {
-  name: string
-  role: string
-  description: string
-  image?: string
-  readMoreUrl?: string
-  order?: number
-  imageAlt?: string
-}
+import type { CastCrewMember } from "@/data/cast-and-crew";
 
 interface CastCrewCarouselProps {
-  castMembers?: CastMember[];
+  castMembers?: CastCrewMember[];
 }
 
 
