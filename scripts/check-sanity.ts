@@ -1,7 +1,8 @@
 // Local-only replacement for the old public `/test-sanity` debug route
 // (removed in WAS-31). Run with `pnpm check-sanity` to eyeball the data
-// getCastAndCrew()/getSupporters() would hand to the homepage, without
-// exposing a live, unauthenticated route in production.
+// getCastAndCrew()/getSupporters() would hand to the homepage (live Sanity
+// content if present, static fallback otherwise), without exposing a live,
+// unauthenticated route in production.
 import { getCastAndCrew, getSupporters } from '../lib/sanity'
 
 async function main() {
