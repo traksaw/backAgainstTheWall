@@ -1,16 +1,13 @@
-// Create a new file: /app/api/cast-and-crew/route.ts
-
 import { NextResponse } from 'next/server'
-import * as Sentry from '@sentry/nextjs'
 import { loadCastAndCrew } from '@/lib/cast-crew-loader'
+import { reportServerError } from '@/lib/server-error'
 
 export async function GET() {
   try {
     const castAndCrew = loadCastAndCrew()
     return NextResponse.json(castAndCrew)
   } catch (error) {
-    console.error('Error loading cast and crew:', error)
-    Sentry.captureException(error)
+    reportServerError('Failed to load cast and crew:', error)
     return NextResponse.json(
       { error: 'Failed to load cast and crew' },
       { status: 500 }
