@@ -36,3 +36,6 @@ ffmpeg2pass-*.log*
 # Large video files
 public/videos/*.mp4
 public/videos/optimized/*.mp4
+
+# superpowers subagent-driven-development scratch ledger
+/.superpowers/
