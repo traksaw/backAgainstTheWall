@@ -30,6 +30,12 @@ URI into `.env.local`:
 MONGODB_URI=<prod-uri> pnpm sync-indexes
 ```
 
+That inline form writes the full production connection string, credentials
+included, into your shell history. Prefix the command with a space if your
+shell is configured to skip history for space-prefixed commands
+(`HISTCONTROL=ignorespace` in bash, `HIST_IGNORE_SPACE` in zsh), or clear
+the relevant history entry afterward.
+
 **Note:** The script requires `DOTENV_CONFIG_PATH=.env.local` to load your
 environment variables, and the `pnpm sync-indexes` entry in `package.json` has
 this already configured. Running `tsx scripts/sync-indexes.ts` directly will
