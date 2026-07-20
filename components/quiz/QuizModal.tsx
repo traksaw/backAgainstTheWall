@@ -20,7 +20,7 @@ interface UserProfile {
 interface QuizModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onQuizComplete: (answers: Record<number, QuizAnswer>) => void
+  onQuizComplete: (answers: Record<number, QuizAnswer>, sessionId: string) => void
   profile: UserProfile
   // When true, the quiz will hard reset upon opening (but not auto-start), so welcome screen stays
   autoReset?: boolean
@@ -33,12 +33,15 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
   const {
     currentQuestion,
     shuffledQuestions,
+    sessionId,
     showWelcome,
     answers,
     startQuiz,
     hardReset,
     handleQuizAnswer,
     goBackOne,
+    isStarting,
+    startError,
   } = quizState
 
   // Ensure no button remains focused when moving to the next question (mobile Safari focus persistence)
@@ -179,7 +182,10 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
 
     if (isComplete) {
       try {
-        onQuizComplete(finalAnswers)
+        if (!sessionId) {
+          throw new Error('Missing quiz session — please start the quiz again')
+        }
+        onQuizComplete(finalAnswers, sessionId)
       } catch (error) {
         logger.error('Quiz completion error in modal:', error)
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -216,12 +222,18 @@ export function QuizModal({ open, onOpenChange, onQuizComplete, profile, autoRes
                     characters.
                   </p>
                 </div>
-                <div className="flex justify-center">
+                <div className="flex flex-col items-center gap-2">
+                  {startError && (
+                    <p className="text-sm text-red-600 text-center" role="alert">
+                      {startError}
+                    </p>
+                  )}
                   <Button
-                    onClick={() => startQuiz()}
-                    className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-6 py-3 rounded-lg text-sm min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B95D38] focus-visible:ring-offset-2"
+                    onClick={() => void startQuiz()}
+                    disabled={isStarting}
+                    className="bg-[#B95D38] hover:bg-[#B95D38]/90 text-white font-semibold px-6 py-3 rounded-lg text-sm min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B95D38] focus-visible:ring-offset-2 disabled:opacity-50"
                   >
-                    Start Quiz
+                    {isStarting ? "Starting…" : "Start Quiz"}
                   </Button>
                 </div>
               </div>

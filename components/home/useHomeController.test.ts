@@ -9,12 +9,10 @@ import type { QuizAnswer, QuizResult, QuizSubmissionData } from '@/types/quiz'
 // The plan's literal mock is a static factory: `latestResult` is always `null` and
 // `submitQuiz` always resolves to a hardcoded `sessionId: 'session-1'`. That's fine for
 // most tests (and matches the plan's Task 3/4 mock verbatim), but it can never satisfy
-// the "prefers the server-confirmed result" test below: the optimistic sessionId comes
-// from quizLogic.processQuizCompletion()'s real generateSessionId() (timestamp +
-// Math.random — see lib/quiz/utils.ts), which will never equal the literal string
-// 'session-1'. So that one test gets its own stateful override (see below) that echoes
-// back whatever sessionId/archetype/scores were actually submitted, letting it exercise
-// the real reconciliation-by-sessionId path. Every other test keeps the plan's original
+// the "prefers the server-confirmed result" test below without echoing the sessionId
+// passed into completeQuiz (from POST /api/quiz/start via WAS-107). So that one test
+// gets its own stateful override (see below) that echoes back whatever sessionId/
+// archetype/scores were actually submitted. Every other test keeps the plan's original
 // static mock, reset via beforeEach.
 vi.mock('@/hooks/useQuiz', () => ({
   useQuiz: vi.fn(),
@@ -129,11 +127,14 @@ describe('useHomeController quiz completion', () => {
     const { result } = renderHook(() => useHomeController())
 
     await act(async () => {
-      await result.current.completeQuiz({
-        1: answer('Architect', 5),
-        2: answer('Architect', 4),
-        3: answer('Gambler', 1),
-      })
+      await result.current.completeQuiz(
+        {
+          1: answer('Architect', 5),
+          2: answer('Architect', 4),
+          3: answer('Gambler', 1),
+        },
+        'session-optimistic'
+      )
     })
 
     // Regression guard: this must NOT be the old hardcoded 'Realist'/zero-scores bug.
@@ -181,7 +182,7 @@ describe('useHomeController quiz completion', () => {
     const { result } = renderHook(() => useHomeController())
 
     await act(async () => {
-      await result.current.completeQuiz({ 1: answer('Realist', 5) })
+      await result.current.completeQuiz({ 1: answer('Realist', 5) }, 'session-reconcile')
     })
 
     // Server result wins for the fields it does confirm (real `_id`)...
@@ -195,7 +196,7 @@ describe('useHomeController quiz completion', () => {
     const { result } = renderHook(() => useHomeController())
 
     await act(async () => {
-      await result.current.completeQuiz({ 1: answer('Realist', 5) })
+      await result.current.completeQuiz({ 1: answer('Realist', 5) }, 'session-retake')
     })
     expect(result.current.latestResult).not.toBeNull()
 

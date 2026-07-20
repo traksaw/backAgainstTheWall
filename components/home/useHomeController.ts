@@ -116,9 +116,12 @@ export function useHomeController() {
     dispatch({ type: 'QUIZ_SESSION_STARTED', autoReset: false })
   }
 
-  const completeQuiz = async (answers: Record<number, QuizAnswer>) => {
+  const completeQuiz = async (
+    answers: Record<number, QuizAnswer>,
+    sessionId: string
+  ) => {
     try {
-      const quizData = quizLogic.processQuizCompletion(answers)
+      const quizData = quizLogic.processQuizCompletion(answers, sessionId)
       const optimistic: QuizResult = {
         archetype: quizData.archetype,
         score: quizData.score,

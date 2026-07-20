@@ -1,14 +1,22 @@
 // hooks/useQuizLogic.ts
 import { QuizAnswer, QuizSubmissionData, Archetype } from '@/types/quiz';
-import { calculateQuizScores, getWinningArchetype, generateSessionId } from '@/lib/quiz/utils';
+import { calculateQuizScores, getWinningArchetype } from '@/lib/quiz/utils';
 
 export function useQuizLogic() {
 
   /**
-   * Process quiz completion and generate submission data
+   * Process quiz completion and generate submission data.
+   * sessionId must come from POST /api/quiz/start (WAS-107) — never generate
+   * a new one here or submit cannot look up the persisted shuffle layout.
    */
-  const processQuizCompletion = (answers: Record<number, QuizAnswer>): QuizSubmissionData => {
-    const sessionId = generateSessionId()
+  const processQuizCompletion = (
+    answers: Record<number, QuizAnswer>,
+    sessionId: string
+  ): QuizSubmissionData => {
+    if (!sessionId) {
+      throw new Error('Missing quiz sessionId — start the quiz before submitting')
+    }
+
     const scores = calculateQuizScores(answers)
     const winningArchetype = getWinningArchetype(scores, answers)
 
