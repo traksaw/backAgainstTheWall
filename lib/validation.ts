@@ -89,9 +89,11 @@ const quizAnswerSchema = z.object({
 // WAS-89: archetype/score are recomputed server-side from `answers` in
 // app/api/quiz/submit/route.ts - they are intentionally NOT accepted here so
 // a client can never write an arbitrary result to the database.
+// WAS-107: sessionId is required so submit can look up the persisted shuffle
+// layout for this attempt and verify answers against what was actually shown.
 export const quizSubmitSchema = z.object({
   answers: z.record(quizAnswerSchema),
-  sessionId: z.string().optional(),
+  sessionId: z.string().min(1),
 })
 
 export const quizUpdateSchema = z.object({

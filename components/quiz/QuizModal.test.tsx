@@ -37,12 +37,15 @@ const quizState = {
       ],
     },
   ],
+  sessionId: "test-session-1",
   showWelcome: false,
   answers: {},
   startQuiz: vi.fn(),
   hardReset: vi.fn(),
   handleQuizAnswer,
   goBackOne,
+  isStarting: false,
+  startError: null as string | null,
 }
 
 vi.mock("@/hooks/useQuizState", () => ({

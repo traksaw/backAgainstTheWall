@@ -1,6 +1,6 @@
 // lib/quiz.ts
 
-import type { Archetype, QuizAnswer, QuizResult } from "@/types/quiz"
+import type { Archetype, QuizAnswer, QuizQuestion, QuizResult } from "@/types/quiz"
 import { logger } from "@/lib/logger"
 export type { Archetype, QuizAnswer, QuizResult }
 
@@ -19,9 +19,29 @@ export class QuizService {
     return await res.json()
   }
 
+  /** WAS-107: create a server-persisted shuffled layout for this attempt. */
+  static async startQuiz(): Promise<{ sessionId: string; questions: QuizQuestion[] }> {
+    const res = await fetch("/api/quiz/start", {
+      method: "POST",
+      credentials: "include",
+    })
+
+    if (!res.ok) {
+      let errorData: { error?: string } = {}
+      try {
+        errorData = await res.json()
+      } catch {
+        // ignore parse failure
+      }
+      throw new Error(errorData?.error || `Failed to start quiz (HTTP ${res.status})`)
+    }
+
+    return await res.json()
+  }
+
   static async submitQuiz(data: {
     answers: Record<number, QuizAnswer>
-    sessionId?: string
+    sessionId: string
     archetype: string
     score: number
     scores?: Record<string, number>
