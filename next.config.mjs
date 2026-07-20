@@ -38,15 +38,6 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/videos/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
         // WAS-33: baseline security headers for every route. These five are
         // static and safe to set here because they don't vary per request.
         // Content-Security-Policy is deliberately NOT set in this entry -

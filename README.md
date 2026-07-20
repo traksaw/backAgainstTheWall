@@ -101,19 +101,41 @@ The quiz identifies one of four financial personality types:
    
    # Vercel Blob (for video hosting)
    BLOB_READ_WRITE_TOKEN=your_blob_token
+   NEXT_PUBLIC_VIDEO_URL=your_blob_video_url
    ```
 
-   **Optional — `scripts/upload-video.mjs`:** re-uploads
-   `public/videos/Ambitious_compatible.mp4` to Vercel Blob (the URL
-   `VideoPlayer` reads is hardcoded to that Blob store's fixed pathname, so
-   this overwrites the live asset in place). It calls the `@vercel/blob`
-   SDK directly with `BLOB_READ_WRITE_TOKEN` rather than going through an
-   API route — a Vercel serverless function's request body is capped at
-   4.5MB, far under this video's size, so a server-upload endpoint could
-   never carry the file:
+   **Optional — `scripts/upload-video.mjs`:** uploads
+   `public/videos/Ambitious_compatible.mp4` to Vercel Blob under a
+   content-hashed filename (e.g. `Ambitious_compatible.<hash>.mp4`), so each
+   upload with different content gets its own permanent URL instead of
+   overwriting the previous one in place (WAS-42 — a fixed URL under a
+   year-long cache meant already-visited clients could keep serving stale
+   bytes after a re-upload). It calls the `@vercel/blob` SDK directly with
+   `BLOB_READ_WRITE_TOKEN` rather than going through an API route — a Vercel
+   serverless function's request body is capped at 4.5MB, far under this
+   video's size, so a server-upload endpoint could never carry the file:
    ```bash
    node scripts/upload-video.mjs
    ```
+   After it prints the new Blob URL, set `NEXT_PUBLIC_VIDEO_URL` to that
+   value in Vercel (and `.env.local` for dev) **and trigger a new
+   deployment** — this env var is inlined at build time, not read at
+   runtime, so updating it alone does not change the live site. If unset,
+   `HomeInteractiveShell` falls back to the last known-good URL baked into
+   `lib/video.ts`.
+
+   Each versioned upload is a new, permanent Blob object — old versions
+   aren't deleted automatically. Once the new URL is confirmed live in
+   production, clean up old versions with:
+   ```bash
+   node scripts/cleanup-old-videos.mjs           # dry run - lists what it would delete
+   node scripts/cleanup-old-videos.mjs --confirm # actually deletes
+   ```
+   It reads `NEXT_PUBLIC_VIDEO_URL` and keeps only the version that URL
+   points to, deleting every other version of `Ambitious_compatible.*.mp4`.
+   Run it only after confirming the deploy is live — running it against a
+   stale `NEXT_PUBLIC_VIDEO_URL` (i.e. before redeploying) will delete the
+   version production is still serving.
 
    **Going to production (email):** the `EMAIL_FROM`/`RESEND_API_KEY`
    values above work as-is in dev against Resend's `onboarding@resend.dev`

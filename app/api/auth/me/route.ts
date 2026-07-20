@@ -9,14 +9,7 @@ export async function GET(req: NextRequest) {
     const userId = await getUserIdFromRequest(req)    
     // Check if userId exists
     if (!userId) {
-      return NextResponse.json({ 
-        error: "Unauthorized",
-        debug: {
-          cookiesFound: req.cookies.getAll().length,
-          hasTokenCookie: !!req.cookies.get("token"),
-          hasAuthHeader: !!req.headers.get('authorization')
-        }
-      }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const user = await AuthService.getUserProfile(userId)

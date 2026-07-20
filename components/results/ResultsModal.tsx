@@ -20,17 +20,34 @@ interface ResultsModalProps {
   onRetakeQuiz?: () => void
 }
 
-export function ResultsModal({ 
-  open, 
-  onOpenChange, 
-  latestResult, 
-  onResultsViewed, 
+const RESULT_TABS = ['personality', 'recommendations'] as const;
+type ResultTab = (typeof RESULT_TABS)[number];
+
+export function ResultsModal({
+  open,
+  onOpenChange,
+  latestResult,
+  onResultsViewed,
   loading = false,
   onRetakeQuiz,
 }: ResultsModalProps) {
-  const [activeTab, setActiveTab] = useState<'personality' | 'recommendations'>('personality');
+  const [activeTab, setActiveTab] = useState<ResultTab>('personality');
   const [archetypesMap, setArchetypesMap] = useState<Record<string, ArchetypeResult>>({});
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const tabRefs = useRef<Record<ResultTab, HTMLButtonElement | null>>({
+    personality: null,
+    recommendations: null,
+  });
+
+  const handleTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    const currentIndex = RESULT_TABS.indexOf(activeTab);
+    const direction = event.key === 'ArrowRight' ? 1 : -1;
+    const nextTab = RESULT_TABS[(currentIndex + direction + RESULT_TABS.length) % RESULT_TABS.length];
+    setActiveTab(nextTab);
+    tabRefs.current[nextTab]?.focus();
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -107,9 +124,16 @@ export function ResultsModal({
 
             {/* Tab Navigation */}
             <FadeInUp delay={200}>
-              <div className="flex bg-white rounded-2xl p-1 shadow-sm">
+              <div role="tablist" aria-label="Results view" className="flex bg-white rounded-2xl p-1 shadow-sm">
                 <button
+                  ref={(el) => { tabRefs.current.personality = el; }}
+                  role="tab"
+                  id="results-tab-personality"
+                  aria-selected={activeTab === 'personality'}
+                  aria-controls="results-panel-personality"
+                  tabIndex={activeTab === 'personality' ? 0 : -1}
                   onClick={() => setActiveTab('personality')}
+                  onKeyDown={handleTabKeyDown}
                   className={`flex-1 py-2 px-3 rounded-xl font-medium text-xs transition-all ${
                     activeTab === 'personality'
                       ? 'bg-[#B95D38] text-white shadow-sm'
@@ -119,7 +143,14 @@ export function ResultsModal({
                   PERSONALITY
                 </button>
                 <button
+                  ref={(el) => { tabRefs.current.recommendations = el; }}
+                  role="tab"
+                  id="results-tab-recommendations"
+                  aria-selected={activeTab === 'recommendations'}
+                  aria-controls="results-panel-recommendations"
+                  tabIndex={activeTab === 'recommendations' ? 0 : -1}
                   onClick={() => setActiveTab('recommendations')}
+                  onKeyDown={handleTabKeyDown}
                   className={`flex-1 py-2 px-3 rounded-xl font-medium text-xs transition-all ${
                     activeTab === 'recommendations'
                       ? 'bg-[#B95D38] text-white shadow-sm'
@@ -134,7 +165,13 @@ export function ResultsModal({
             {/* Personality Tab Content */}
             {activeTab === 'personality' ? (
               <FadeIn duration={600}>
-                <div className="grid grid-cols-1 gap-4">
+                <div
+                  role="tabpanel"
+                  id="results-panel-personality"
+                  aria-labelledby="results-tab-personality"
+                  tabIndex={0}
+                  className="grid grid-cols-1 gap-4"
+                >
                   {/* Chart Section */}
                   <div className="flex flex-col items-center space-y-3">
                     <h3 className="text-base font-semibold text-gray-800 text-center">Your Financial Personality Profile</h3>
@@ -196,10 +233,17 @@ export function ResultsModal({
               </FadeIn>
             ) : (
               <FadeInScale delay={300}>
-                <RecommendationsGrid
-                  archetype={latestResult.archetype}
-                  archetypesMap={Object.keys(archetypesMap).length ? archetypesMap : archetypeResults}
-                />
+                <div
+                  role="tabpanel"
+                  id="results-panel-recommendations"
+                  aria-labelledby="results-tab-recommendations"
+                  tabIndex={0}
+                >
+                  <RecommendationsGrid
+                    archetype={latestResult.archetype}
+                    archetypesMap={Object.keys(archetypesMap).length ? archetypesMap : archetypeResults}
+                  />
+                </div>
               </FadeInScale>
             )}
 

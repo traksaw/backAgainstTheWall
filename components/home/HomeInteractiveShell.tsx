@@ -14,8 +14,11 @@ import { QuizHistorySection } from "@/components/QuizHistorySection"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useHomeController } from "@/components/home/useHomeController"
 import { useAuth } from "@/hooks/useAuth"
+import { getVideoSrc } from "@/lib/video"
 import type { Supporter } from "@/types/supporter"
 import type { User, Profile } from "@/types/auth"
+
+const VIDEO_SRC = getVideoSrc(process.env.NEXT_PUBLIC_VIDEO_URL)
 
 interface HomeInteractiveShellProps {
   supporters: Supporter[]
@@ -133,7 +136,7 @@ export function HomeInteractiveShell({ supporters, children }: HomeInteractiveSh
           </DialogHeader>
           <div className="relative w-full">
             <VideoPlayer
-              src="https://tkoohwnrcxpmkerj.public.blob.vercel-storage.com/Ambitious_compatible.mp4"
+              src={VIDEO_SRC}
               poster="/assets/desktop-movie-poster.png"
               title="Back Against the Wall"
               onEnded={controller.completeFilm}
