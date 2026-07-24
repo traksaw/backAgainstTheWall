@@ -102,7 +102,15 @@ The quiz identifies one of four financial personality types:
    # Vercel Blob (for video hosting)
    BLOB_READ_WRITE_TOKEN=your_blob_token
    NEXT_PUBLIC_VIDEO_URL=your_blob_video_url
+   
+   # Supabase (Pressure Room)
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
+
+   Get the URL and anon (public) key from the Supabase dashboard → Project
+   Settings → API. Set the same two vars in Vercel before Pressure Room
+   ships to production. Never use the `service_role` key in this app.
 
    **Optional — `scripts/upload-video.mjs`:** uploads
    `public/videos/Ambitious_compatible.mp4` to Vercel Blob under a
