@@ -59,7 +59,7 @@ export function SignInModal({ open, onOpenChange, onSwitchToSignUp, onSwitchToFo
         errorMessage = error.message
       }
 
-      // Handle specific Supabase errors
+      // Normalize common auth error messages for display
       const errorMsg = errorMessage.toLowerCase()
       if (errorMsg.includes("invalid login credentials") || errorMsg.includes("invalid email or password")) {
         errorMessage = "Invalid email or password"
